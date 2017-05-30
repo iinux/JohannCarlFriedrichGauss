@@ -1,0 +1,217 @@
+<html>
+    <head>
+        <script src="vue.min.js"></script>
+    </head>
+    <body>
+        <div id="app">
+            {{* newTodo }}
+            <a v-bind:href="newTodo">{{ newTodo }}</a>
+            <a :href="newTodo">{{ newTodo }}</a>
+            <a v-bind:href.literal="newTodo">{{ newTodo }}</a>
+            <input v-model="newTodo" v-on:keyup.enter="addTodo" />
+            <ul>
+                <li v-for="todo in todos">
+                    <span>{{ $index }} {{ todo.text}}</span>
+                    <button v-on:click="removeTodo">X</button>
+                    <button @click="removeTodo">x</button>
+
+                </li>
+            </ul>
+            <hr />
+            <div :class="{ 'class-a':isA, 'class-b' :isB }">
+            a={{ a }} b={{ b}}
+            </div>
+            <div :class="classObject">
+
+            </div>
+            <div :class="['classA', isB ? 'classB' : '']">
+
+            </div>
+            <div :style="{ color: activeColor, fontSize: fontSize + 'px' }">
+
+            </div>
+            <div :style="styleObject">
+
+            </div>
+            <div :style="[styleObjectA, styleObjectB">
+
+            </div>
+            <hr />
+            <p v-if="ok">Yes</p>
+            <p v-else>No</p>
+            <p v-show="ok">v-show</p>
+            <hr />
+            <div>
+                <span v-for="n in 10">{{ n }}</span>
+            </div>
+            <hr />
+            <button v-on:click="say('Hello', $event)">submit</button>
+            <!-- 阻止单击事件冒泡 -->
+            <a v-on:click.stop="doThis"></a>
+
+            <!-- 提交事件不再重载页面 -->
+            <form v-on:submit.prevent="onSubmit"></form>
+
+            <!-- 修饰符可以串联 -->
+            <a v-on:click.stop.prevent="doThat"></a>
+
+            <!-- 只有修饰符 -->
+            <form v-on:submit.prevent></form>
+            <!--1.0.16 添加了两个额外的修饰符：-->
+
+            <!-- 添加事件侦听器时使用 capture 模式 -->
+            <div v-on:click.capture="doThis">...</div>
+
+            <!-- 只当事件在该元素本身（而不是子元素）触发时触发回调 -->
+            <div v-on:click.self="doThat">...</div>
+            <hr />
+            <input @keyup.13="say('13', $event)" />
+            <input @keyup.enter="say('enter', $event)" />
+            <!--全部的按键别名：
+
+            enter
+            tab
+            delete
+            esc
+            space
+            up
+            down
+            left
+            right-->
+
+            <input @keyup.f2="say('f2', $event)" />
+            <hr />
+            <input type="checkbox" id="jack" value="Jack" v-model="checkedNames">
+            <label for="jack">Jack</label>
+            <input type="checkbox" id="john" value="John" v-model="checkedNames">
+            <label for="john">John</label>
+            <input type="checkbox" id="mike" value="Mike" v-model="checkedNames">
+            <label for="mike">Mike</label>
+            <br>
+            <span>Checked names: {{ checkedNames | json }}</span>
+            <hr />
+            <input type="radio" id="one" value="One" v-model="picked">
+            <label for="one">One</label>
+            <br>
+            <input type="radio" id="two" value="Two" v-model="picked">
+            <label for="two">Two</label>
+            <br>
+            <span>Picked: {{ picked }}</span>
+            <hr />
+            <select v-model="selected">
+                <option selected>A</option>
+                <option>B</option>
+                <option>C</option>
+            </select>
+            <span>Selected: {{ selected }}</span>
+            <hr />
+            <select v-model="selected">
+                <option v-for="option in options" v-bind:value="option.value">
+                    {{ option.text }}
+                </option>
+            </select>
+            <span>Selected: {{ selected }}</span>
+            <hr />
+            <!-- 当选中时，`picked` 为字符串 "a" -->
+            <input type="radio" v-model="picked" value="a">
+
+            <!-- `toggle` 为 true 或 false -->
+            <input type="checkbox" v-model="toggle">
+
+            <!-- 当选中时，`selected` 为字符串 "abc" -->
+            <select v-model="selected">
+                <option value="abc">ABC</option>
+            </select>
+            <hr />
+            <input
+                    type="checkbox"
+                    v-model="toggle"
+                    v-bind:true-value="a"
+                    v-bind:false-value="b">
+            <input type="radio" v-model="pick" v-bind:value="a">
+        </div>
+        <script>
+            var vm = new Vue({
+                el: '#app',
+                data: {
+                    vnewTodo: 'Hello world',
+                    todos: [
+                        { text : 'add some todos' }
+                    ],
+                    a: 1,
+                    firstName: 'Bei',
+                    lastName: 'Jing',
+                    isA: true,
+                    isB: false,
+                    classObject:{
+                        'class-a':true,
+                        'class-b':false,
+                    },
+                    activeColor: 'red',
+                    fontSize: 30,
+                    styleObject: {
+                        color: 'green',
+                        fontSize: '13px'
+                    },
+                    ok: true,
+                    checkedNames: [],
+
+                    selected: 'A',
+                    options: [
+                        { text: 'One', value: 'A' },
+                        { text: 'Two', value: 'B' },
+                        { text: 'Three', value: 'C' }
+                    ]
+                },
+                computed: {
+                    b: function() {
+                        return this.a + 1;
+                    },
+                    fullName: {
+                        get: function() {
+                            return this.firstName + '@' + this.lastName
+                        },
+                        set: function(newValue) {
+                            var names = newValue.split(' ');
+                            this.firstName = names[0];
+                            this.lastName = names[names.length - 1];
+                        }
+                    }
+                },
+                methods: {
+                    cl: function() {
+                        // 当选中时
+                        console.log(vm.toggle === vm.a);
+                        // 当没有选中时
+                        console.log(vm.toggle === vm.b);
+                        // 当选中时
+                        console.log(vm.pick === vm.a);
+                    },
+                    addTodo: function() {
+                        var text = this.newTodo.trim();
+                        if (text) {
+                            this.todos.push({text:text});
+                            this.newTodo = ''
+                        }
+                    },
+                    removeTodo: function(index) {
+                        this.todos.splice(index, 1);
+                    },
+                    say: function(msg, event) {
+                        alert('say'+msg);
+                        event.preventDefault();
+                    }
+                },
+                created: function(){
+                    Vue.directive('on').keyCodes.f2 = 113;
+                    console.log('created');
+                }
+            })
+            vm.$watch('newTodo', function(newVal, oldVal){
+                console.log(newVal);
+                console.log(oldVal);
+            });
+            console.log(vm);
+        </script>
+    </body>
+</html>

@@ -1,0 +1,151 @@
+<?php
+header("Access-Control-Allow-Origin: *");
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="angular.min.js"></script>
+    <style>
+        input.ng-invalid {
+            background-color: lightBlue;
+        }
+    </style>
+</head>
+<body>
+<div ng-app="myApp" ng-controller="myCtrl" ng-init="name='microsoft';num=6;names=['zhang','zhao','qiang']">
+    <p>名字：<input type="text" ng-model="name"><span ng-bind="name"></span></p>
+    <p>currency: {{name|currency}}</p>
+    <p>filter: {{name|filter}}</p>
+    <p>lowercase: {{name|lowercase}}</p>
+    <p>orderBy: {{name|orderBy}}</p>
+    <p>uppercase: {{name|uppercase}}</p>
+    <p>My first expression: {{ 5 + 5 + num}}</p>
+    <hr />
+
+    firstName:<input type="text" ng-model="nameArr.first"><br />
+    lastName:<input type="text" ng-model="nameArr.last"><br />
+    <p ng-click="reset()">name {{ fullName()}}</p>
+    <hr />
+
+    <input type="text" ng-model="filter_test">
+    <ul>
+        <li ng-repeat="x in names | filter:filter_test | orderBy">
+            {{ $index+1 }}、{{ x | myFormat}} ; <span ng-if="$odd">odd</span><span ng-if="$even">even</span>
+        </li>
+    </ul>
+    <hr />
+
+    <qun-zhang></qun-zhang>
+    <div qun-zhang=""></div>
+    <div class="qun-zhang"></div>
+    <!-- directive: qun-zhang -->
+    <hr />
+
+    <form name="myForm">
+        <input type="email" name="myAddress" ng-model="text">
+        valid:{{ myForm.myAddress.$valid }}
+        invalid:{{ myForm.myAddress.$invalid }}
+        pristine:{{ myForm.myAddress.$pristine }}
+        dirty:{{ myForm.myAddress.$dirty }}
+        touched:{{ myForm.myAddress.$touched }}
+        error:{{ myForm.myAddress.$error }}
+    </form>
+    <span ng-show="myForm.myAddress.$error.email" style="color: red;">no a valid email</span>
+    <hr />
+
+    myUrl: {{ myUrl }}
+    <hr />
+
+    <select ng-model="selectSite" ng-options="xyz.site for xyz in sites"></select><!--ng-model不能少-->{{ selectSite}}
+    <select ng-model="selectSite2" ng-options="y.name for (x, y) in sites2"></select><!--ng-model不能少-->{{ selectSite2}}
+    <hr />
+
+    <button ng-disabled="mySwitch" ng-click="count=count+1">click me!</button>{{ count }}<!--count+=1 不可以-->
+    <input type="checkbox" ng-model="mySwitch" /><span ng-hide="false">{{mySwitch}}</span>
+    <hr />
+
+    <div ng-include="'tree.php'"></div>
+
+</div>
+<script>
+/*    ng-model 指令根据表单域的状态添加/移除以下类：
+    ng-empty
+    ng-not-empty
+    ng-touched
+    ng-untouched
+    ng-valid
+    ng-invalid
+    ng-dirty
+    ng-pending
+    ng-pristine*/
+    var app = angular.module('myApp', []);
+    //服务加$，自定义服务不加$
+    app.controller('myCtrl', function ($scope, $location, $rootScope, $http, $timeout, $interval, hexafy) {
+        $scope.sName = {first:'adolf',last:'bonaparte'};
+        $delimeter = ' ';//加不加$都行
+        $rootScope.fullName = function(){
+            return $scope.nameArr.first + $delimeter + $scope.nameArr.last;
+        }
+
+        $rootScope.reset = function () {
+            $scope.nameArr = angular.copy($scope.sName);
+        }
+        $rootScope.reset();
+
+        $scope.sites = [
+            {site:'google',url:'google.com'},
+            {site:'baidu',url:'baidu.com'},
+            {site:'bing',url:'bing.com'}
+        ];
+
+        $scope.sites2 = {
+            site1:{name:'google',color:'red'},
+            site2:{name:'baidu',color:'green'},
+            site3:{name:'bing',color:'blue'}
+        };
+
+        $scope.myUrl = $location.absUrl();
+
+        $http.get('http://www.baidu.com/small/an.html').then(function(response){
+            console.log(response);
+        });
+
+        $http.get('an.html').then(function(response){
+            console.log('response success');
+        });
+
+        $timeout(function(){
+            $scope.nameArr.first = 'time';
+            $scope.nameArr.last = 'out';
+        }, 2000);
+
+        $interval(function(){
+            console.log( '.');
+        }, 1000);
+
+        console.log(hexafy.myFunc(255));
+    });
+    //自定义服务可以定义在后，使用在前
+    app.service('hexafy', function(){
+        this.myFunc = function(x){
+            return x.toString(16);
+        }
+    });
+    app.filter('myFormat', ['hexafy', function(hexafy){
+        return function (x){
+            //return hexafy.myFunc(x);
+            //return Math.random();
+            return x + ' san';
+        };
+    }]);
+    app.directive('qunZhang', function(){
+        return {
+            restrict : 'EACM',//M不生效
+            template : "<p>my directive</p>"
+        };
+    });
+</script>
+</body>
+</html>
