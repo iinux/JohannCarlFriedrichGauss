@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="article_content" class="article_content">
+
+
+    <style type="text/css"></style>
+
+
+    <pre></pre>
+    <style type="text/css">
+        <!--
+        @page {
+            margin: 2cm
+        }
+
+        pre.western {
+            font-family: "DejaVu Sans Mono", monospace
+        }
+
+        pre.cjk {
+            font-family: "文泉驿正黑", monospace
+        }
+
+        pre.ctl {
+            font-family: "DejaVu Sans Mono", monospace
+        }
+
+        p {
+            margin-bottom: 0.21cm
+        }
+
+        -->
+    </style>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">1：首先安装</span><span
+            style="font-family:SimHei">apache：打开终端（</span><span style="font-family:SimHei">ctrl+Alt+t），</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">输入命令：</span><span
+            style="font-family:SimHei">sudo apt-get install apache2即可安装，</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">安装完后，打开浏览器，在地址栏输入：</span><span
+            style="font-family:SimHei">localhost或者</span><span style="font-family:SimHei">http://127.0.0.1</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">看到</span><span
+            style="font-family:SimHei">It works，表示安装成功！
+<br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">默认根目录：</span><span
+            style="font-family:SimHei">/var/www/&nbsp;</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">2：安装</span><span
+            style="font-family:SimHei"><a href="http://lib.csdn.net/base/14" class="replace_word" title="MySQL知识库"
+                                          target="_blank" style="color:#df3434; font-weight:bold;">MySQL</a>：
+<br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">sudo apt-get install mysql-server-5.0
+<br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">安装完后，会要你新设置</span><span
+            style="font-family:SimHei">mysql root密码，输入你自己的密码后</span><span
+            style="font-family:SimHei">enter键，再确认密码。</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">3：安装</span><span
+            style="font-family:SimHei">PHP 5 and Apache PHP 5 module:&nbsp;</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">sudo apt-get install php5 libapache2-mod-php5</span>
+    </p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span
+            style="font-family:SimHei">sudo /etc/init.d/apache2 restart(重启</span><span style="font-family:SimHei">apache)
+<br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">试试成功否：
+<br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">命令：</span><span
+            style="font-family:SimHei">gksudo gedit /var/www/text.php 【在</span><span style="font-family:SimHei">apache默认根目录</span><span
+            style="font-family:SimHei">/var/www/下创建一</span><span style="font-family:SimHei">text.php文件】</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">在</span><span
+            style="font-family:SimHei">text.php文件中输入以下代码检验是否安装成功：&nbsp;</span><span style="font-family:SimHei"><br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">&lt;?php&nbsp;</span><span
+            style="font-family:SimHei"><br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">echo “helloworld”;
+<br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">?&gt; <br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">在浏览器地址栏输入：</span><span
+            style="font-family:SimHei">http：</span><span
+            style="font-family:SimHei">//localhost/text.php 如果页面显示</span><span style="font-family:SimHei">helloworld则表示成功
+<br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">温馨提示：如果返回终端时无法再次输入命令时，按</span><span
+            style="font-family:SimHei">ctrl+z组合键
+<br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">4：让</span><span
+            style="font-family:SimHei">apache和</span><span style="font-family:SimHei">php支持</span><span
+            style="font-family:SimHei">php ：<br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">sudo apt-get install libapache2-mod-auth-mysql</span><span
+            style="font-family:SimHei"><br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">sudo apt-get install php5-mysql</span>
+    </p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span
+            style="font-family:SimHei">sudo /etc/init.d/apache2 restart(重启</span><span style="font-family:SimHei">apache)</span>
+    </p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">至此环境已搭建完！</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">&nbsp;</span><span
+            style="font-family:SimHei">/var/www/（</span><span style="font-family:SimHei">apache2网页文件放在这里）</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">&nbsp;</span><span
+            style="font-family:SimHei">/var/lib/mysql(mysql文件放在这里</span><span style="font-family:SimHei">)<a
+            name="best-answer-content"></a><br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">如果你要远程连接的话，还要安装</span><span
+            style="font-family:SimHei">SSH，命令</span><span style="font-family:SimHei">:sudo apt-get install ssh
+<br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">可能我们还是习惯用</span><span
+            style="font-family:SimHei">phpmyadmin</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">&nbsp;</span><span
+            style="font-family:SimHei">5：安装</span><span style="font-family:SimHei">phpmyadmin
+<br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">sudo apt-get install phpmyadmin
+<br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">此时在浏览器上输入：</span><span
+            style="font-family:SimHei">http://localhost/phpmyadmin 发现</span><span style="font-family:SimHei">not found
+<br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">所以我们还必须把安装好到</span><span
+            style="font-family:SimHei">phpmyadmin文件夹转移到</span><span style="font-family:SimHei">/var/www/下面
+<br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">sudo ln -s /usr/share/phpmyadmin/ /var/www/</span>
+    </p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">执行上面到命令，我们已经把</span><span
+            style="font-family:SimHei">phpmyadmin文件夹转移到目的地了，也或者你把</span><span
+            style="font-family:SimHei">phpmyadmin直接复制到</span><span style="font-family:SimHei">/var/www/的文件夹下面也可以。&nbsp;
+<br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">我们再次浏览器上输入：</span><span
+            style="font-family:SimHei">http://localhost/phpmyadmin 回车时发现我们熟悉的界面回来了
+<br>
+</span></p>
+    <p class="cjk" style="margin-bottom:0.5cm"><span style="font-family:SimHei">本人才素学浅，可能有些地方说的不太好，请见谅或指出错误！</span></p>
+    <p style="margin-bottom:0cm"><span style="font-family:SimHei"><br>
+</span></p>
+    <br>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<html>
+<head>
+  <title> demo </title>
+  <meta name="Author" content="xugang" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <!-- 添加外部CSS 样式 -->
+  <link rel="stylesheet" href="styles_priority.css" type="text/css" />
+  <!-- 在外部的styles.css文件中，代码如下：
+       h3 {color:blue;}
+  -->
+ 
+  <!-- 使用javascript 创建内部CSS 样式 -->
+  <script type="text/javascript">
+  <!--
+    (function(){
+        var agent = window.navigator.userAgent.toLowerCase();
+        var is_op = (agent.indexOf("opera") != -1);
+        var is_ie = (agent.indexOf("msie") != -1) && document.all && !is_op;
+        var is_ch = (agent.indexOf("chrome") != -1);
+ 
+        var cssStr="h3 {color:green;}";
+        var s=document.createElement("style");
+        var head=document.getElementsByTagName("head").item(0);
+        var link=document.getElementsByTagName("link");
+        link=link.item(0);
+ 
+        if(is_ie)
+        {
+            if(link)
+                head.insertBefore(s,link);
+            else
+                head.appendChild(s);
+            document.styleSheets.item(document.styleSheets.length-1).cssText=cssStr;
+        }
+        else if(is_ch)
+        {
+            var t=document.createTextNode();
+            t.nodeValue=cssStr;
+            s.appendChild(t);
+            head.insertBefore(s,link);
+        }
+        else
+        {
+            s.innerHTML=cssStr;
+            head.insertBefore(s,link);
+        }
+    })//();
+    
+	var s=document.createElement("style");
+	var head=document.getElementsByTagName("head").item(0);
+	var link=document.getElementsByTagName("link").item(0);
+	 
+	head.insertBefore(s,link);
+	/* 注意：在IE 中，
+	   虽然代码是将<style>插入在<link>之前，
+	   但实际内存中，<style>却在<link>之后。
+	   这也是“IE中奇怪的应用CSS的BUG”之所在！
+	*/
+	 
+	var oStyleSheet = document.styleSheets[0];
+	//这实际是在<link>的外部样式中追加
+	oStyleSheet.addRule("h3","color:green;");
+	alert(oStyleSheet.rules[0].style.cssText);
+	alert(document.styleSheets[0].rules[0].style.cssText);
+	 
+	//方式2
+	//var cssStr="h3 {color:green;}";
+	//document.styleSheets.item(document.styleSheets.length-1).cssText=cssStr;
+  //-->
+  </script>
+</head>
+<body>
+  <h3>在IE中我是绿色，非IE浏览器下我是蓝色！</h3>
+</body>
+</html>

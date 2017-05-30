@@ -1,0 +1,70 @@
+<html>
+<head>
+    <script type="text/javascript" src="https://cdn.bootcss.com/jquery/1.10.2/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            var jsonObj2 = {
+                teacher: [
+                    {name: "jordan", sex: "m", age: "40"},
+                    {name: "bryant", sex: "m", age: "28"},
+                    {name: "McGrady", sex: "m", age: "27"}
+                ]
+            };
+            var jsonObj2New = {};
+            $("#btn").click(function () {
+                //invoke the update
+                updateData("jordan");
+                var persons = jsonObj2.teacher;
+                for (var i = 0; i < persons.length; i++) {
+                    var cur_person = persons[i];
+                    console.log(cur_person.sex);
+                }
+
+                //invoke the delete
+                deleteData("jordan");
+                persons = jsonObj2.teacher;
+                for (var i = 0; i < persons.length; i++) {
+                    cur_person = persons[i];
+                    console.log(cur_person.sex);
+                }
+
+                //push
+                var temp = {name: "kenny", sex: "m", age: "25"};
+                jsonObj2.teacher.push(temp);
+
+                persons = jsonObj2.teacher;
+                for (var i = 0; i < persons.length; i++) {
+                    cur_person = persons[i];
+                    console.log(cur_person.name);
+                }
+
+            });
+
+            function updateData(name) {
+                var persons = jsonObj2.teacher;
+                //console.log(name);
+                for (var i = 0; i < persons.length; i++) {
+                    var cur_person = persons[i];
+                    if (cur_person.name == name) {
+                        persons[i].sex = "f";
+                    }
+                }
+            }
+
+            function deleteData(name) {
+                var persons = jsonObj2.teacher;
+                //console.log(name);
+                for (var i = 0; i < persons.length; i++) {
+                    var cur_person = persons[i];
+                    if (cur_person.name == name) {
+                        jsonObj2.teacher.splice(i, 1);
+                    }
+                }
+            }
+        });
+    </script>
+</head>
+<body>
+<button type="button" id="btn">Click Me!</button>
+</body>
+</html>

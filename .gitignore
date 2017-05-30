@@ -1,1 +1,5 @@
 .idea
+vendor
+.tags
+*.sublime-project
+*.sublime-workspace
