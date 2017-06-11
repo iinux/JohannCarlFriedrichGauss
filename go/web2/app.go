@@ -10,6 +10,9 @@ import (
 	"path"
 	//for extracting service credentials from VCAP_SERVICES
 	//"github.com/cloudfoundry-community/go-cfenv"
+	"bytes"
+	"fmt"
+	"time"
 )
 
 type Profile struct {
@@ -32,8 +35,13 @@ var index = template.Must(template.ParseFiles(
 ))
 
 func helloWorld(w http.ResponseWriter, req *http.Request) {
+	buf := new(bytes.Buffer)
 	profile := Profile{"Alex", []string{"snowboarding", "programming"}}
 	index.Execute(w, profile)
+	index.Execute(buf, profile)
+	// fmt.Println(buf.String())
+	fmt.Println(time.Now())
+	fmt.Println(time.Date(2013,1,4,13,14,0,0,nil))
 }
 
 func jsonFormat(w http.ResponseWriter, req *http.Request) {
