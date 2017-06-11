@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"encoding/json"
 	"encoding/xml"
+	"path"
 	//for extracting service credentials from VCAP_SERVICES
 	//"github.com/cloudfoundry-community/go-cfenv"
 )
@@ -30,7 +31,7 @@ var index = template.Must(template.ParseFiles(
 	"templates/index.html",
 ))
 
-func helloworld(w http.ResponseWriter, req *http.Request) {
+func helloWorld(w http.ResponseWriter, req *http.Request) {
 	index.Execute(w, nil)
 }
 
@@ -58,6 +59,11 @@ func xmlFormat(w http.ResponseWriter, req *http.Request) {
 	w.Write(x)
 	w.WriteHeader(200)
 }
+func ServingFile(w http.ResponseWriter, req *http.Request)  {
+	fp := path.Join("static", "images", "newapp-icon.png")
+	http.ServeFile(w, req, fp)
+}
+
 
 func main() {
 	var port string
@@ -70,9 +76,10 @@ func main() {
 		host = DEFAULT_HOST
 	}
 
-	http.HandleFunc("/", helloworld)
+	http.HandleFunc("/", helloWorld)
 	http.HandleFunc("/1.json", jsonFormat)
 	http.HandleFunc("/1.xml", xmlFormat)
+	http.HandleFunc("/servingFile", ServingFile)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	log.Printf("Starting app on %+v:%+v\n", host, port)
