@@ -32,7 +32,8 @@ var index = template.Must(template.ParseFiles(
 ))
 
 func helloWorld(w http.ResponseWriter, req *http.Request) {
-	index.Execute(w, nil)
+	profile := Profile{"Alex", []string{"snowboarding", "programming"}}
+	index.Execute(w, profile)
 }
 
 func jsonFormat(w http.ResponseWriter, req *http.Request) {
