@@ -41,7 +41,6 @@ func helloWorld(w http.ResponseWriter, req *http.Request) {
 	index.Execute(buf, profile)
 	// fmt.Println(buf.String())
 	fmt.Println(time.Now())
-	fmt.Println(time.Date(2013,1,4,13,14,0,0,nil))
 }
 
 func jsonFormat(w http.ResponseWriter, req *http.Request) {
@@ -49,7 +48,7 @@ func jsonFormat(w http.ResponseWriter, req *http.Request) {
 	//w.Write([]byte("OK"))
 	profile := Profile{"Alex", []string{"snowboarding", "programming"}}
 	js, err := json.Marshal(profile)
-	if (err != nil) {
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -61,7 +60,7 @@ func xmlFormat(w http.ResponseWriter, req *http.Request) {
 	//w.Write([]byte("OK"))
 	profile := ProfileXml{"Alex", []string{"snowboarding", "programming"}}
 	x, err := xml.Marshal(profile)
-	if (err != nil) {
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -87,6 +86,7 @@ func main() {
 
 	http.HandleFunc("/", helloWorld)
 	http.HandleFunc("/1.json", jsonFormat)
+	http.HandleFunc("/shifts/list.json", writeOK)
 	http.HandleFunc("/1.xml", xmlFormat)
 	http.HandleFunc("/servingFile", ServingFile)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
