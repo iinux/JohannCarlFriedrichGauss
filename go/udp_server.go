@@ -36,7 +36,10 @@ func handleClient(conn *net.UDPConn) {
 	}
 	daytime := time.Now().Unix()
 	fmt.Println(n, remoteAddr)
+	fmt.Println(string(data))
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, uint32(daytime))
+	b1 := []byte("OK好的")
 	conn.WriteToUDP(b, remoteAddr)
+	conn.WriteToUDP(b1, remoteAddr)
 }

@@ -19,6 +19,10 @@ func main() {
 	size := rt.Size()
 
 	fmt.Println(size)
+	q := rtreego.Point{6.5, -2.47}
+	k := 5
+	results := rt.NearestNeighbors(k, q)
+	fmt.Println(results)
 }
 
 type Thing struct {

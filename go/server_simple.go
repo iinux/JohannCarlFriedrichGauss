@@ -97,6 +97,8 @@ func tcpPipe(conn *net.TCPConn) {
 
 	// 解析包体
 	var req Request
+	fmt.Println(buf[headSize:length])
+	fmt.Println(string(buf[headSize:length]))
 	if err = json.Unmarshal(buf[headSize:length], &req); err != nil {
 		fmt.Println("Error to parse request because of: ", err)
 		return
