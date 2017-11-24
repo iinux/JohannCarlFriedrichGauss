@@ -37,6 +37,7 @@ func randArray(aris []int) {
     l := len(aris)
     for i := 0; i < l; i++ {
         r := rand.New(rand.NewSource(time.Now().UnixNano()))
+        time.Sleep(time.Microsecond)
         aris[i] = r.Intn(1000)
     }
 }

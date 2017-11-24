@@ -24,7 +24,7 @@ $filename = "./bak.zip"; //最终生成的文件名（含路径）
 if (!file_exists($filename)) {
     //重新生成文件
     $zip = new ZipArchive();//使用本类，linux需开启zlib，windows需取消php_zip.dll前的注释
-    if ($zip->open($filename, ZIPARCHIVE::CREATE) !== TRUE) {
+    if ($zip->open($filename, ZipArchive::CREATE) !== TRUE) {
         exit('无法打开文件，或者文件创建失败');
     }
     foreach ($datalist as $val) {
