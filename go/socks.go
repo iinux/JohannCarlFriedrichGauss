@@ -15,6 +15,7 @@ func main() {
 
 	c, err := p.Dial("tcp", "www.google.com:80")
 	if err != nil {
+		fmt.Println(err)
 		panic("连接错误")
 	}
 
