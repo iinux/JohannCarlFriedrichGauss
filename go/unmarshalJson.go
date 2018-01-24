@@ -25,7 +25,7 @@ type Config struct {
 func main() {
 	c := Config{}
 
-	json.Unmarshal([]byte(`{"T": "bad-time"}`), &t c)
+	json.Unmarshal([]byte(`{"T": "bad-time"}`), &c)
 
 	fmt.Printf("%+v\n", c)
 }
