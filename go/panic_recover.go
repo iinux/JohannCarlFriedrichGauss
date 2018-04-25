@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"fmt"
 )
 
 var user = os.Getenv("USER")
@@ -23,5 +24,5 @@ func throwsPanic(f func()) (b bool) {
 }
 
 func main()  {
-	throwsPanic(manualInit)
+	fmt.Println(throwsPanic(manualInit))
 }
