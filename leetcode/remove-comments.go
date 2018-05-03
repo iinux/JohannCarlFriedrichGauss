@@ -33,6 +33,19 @@ func main() {
 		"   k = k/2;*/",
 		"}",
 	})
+	judge([]string{
+		"main() {",
+		"  Node* p;",
+		"  /* declare a Node",
+		"  /*float f = 2.0",
+		"   p->val = f;",
+		"   /**/",
+		"   p->val = 1;",
+		"   //*/ cout << success;*/",
+		"}",
+		" ",
+	}) // ["main() {","  Node* p;","  ","   p->val = 1;","   ","}"," "]
+
 }
 
 func judge(source []string) {
