@@ -63,6 +63,19 @@ func main() {
 	})
 	judge([]string{
 		"eccd/*/cb//*/*/ab//*ba//*/*/bc/*/ebdec//*baeadb//*//*c*//bacc//*d/*/*//b*///*/",
+		"*////*ce//*a*////*bc//*/*//*/b//*/*/*//b//*//*eb/*/a*//*//dede/*/aebebc//*ba//*",
+		"/*/d//*//*d//*/*/cbcedae/*/b//*/*//*/*//eae/*/a*///*///*ca//*ab//*e/*/eebea/*/",
+		"a//*a*//ee//*/*/dd/*/ebe//*eaacda/*/*//c/*///*cd*///*/aa//**//aaecba/*/b//*bbe",
+		"//*d//*//*ccaa/*/c//*be//**///*/e*//de/*/cce//*//*//*abbdd/*///*cceebc//*//*dd",
+		"aa//*d//*//*ebc/*/ba//*bd//*/*///*//**//*////*dca/*//*/eeee/*/*////*a/*/c*//b*//",
+		"*//ca*///*/*//deb//*adb*//d//*dcbbeda*//bd/*/ad//*cdd/*/ee//*//*ecea//*/*/a//*",
+		"cadbbd/*/de/*///*//*//*//*//*//*bc*////*db*//bebdb//*/*/b//**////*/*/bc//*a*//",
+		"d//*bc*//eda*//aaac/*///*/*/db//*dca//*edd/*/a/*/ccad*//c//*aded/*/ee/*/eead/*/",
+		"*//bdaeda//*//**///*/b*//ddccbad*//ee*//ddcbcd/*/ab//*ec//*dd//*//*//*aaeddbac",
+		"c//*/*/decadeed*//a*//ca//*/*/e*//bd*///*/db*////*a/*/cabdaddbeadbdaaacb*//b//*",
+		"d/*/aee*//d/*/*///*/de*//de//*ab*///*/ccb/*/adbab*//c//*/*/e*//eee*//e/*//*///*",
+		"d/*/*//c//**//cd/*///*d/*/b/*/bba*//dc//**///*/baca*//ddbc*//deeaead//*bd*//dd",
+		"dbbdedece//*dceaa//*aeb/*/bdead//*ccbeb*////**//b//*d*//aecad//*a*////**//abeb",
 	})
 }
 
@@ -78,26 +91,32 @@ func removeComments(source []string) []string {
 	var res []string
 	var line string
 	var inComment bool
-	var i, j, k int
+	var i, j, k, t int
 	for _, s := range source {
 		for true {
 			k = strings.Index(s, "//")
 			i = strings.Index(s, "/*")
 			j = strings.Index(s, "*/")
 
-			if k >= 0 && !inComment && (i == -1 || k < i) && (j == -1 || k < j + 2) {
+			if k >= 0 && !inComment && (i == -1 || k < i) && (j == -1 || k < j + 2 || i > j) {
 				s = s[0:k]
 				break
 			}
 
 			if inComment {
 				i = -1
-			} else if i > j {
-				j = -1
+			}
+
+			if i >= 0 && j >= 0 && i > j {
+				t = j + 1
+				j = strings.Index(s[t:], "*/")
+				if j >= 0 {
+					j += t
+				}
 			}
 
 			if i >= 0 && j >= 0 && i + 1 == j {
-				t := j + 1
+				t = j + 1
 				j = strings.Index(s[t:], "*/")
 				if j >= 0 {
 					j += t
