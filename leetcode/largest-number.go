@@ -4,6 +4,10 @@ import "fmt"
 
 func main() {
 	fmt.Println(largestNumber([]int{3, 30, 34, 5, 9}))
+	fmt.Println(largestNumber([]int{121, 12}))
+	fmt.Println(largestNumber([]int{1, 1, 1}))
+	fmt.Println(largestNumber([]int{3, 43, 48, 94, 85, 33, 64, 32, 63, 66}))
+	fmt.Println(largestNumber([]int{0, 0}))
 }
 
 func largestNumber(nums []int) string {
@@ -19,44 +23,32 @@ func largestNumber(nums []int) string {
 	for _, num := range nums {
 		s += fmt.Sprintf("%d", num)
 	}
-	return s
+
+	sr := []rune(s)
+	srl := len(sr)
+	for i := 0; i < srl; i++ {
+		if sr[i] == '0' && i != srl - 1 {
+			continue
+		} else {
+			sr = sr[i:]
+			break
+		}
+	}
+
+	return string(sr)
 }
 
 func gt(a int, b int) bool {
-	ar := []rune(fmt.Sprintf("%d", a))
-	br := []rune(fmt.Sprintf("%d", b))
+	ar := []rune(fmt.Sprintf("%d%d", a, b))
+	br := []rune(fmt.Sprintf("%d%d", b, a))
 
 	al := len(ar)
-	bl := len(br)
-
-	i := 0
-	for true {
-		if i >= al && i >= bl {
-			break
+	for i := 0; i < al; i++ {
+		if ar[i] > br[i] {
+			return true
+		} else if ar[i] < br[i] {
+			return false
 		}
-		if i >= al {
-			if br[i - al] == br [i] {
-			} else if br[i - al] < br [i] {
-				return false
-			} else {
-				return true
-			}
-		} else if i >= bl {
-			if ar[i - bl] == ar [i] {
-			} else if ar[i - bl] < ar [i] {
-				return true
-			} else {
-				return false
-			}
-		} else {
-			if ar[i] == br[i] {
-			} else if ar[i] < br[i] {
-				return false
-			} else {
-				return true
-			}
-		}
-		i++
 	}
 
 	return false
