@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/go-vgo/robotgo"
+	// "github.com/go-vgo/robotgo"
 )
 
 func abort(funcName string, err error) {
@@ -21,6 +21,7 @@ func abort(funcName string, err error) {
 var (
 	user32, _     = syscall.LoadLibrary("user32.dll")
 	messageBox, _ = syscall.GetProcAddress(user32, "MessageBoxW")
+	keybd_event, _ = syscall.GetProcAddress(user32, "keybd_event")
 )
 
 const (
@@ -119,7 +120,17 @@ func main() {
 			} else {
 				fmt.Println(string(body))
 			}
-			robotgo.KeyTap("4", "command")
+			// robotgo.KeyTap("4", "command")
+			// Replace the above line of code with the following code, the program size will be reduced by 1.6M
+			// if use `go build -ldflags '-w -s -H=windowsgui'` will be reduced by 3.3M
+			// https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-keybd_event
+			// https://docs.microsoft.com/zh-cn/windows/desktop/inputdev/virtual-key-codes
+			// http://blog.51cto.com/kaixinbuliao/1348378
+
+			syscall.Syscall(uintptr(keybd_event), 4, 91, 0, 0) // win key down
+			syscall.Syscall(uintptr(keybd_event), 4, 52, 0, 0) // 4 key down
+			syscall.Syscall(uintptr(keybd_event), 4, 52, 0, 2) // 4 key up
+			syscall.Syscall(uintptr(keybd_event), 4, 91, 0, 2) // win key up
 		}
 		/*
 		program = "C:\\Program Files\\Git\\usr\\bin\\ssh.exe"
