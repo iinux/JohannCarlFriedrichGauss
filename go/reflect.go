@@ -4,13 +4,19 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"runtime"
 )
 
 func hello() {
 	fmt.Println("Hello world!")
 }
 
+func GetFunctionName(i interface{}) string {
+	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+}
+
 func main() {
+	fmt.Println(GetFunctionName(hello))
 	hl := hello
 	fv := reflect.ValueOf(hl)
 	fmt.Println("fv is reflect.Func ?", fv.Kind() == reflect.Func)
