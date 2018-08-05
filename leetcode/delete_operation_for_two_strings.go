@@ -4,6 +4,7 @@ import (
 	"fmt"
 	//"log"
 	"time"
+	"sort"
 )
 
 func main() {
@@ -44,6 +45,12 @@ func main() {
 	judge(
 		"pneumonoultramicroscopicsilicovolcanoconiosis",
 		"ultramicroscopic", 29)
+	judge(
+		"szwokpjlgqgogbgpjaczcmtjhzgldwinqfxbcxgghitcinmtdwnnpsmnmhfrhrgwncvcizaze",
+		"spjlqggpzcgdxxtdwnrvca", 51)
+	judge(
+		"ebvivhpfxoptspwianmuhmkmbhxkqbrbgpfwpfcjixzhsjmtsgrzfshvkrvoxvjpmmsrojnpgzqdyofvicscopak",
+		"vxoumkmxbpcixzhtrfhxmnzqyvisp", 59)
 }
 
 func judge(a string, b string, answer int) {
@@ -54,6 +61,9 @@ func judge(a string, b string, answer int) {
 }
 
 func minDistance(word1 string, word2 string) int {
+	if len(word1) > len(word2) {
+		word1, word2 = word2, word1
+	}
 	len1 := len(word1)
 	len2 := len(word2)
 
@@ -76,25 +86,76 @@ func minDistance(word1 string, word2 string) int {
 		}
 	}
 
-	len3 := calc(lines, 0, 0)
+	sort.Sort(lines)
+	count = 0
+	fmt.Println(len(lines))
+	// len3 := calc(lines, 0, 0)
+	len3 := calc2(lines, 0)
+	fmt.Println(count)
 
 	return len1 + len2 - 2*len3
 }
 
-func calc(lines lineSlice, startX int, startY int) int {
+var count int
+
+func calc2(lines lineSlice, start int) int {
+	var fi int
 	end := true
-	var okLines lineSlice
-	for _, line := range lines {
+	if start >= len(lines) {
+		return 0
+	}
+	for i, line := range lines {
+		if line.X >= lines[start].X && line.Y >= lines[start].Y {
+			end = false
+			fi = i
+			break
+		}
+	}
+	if end {
+		return 0
+	}
+	a := calc2(lines, fi+1) + 1
+	b := calc2(lines, start+1)
+	if a >= b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func calc(lines lineSlice, startX int, startY int) int {
+	count++
+	end := true
+	//var okLines lineSlice
+	minxi := -1
+	minyi := -1
+	for i, line := range lines {
 		if line.X >= startX && line.Y >= startY {
-			okLines = append(okLines, line)
+			if minxi == -1 || line.X < lines[minxi].X || line.X == lines[minxi].X && line.Y < lines[minxi].Y {
+				minxi = i
+			}
+			if minyi == -1 || line.Y < lines[minyi].Y || line.Y == lines[minyi].Y && line.X < lines[minyi].X {
+				minyi = i
+			}
 			end = false
 		}
 	}
+	/*
+	for _, line := range lines {
+		if line.X >= startX && line.Y >= startY {
+			if line.X <= lines[minxi].X || line.Y <= lines[minxi].Y || line.X <= lines[minyi].X || line.Y <= lines[minyi].Y{
+				okLines = append(okLines, line)
+			}
+			end = false
+		}
+	}
+	*/
 
 	if end {
 		return 0
 	}
 
+	/*
 	max := 0
 	for _, line := range okLines {
 		v := calc(lines, line.X+1, line.Y+1) + 1
@@ -103,6 +164,23 @@ func calc(lines lineSlice, startX int, startY int) int {
 		}
 	}
 	return max
+	*/
+	if minxi == minyi {
+		return calc(lines, lines[minxi].X+1, lines[minxi].Y+1) + 1
+	} else {
+		var a []int
+		a = append(a, calc(lines, lines[minxi].X+1, lines[minxi].Y+1)+1)
+		a = append(a, calc(lines, lines[minyi].X+1, lines[minyi].Y+1)+1)
+		a = append(a, calc(lines, lines[minxi].X+1, lines[minyi].Y+1))
+		//a = append(a, calc(lines, startX, startY+1))
+		max := 0
+		for _, v := range a {
+			if v > max {
+				max = v
+			}
+		}
+		return max
+	}
 }
 
 type line struct {
@@ -112,6 +190,20 @@ type line struct {
 }
 
 type lineSlice []*line
+
+func (c lineSlice) Len() int {
+	return len(c)
+}
+func (c lineSlice) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+func (c lineSlice) Less(i, j int) bool {
+	if c[i].X == c[j].X {
+		return c[i].Y < c[j].Y
+	} else {
+		return c[i].X < c[j].X
+	}
+}
 
 func minDistance_error(word1 string, word2 string) int {
 	len1 := len(word1)

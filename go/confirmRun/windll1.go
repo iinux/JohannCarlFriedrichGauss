@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"syscall"
 	"unsafe"
-	"github.com/gonutz/ide/w32"
 	"os/exec"
+	"log"
+
+	"github.com/gonutz/ide/w32"
+	"github.com/itchyny/volume-go"
 )
 
 func abort(funcname string, err error) {
@@ -109,6 +112,30 @@ func main() {
 	//hideConsole()
 	defer syscall.FreeLibrary(kernel32)
 	defer syscall.FreeLibrary(user32)
+
+	if false {
+		vol, err := volume.GetVolume()
+		if err != nil {
+			log.Fatalf("get volume failed: %+v", err)
+		}
+		fmt.Printf("current volume: %d\n", vol)
+
+		err = volume.SetVolume(10)
+		if err != nil {
+			log.Fatalf("set volume failed: %+v", err)
+		}
+		fmt.Printf("set volume success\n")
+
+		err = volume.Mute()
+		if err != nil {
+			log.Fatalf("mute failed: %+v", err)
+		}
+
+		err = volume.Unmute()
+		if err != nil {
+			log.Fatalf("unmute failed: %+v", err)
+		}
+	}
 
 	fmt.Printf("Return: %d\n", MessageBox("Done Title", "This test is Done.", MB_YESNOCANCEL))
 	ShowMessage2("windows下的另一种DLL方法调用", "HELLO !")
