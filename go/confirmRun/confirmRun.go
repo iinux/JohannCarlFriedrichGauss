@@ -97,10 +97,24 @@ func main() {
 	program += "_real"
 
 	// MB_YESNOCANCEL
-	userClick := MessageBox("Title", text, MB_YESNO)
+	userClick := MessageBox("Title", text, MB_YESNOCANCEL)
 	fmt.Printf("Return: %d\n", userClick)
 
 	if userClick == 6 {
+		cmd := exec.Command(program, newArgs...)
+		runCmd(cmd)
+	} else if userClick == 7 {
+		program = "C:\\Program Files\\Git\\usr\\bin\\ssh.exe"
+		newArgs = []string{"shakespeare", "export DISPLAY=:1 ; /opt/google/chrome/chrome"}
+		for k, s := range args {
+			if k < 1 {
+				continue
+			}
+			newArgs[1] = newArgs[1] + " " + s
+		}
+
+		fmt.Println(program, newArgs)
+
 		cmd := exec.Command(program, newArgs...)
 		runCmd(cmd)
 	}
