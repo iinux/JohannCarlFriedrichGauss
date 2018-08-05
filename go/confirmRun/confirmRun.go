@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"io/ioutil"
 	"log"
+	"net/http"
+	"net/url"
 )
 
 func abort(funcName string, err error) {
@@ -104,6 +106,20 @@ func main() {
 		cmd := exec.Command(program, newArgs...)
 		runCmd(cmd)
 	} else if userClick == 7 {
+		resp, err := http.PostForm("http://10.4.123.218:8888",
+			url.Values{"key": {"911"}, "args": newArgs})
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			defer resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Println(string(body))
+			}
+		}
+		/*
 		program = "C:\\Program Files\\Git\\usr\\bin\\ssh.exe"
 		newArgs = []string{"shakespeare", "export DISPLAY=:1 ; /opt/google/chrome/chrome"}
 		for k, s := range args {
@@ -117,6 +133,7 @@ func main() {
 
 		cmd := exec.Command(program, newArgs...)
 		runCmd(cmd)
+		*/
 	}
 }
 
