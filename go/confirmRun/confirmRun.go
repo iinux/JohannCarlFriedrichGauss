@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"github.com/go-vgo/robotgo"
 )
 
 func abort(funcName string, err error) {
@@ -118,6 +119,7 @@ func main() {
 			} else {
 				fmt.Println(string(body))
 			}
+			robotgo.KeyTap("4", "command")
 		}
 		/*
 		program = "C:\\Program Files\\Git\\usr\\bin\\ssh.exe"
