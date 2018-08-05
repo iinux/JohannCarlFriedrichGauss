@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"syscall"
 	"unsafe"
+	"github.com/gonutz/ide/w32"
+	"os/exec"
 )
 
 func abort(funcname string, err error) {
@@ -86,14 +88,34 @@ func ShowMessage2(title, text string) {
 	MessageBoxW.Call(IntPtr(0), StrPtr(text), StrPtr(title), IntPtr(0))
 }
 
+func hideConsole() {
+	console := w32.GetConsoleWindow()
+	if console == 0 {
+		return // no console attached
+	}
+	// If this application is the process that created the console window, then
+	// this program was not compiled with the -H=windowsgui flag and on start-up
+	// it created a console along with the main application window. In this case
+	// hide the console window.
+	// See
+	// http://stackoverflow.com/questions/9009333/how-to-check-if-the-program-is-run-from-a-console
+	_, consoleProcID := w32.GetWindowThreadProcessId(console)
+	if w32.GetCurrentProcessId() == consoleProcID {
+		w32.ShowWindowAsync(console, w32.SW_HIDE)
+	}
+}
+
 func main() {
+	//hideConsole()
 	defer syscall.FreeLibrary(kernel32)
 	defer syscall.FreeLibrary(user32)
 
 	fmt.Printf("Return: %d\n", MessageBox("Done Title", "This test is Done.", MB_YESNOCANCEL))
 	ShowMessage2("windows下的另一种DLL方法调用", "HELLO !")
-}
 
-func init() {
-	fmt.Print("Starting Up\n")
+	// need go build -ldflags -H=windowsgui
+	cmd_path := "C:\\Windows\\system32\\cmd.exe"
+	cmd_instance := exec.Command(cmd_path, "/c", "notepad")
+	cmd_instance.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+	cmd_instance.Output()
 }
