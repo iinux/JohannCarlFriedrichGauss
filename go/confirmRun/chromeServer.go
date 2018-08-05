@@ -6,6 +6,7 @@ import (
 	"log"
 	"os/exec"
 	"io/ioutil"
+	"github.com/go-vgo/robotgo/clipboard"
 )
 
 func runCmdHandle(w http.ResponseWriter, r *http.Request) {
@@ -15,6 +16,8 @@ func runCmdHandle(w http.ResponseWriter, r *http.Request) {
 
 	// need system env var
 	program := "/opt/google/chrome/chrome"
+	// for mac
+	// program := "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 	cmd := exec.Command(program, r.Form["args"]...)
 	runCmd(cmd)
 
@@ -42,9 +45,17 @@ func getClipHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// need system env var
+	/*
 	program := "/usr/bin/xclip"
 	cmd := exec.Command(program, "-o")
-	fmt.Fprint(w, runCmd(cmd))
+	text := runCmd(cmd)
+	*/
+	text, err := clipboard.ReadAll()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Fprint(w, text)
+
 }
 
 func setClipHandle(w http.ResponseWriter, r *http.Request) {
@@ -53,6 +64,7 @@ func setClipHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	clipText := r.Form["text"][0]
+	/*
 	copyCmd := exec.Command("xclip", "-in", "-selection", "clipboard")
 	in, err := copyCmd.StdinPipe()
 	if err != nil {
@@ -73,6 +85,8 @@ func setClipHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	copyCmd.Wait()
+	*/
+	clipboard.WriteAll(clipText)
 	fmt.Fprintf(w, "set %s OK", clipText)
 }
 
