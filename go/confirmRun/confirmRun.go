@@ -110,7 +110,7 @@ func main() {
 			if k < 1 {
 				continue
 			}
-			newArgs[1] = newArgs[1] + " " + s
+			newArgs[1] = newArgs[1] + " '" + s + "'"
 		}
 
 		fmt.Println(program, newArgs)
