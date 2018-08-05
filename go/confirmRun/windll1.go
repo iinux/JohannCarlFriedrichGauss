@@ -72,11 +72,26 @@ func GetModuleHandle() (handle uintptr) {
 	return
 }
 
+func IntPtr(n int) uintptr {
+	return uintptr(n)
+}
+
+func StrPtr(s string) uintptr {
+	return uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(s)))
+}
+// windows下的另一种DLL方法调用
+func ShowMessage2(title, text string) {
+	user32 := syscall.NewLazyDLL("user32.dll")
+	MessageBoxW := user32.NewProc("MessageBoxW")
+	MessageBoxW.Call(IntPtr(0), StrPtr(text), StrPtr(title), IntPtr(0))
+}
+
 func main() {
 	defer syscall.FreeLibrary(kernel32)
 	defer syscall.FreeLibrary(user32)
 
 	fmt.Printf("Return: %d\n", MessageBox("Done Title", "This test is Done.", MB_YESNOCANCEL))
+	ShowMessage2("windows下的另一种DLL方法调用", "HELLO !")
 }
 
 func init() {
