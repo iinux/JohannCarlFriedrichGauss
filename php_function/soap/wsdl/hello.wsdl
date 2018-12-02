@@ -1,0 +1,60 @@
+<wsdl:definitions
+    xmlns:impl='http://localhost/php-soap/wsdl/helloService'
+    xmlns:intf='http://localhost/php-soap/wsdl/helloService'
+    xmlns:wsdl='http://schemas.xmlsoap.org/wsdl/'
+    xmlns:wsdlsoap='http://schemas.xmlsoap.org/wsdl/soap/'
+    xmlns:xsd='http://www.w3.org/2001/XMLSchema' 
+    targetNamespace='http://localhost/php-soap/wsdl/helloService'>
+    <wsdl:types>
+        <schema elementFormDefault='qualified'
+            xmlns:impl='http://localhost/php-soap/wsdl/helloService'
+            xmlns:intf='http://localhost/php-soap/wsdl/helloService'
+            xmlns:wsdl='http://schemas.xmlsoap.org/wsdl/'
+            xmlns="http://www.w3.org/2001/XMLSchema" 
+            targetNamespace='http://localhost/php-soap/wsdl/helloService' >
+            <element name='greet'>
+                <complexType>
+                    <sequence>
+                        <element name='name' type='xsd:string' />
+                    </sequence>
+                </complexType>
+            </element>
+            <element name='greetResponse'>
+                <complexType>
+                    <sequence>
+                        <element name='greetReturn' type='xsd:string' />
+                    </sequence>
+                </complexType>
+            </element>
+        </schema>
+    </wsdl:types>
+    <wsdl:message name='greetRequest'>
+        <wsdl:part name='parameters' element='impl:greet' />
+    </wsdl:message>
+    <wsdl:message name='greetResponse'>
+        <wsdl:part name='parameters' element='impl:greetResponse' />
+    </wsdl:message>
+    <wsdl:portType name='helloService'>
+        <wsdl:operation name='greet'>
+            <wsdl:input name='greetRequest' message='impl:greetRequest' />
+            <wsdl:output name='greetResponse' message='impl:greetResponse' />
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name='helloServiceSoapBinding' type='impl:helloService'>
+        <wsdlsoap:binding transport='http://schemas.xmlsoap.org/soap/http' style='document' />
+        <wsdl:operation name='greet'>
+            <wsdlsoap:operation soapAction='helloService#greet' />
+            <wsdl:input name='greetRequest'>
+                <wsdlsoap:body use='literal' />
+            </wsdl:input>
+            <wsdl:output name='greetResponse'>
+                <wsdlsoap:body use='literal' />
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name='helloService'>
+        <wsdl:port binding='impl:helloServiceSoapBinding' name='helloService'>
+            <wsdlsoap:address location='http://192.168.188.218:9200/hello_service_wsdl.php' />
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>
