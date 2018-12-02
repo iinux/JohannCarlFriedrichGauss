@@ -108,7 +108,7 @@ func main() {
 		cmd := exec.Command(program, newArgs...)
 		runCmd(cmd)
 	} else if userClick == 7 {
-		resp, err := http.PostForm("http://10.4.123.218:8888",
+		resp, err := http.PostForm("http://192.168.188.218:8888",
 			url.Values{"key": {"911"}, "args": newArgs})
 		if err != nil {
 			fmt.Println(err)
