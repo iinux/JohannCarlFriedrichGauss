@@ -7,6 +7,8 @@
  */
 define('DISCOUNT_BEFORE_SEVEN_CLOCK', 0.5);
 define('DISCOUNT_ALIPAY', 0.8);
+define('DISCOUNT_ALIPAY_FEE', 19.99);
+define('DISCOUNT_ALIPAY_FEE_DISCOUNT', 0.2);
 define('DISCOUNT_100', 0.8);
 define('DISCOUNT_150', 0.5);
 $website = 'Subway Calculation';
@@ -154,7 +156,7 @@ return;
                     $day++;
                 }
 
-                $sum = 0;
+                $sum = DISCOUNT_ALIPAY_FEE * DISCOUNT_ALIPAY_FEE_DISCOUNT;
                 $day = 1;
                 while ($day <= 31) {
                     $sum += discount($basePrice, $sum, false, true);
