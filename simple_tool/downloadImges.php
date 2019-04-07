@@ -6,9 +6,9 @@
  * Time: 10:29
  */
 
-define('DEBUG', true);
+define('DEBUG', false);
 $htmlFile = 'action.txt';
-$urlsRegex = '/data-src=\'(https?:\/\/.*?\.gif)\'/';
+$urlsRegex = '/data-src=\'(https?:\/\/.*?\.(gif|png|jpg|jpeg))\'/';
 
 /**
  * @param $var
