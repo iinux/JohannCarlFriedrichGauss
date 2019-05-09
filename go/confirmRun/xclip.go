@@ -15,6 +15,7 @@ import (
 
 const (
 	CF_UNICODETEXT = 13
+	SERVER = "http://192.168.188.221:8888"
 )
 
 func oldMain() {
@@ -47,7 +48,7 @@ func main() {
 	}
 
 	if args[1] == "pull"  || args[1] == "l" {
-		resp, err := http.PostForm("http://192.168.188.218:8888/get-clip",
+		resp, err := http.PostForm(SERVER+"/get-clip",
 			url.Values{"key": {"911"}})
 		if err != nil {
 			fmt.Println(err)
@@ -67,7 +68,7 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		resp, err := http.PostForm("http://192.168.188.218:8888/set-clip",
+		resp, err := http.PostForm(SERVER+"/set-clip",
 			url.Values{"key": {"911"}, "text": {clipText}})
 		if err != nil {
 			fmt.Println(err)
