@@ -1,10 +1,9 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"math/rand"
-	"os"
-	"strconv"
 	"syscall"
 	"time"
 	"unsafe"
@@ -20,7 +19,15 @@ var (
 	procUnhookWindowsHookEx = user32.NewProc("UnhookWindowsHookEx")
 	procGetMessage          = user32.NewProc("GetMessageW")
 	keyboardHook            HHOOK
-	keyboardPressCount      = 0
+
+	keyboardPressCount = 0
+	lastPressTime      = time.Now()
+
+	everySecond                 *int
+	wantMinute                  *int
+	pressCountMinute            *int
+	pressCountMinimum           *int
+	messageBoxTypeProtectSecond *int
 )
 
 const (
@@ -65,6 +72,16 @@ const (
 )
 
 func MessageBox(caption, text string, style uintptr) (result int) {
+	for true {
+		now := time.Now()
+		if now.Sub(lastPressTime) < time.Duration(*messageBoxTypeProtectSecond)*time.Second {
+			fmt.Println("becase you are in typing, waiting...")
+			time.Sleep(time.Duration(*messageBoxTypeProtectSecond) * time.Second)
+		} else {
+			break
+		}
+	}
+
 	messageBox.Call(
 		0,
 		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(text))),
@@ -74,36 +91,34 @@ func MessageBox(caption, text string, style uintptr) (result int) {
 }
 
 func main() {
+	wantMinute = flag.Int("m", 0, "random string tip in which minute")
+	everySecond = flag.Int("s", 60, "check random string tip every N second")
+	pressCountMinute = flag.Int("pm", 1, "press count period(minute)")
+	pressCountMinimum = flag.Int("pc", 10, "if press count low than this in period will alert")
+	messageBoxTypeProtectSecond = flag.Int("mbp", 1, "if in typing message box delay second")
+	flag.Parse()
+
 	go PressCountStart()
 	go PressCountTip()
+	go RandomStrTip()
 
-	wantMinuteStr := "0"
-	var everySecond int64
-	everySecond = 60
-	if len(os.Args) >= 2 {
-		wantMinuteStr = os.Args[1]
+	for {
+		time.Sleep(time.Hour)
 	}
-	if len(os.Args) >= 3 {
-		v, err := strconv.ParseInt(os.Args[2], 10, 0)
-		if err == nil {
-			everySecond = v
-		} else {
-			fmt.Println(err)
-		}
-	}
-	tick := time.Tick(time.Duration(everySecond) * time.Second)
+}
 
+func RandomStrTip() {
+	tick := time.Tick(time.Duration(*everySecond) * time.Second)
 	for {
 		<-tick
 		now := time.Now()
-		minuteStr := fmt.Sprintf("%d", now.Minute())
-		if minuteStr == wantMinuteStr {
-			MessageBox(now.Format("01-02 15:04"), random(1), MB_OK|MB_SYSTEMMODAL)
+		if now.Minute() == *wantMinute {
+			MessageBox(now.Format("01-02 15:04"), RandomStr(1), MB_OK|MB_SYSTEMMODAL)
 		}
 	}
 }
 
-func random(category int) string {
+func RandomStr(category int) string {
 	stringMap := map[int][]string{
 		1: []string{
 			"快速地敲击键盘, 让思维和效率飞奔起来",
@@ -197,6 +212,7 @@ func PressCountStart() {
 	keyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL,
 		(HOOKPROC)(func(nCode int, wparam WPARAM, lparam LPARAM) LRESULT {
 			if nCode == 0 && wparam == WM_KEYDOWN {
+				lastPressTime = time.Now()
 				if false {
 					kbdstruct := (*KBDLLHOOKSTRUCT)(unsafe.Pointer(lparam))
 					code := byte(kbdstruct.VkCode)
@@ -216,12 +232,16 @@ func PressCountStart() {
 }
 
 func PressCountTip() {
-	tick := time.Tick(time.Minute)
-
+	tick := time.Tick(time.Duration(*pressCountMinute) * time.Minute)
 	for {
 		<-tick
-		pressStr := fmt.Sprintf("you have %d press in last one minute", keyboardPressCount)
-		MessageBox("Press Count Tip", pressStr, MB_OK|MB_SYSTEMMODAL)
+
+		fmt.Println(time.Now(), keyboardPressCount)
+		if keyboardPressCount < *pressCountMinimum {
+			pressStr := fmt.Sprintf("you have %d press in last %d minute(s)", keyboardPressCount, *pressCountMinute)
+			MessageBox("Press Count Tip", pressStr, MB_OK|MB_SYSTEMMODAL)
+		}
+
 		keyboardPressCount = 0
 	}
 }
