@@ -9,6 +9,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/shirou/gopsutil/cpu"
 	"golang.org/x/sys/windows"
 )
 
@@ -101,7 +102,7 @@ func MessageBox(caption, text string, style uintptr) (result int) {
 }
 
 func main() {
-	wantMinutesStr = flag.String("m", "0", "random string tip in which minute")
+	wantMinutesStr = flag.String("m", "0|30", "random string tip in which minute")
 	everySecond = flag.Int("s", 60, "check random string tip every N second")
 
 	pressCountMinute = flag.Int("pm", 1, "press count period(minute)")
@@ -110,6 +111,7 @@ func main() {
 	messageBoxTypeProtectSecond = flag.Int("mbp", 1, "if in typing message box delay second")
 	flag.Parse()
 
+	go CPUUsage()
 	go PressCountStart()
 	go PressCountTip()
 	go RandomStrTip()
@@ -117,6 +119,64 @@ func main() {
 	for {
 		time.Sleep(time.Hour)
 	}
+}
+
+type CPUUsageLoad struct {
+	Len     int
+	Data    []float64
+	Index   int
+	Average float64
+	Sum     float64
+}
+
+func (c *CPUUsageLoad) Append(value float64) {
+	c.Sum -= c.Data[c.Index]
+	c.Data[c.Index] = value
+	c.Sum += c.Data[c.Index]
+	c.Index = (c.Index + 1) % c.Len
+	c.Average = c.Sum / float64(c.Len)
+}
+
+func NewCPUUsageLoad(len int, initValue float64) *CPUUsageLoad {
+	c := CPUUsageLoad{}
+	c.Len = len
+	for i := 0; i < c.Len; i++ {
+		c.Data = append(c.Data, initValue)
+	}
+	c.Sum = initValue * float64(c.Len)
+	c.Average = initValue
+
+	return &c
+}
+
+func CPUUsage() {
+	percentage, _ := cpu.Percent(1, false)
+	_1min := NewCPUUsageLoad(60, percentage[0])
+	_5min := NewCPUUsageLoad(300, percentage[0])
+	_15min := NewCPUUsageLoad(900, percentage[0])
+
+	go func() {
+
+		tick := time.Tick(time.Second)
+		for true {
+			<-tick
+			// cpu - get CPU number of cores and speed
+			// cpuStat, err := cpu.Info()
+			// fmt.Println(cpuStat, err)
+			percentage, _ = cpu.Percent(0, false)
+			_1min.Append(percentage[0])
+			_5min.Append(percentage[0])
+			_15min.Append(percentage[0])
+		}
+	}()
+
+	go func() {
+		tick := time.Tick(time.Minute)
+		for true {
+			<-tick
+			fmt.Println(percentage[0], _1min.Average, _5min.Average, _15min.Average)
+		}
+	}()
 }
 
 func GetWorkStationLocked() bool {
@@ -313,7 +373,7 @@ func PressCountTip() {
 	for {
 		<-tick
 
-		fmt.Println(time.Now(), keyboardPressCount)
+		fmt.Println(time.Now().Format("01-02 15:04:05"), keyboardPressCount)
 		if keyboardPressCount < *pressCountMinimum {
 			pressStr := fmt.Sprintf("you have %d press in last %d minute(s)", keyboardPressCount, *pressCountMinute)
 			MessageBox("Press Count Tip", pressStr, MB_OK|MB_SYSTEMMODAL)
