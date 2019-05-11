@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"math/rand"
+	"strings"
 	"syscall"
 	"time"
 	"unsafe"
@@ -24,7 +25,7 @@ var (
 	lastPressTime      = time.Now()
 
 	everySecond                 *int
-	wantMinute                  *int
+	wantMinutesStr              *string
 	pressCountMinute            *int
 	pressCountMinimum           *int
 	messageBoxTypeProtectSecond *int
@@ -91,10 +92,12 @@ func MessageBox(caption, text string, style uintptr) (result int) {
 }
 
 func main() {
-	wantMinute = flag.Int("m", 0, "random string tip in which minute")
+	wantMinutesStr = flag.String("m", "0", "random string tip in which minute")
 	everySecond = flag.Int("s", 60, "check random string tip every N second")
+
 	pressCountMinute = flag.Int("pm", 1, "press count period(minute)")
 	pressCountMinimum = flag.Int("pc", 10, "if press count low than this in period will alert")
+
 	messageBoxTypeProtectSecond = flag.Int("mbp", 1, "if in typing message box delay second")
 	flag.Parse()
 
@@ -112,8 +115,12 @@ func RandomStrTip() {
 	for {
 		<-tick
 		now := time.Now()
-		if now.Minute() == *wantMinute {
-			MessageBox(now.Format("01-02 15:04"), RandomStr(1), MB_OK|MB_SYSTEMMODAL)
+		minuteStr := fmt.Sprintf("%d", now.Minute())
+		wantMinuteStrArr := strings.Split(*wantMinutesStr, "|")
+		for _, s := range wantMinuteStrArr {
+			if minuteStr == s {
+				MessageBox(now.Format("01-02 15:04"), RandomStr(1), MB_OK|MB_SYSTEMMODAL)
+			}
 		}
 	}
 }
