@@ -20,6 +20,9 @@ var (
 	procUnhookWindowsHookEx = user32.NewProc("UnhookWindowsHookEx")
 	procGetMessage          = user32.NewProc("GetMessageW")
 	keyboardHook            HHOOK
+	procOpenDesktop         = user32.NewProc("OpenDesktopW") // 用OpenDesktopA不行
+	procCloseDesktop        = user32.NewProc("CloseDesktop")
+	procSwitchDesktop       = user32.NewProc("SwitchDesktop")
 
 	keyboardPressCount = 0
 	lastPressTime      = time.Now()
@@ -70,9 +73,15 @@ const (
 	WM_LBUTTONDOWN = 513
 	WM_RBUTTONDOWN = 516
 	NULL           = 0
+
+	DESKTOP_SWITCHDESKTOP = 0x0100
 )
 
 func MessageBox(caption, text string, style uintptr) (result int) {
+	if GetWorkStationLocked() {
+		return
+	}
+
 	for true {
 		now := time.Now()
 		if now.Sub(lastPressTime) < time.Duration(*messageBoxTypeProtectSecond)*time.Second {
@@ -108,6 +117,22 @@ func main() {
 	for {
 		time.Sleep(time.Hour)
 	}
+}
+
+func GetWorkStationLocked() bool {
+	r1, _, _ := procOpenDesktop.Call(
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr("Default"))),
+		0, 0, DESKTOP_SWITCHDESKTOP)
+	if r1 == 0 {
+		fmt.Println("get desktop locked status error")
+		return false
+	}
+
+	res, _, _ := procSwitchDesktop.Call(r1)
+	// clean up
+	procCloseDesktop.Call(r1)
+
+	return res != 1
 }
 
 func RandomStrTip() {
