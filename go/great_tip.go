@@ -33,6 +33,8 @@ var (
 	pressCountMinute            *int
 	pressCountMinimum           *int
 	messageBoxTypeProtectSecond *int
+
+	cpuUsage1min, cpuUsage5min, cpuUsage15min *CPUUsageLoad
 )
 
 const (
@@ -151,9 +153,9 @@ func NewCPUUsageLoad(len int, initValue float64) *CPUUsageLoad {
 
 func CPUUsage() {
 	percentage, _ := cpu.Percent(1, false)
-	_1min := NewCPUUsageLoad(60, percentage[0])
-	_5min := NewCPUUsageLoad(300, percentage[0])
-	_15min := NewCPUUsageLoad(900, percentage[0])
+	cpuUsage1min = NewCPUUsageLoad(60, percentage[0])
+	cpuUsage5min = NewCPUUsageLoad(300, percentage[0])
+	cpuUsage15min = NewCPUUsageLoad(900, percentage[0])
 
 	go func() {
 
@@ -164,12 +166,13 @@ func CPUUsage() {
 			// cpuStat, err := cpu.Info()
 			// fmt.Println(cpuStat, err)
 			percentage, _ = cpu.Percent(0, false)
-			_1min.Append(percentage[0])
-			_5min.Append(percentage[0])
-			_15min.Append(percentage[0])
+			cpuUsage1min.Append(percentage[0])
+			cpuUsage5min.Append(percentage[0])
+			cpuUsage15min.Append(percentage[0])
 		}
 	}()
 
+	/*
 	go func() {
 		tick := time.Tick(time.Minute)
 		for true {
@@ -177,6 +180,7 @@ func CPUUsage() {
 			fmt.Println(percentage[0], _1min.Average, _5min.Average, _15min.Average)
 		}
 	}()
+	*/
 }
 
 func GetWorkStationLocked() bool {
@@ -373,7 +377,12 @@ func PressCountTip() {
 	for {
 		<-tick
 
-		fmt.Println(time.Now().Format("01-02 15:04:05"), keyboardPressCount)
+		fmt.Printf("%s -> Press: %3d, CPU: %6.2f %6.2f %6.2f\n",
+			time.Now().Format("01-02 15:04:05"),
+			keyboardPressCount,
+			cpuUsage1min.Average,
+			cpuUsage5min.Average,
+			cpuUsage15min.Average)
 		if keyboardPressCount < *pressCountMinimum {
 			pressStr := fmt.Sprintf("you have %d press in last %d minute(s)", keyboardPressCount, *pressCountMinute)
 			MessageBox("Press Count Tip", pressStr, MB_OK|MB_SYSTEMMODAL)
