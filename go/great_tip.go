@@ -107,8 +107,8 @@ func main() {
 	wantMinutesStr = flag.String("m", "0|30", "random string tip in which minute")
 	everySecond = flag.Int("s", 60, "check random string tip every N second")
 
-	pressCountMinute = flag.Int("pm", 1, "press count period(minute)")
-	pressCountMinimum = flag.Int("pc", 10, "if press count low than this in period will alert")
+	pressCountMinute = flag.Int("pm", 2, "press count period(minute)")
+	pressCountMinimum = flag.Int("pc", 20, "if press count low than this in period will alert")
 
 	messageBoxTypeProtectSecond = flag.Int("mbp", 1, "if in typing message box delay second")
 	flag.Parse()
@@ -272,7 +272,8 @@ func RandomStr(category int) string {
 		},
 	}
 	l := len(stringMap[category])
-	r := rand.Intn(l)
+	randMachine := rand.New(rand.NewSource(time.Now().UnixNano()))
+	r := randMachine.Intn(l)
 	return stringMap[category][r]
 }
 
