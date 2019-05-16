@@ -29,16 +29,15 @@ var (
 
 	keyboardPressCount = 0
 	lastPressTime      = time.Now()
+	mbSwitch = true
+	cpuUsage1min, cpuUsage5min, cpuUsage15min *CPUUsageLoad
+	runTime = time.Now()
 
 	everySecond                 *int
 	wantMinutesStr              *string
 	pressCountMinute            *int
 	pressCountMinimum           *int
 	messageBoxTypeProtectSecond *int
-
-	mbSwitch = true
-
-	cpuUsage1min, cpuUsage5min, cpuUsage15min *CPUUsageLoad
 )
 
 const (
@@ -139,6 +138,8 @@ func main() {
 			fmt.Println(mbSwitch)
 		} else if input == "exit" || input == "quit" {
 			os.Exit(0)
+		} else if input =="uptime" {
+			fmt.Println(runTime, time.Now().Sub(runTime))
 		} else {
 			fmt.Printf("%q is not a valid input\n", input)
 		}
