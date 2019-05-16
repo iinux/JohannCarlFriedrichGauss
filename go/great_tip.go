@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"math/rand"
+	"os"
 	"strings"
 	"syscall"
 	"time"
@@ -33,6 +35,8 @@ var (
 	pressCountMinute            *int
 	pressCountMinimum           *int
 	messageBoxTypeProtectSecond *int
+
+	mbSwitch = true
 
 	cpuUsage1min, cpuUsage5min, cpuUsage15min *CPUUsageLoad
 )
@@ -81,7 +85,7 @@ const (
 )
 
 func MessageBox(caption, text string, style uintptr) (result int) {
-	if GetWorkStationLocked() {
+	if !mbSwitch || GetWorkStationLocked() {
 		return
 	}
 
@@ -118,8 +122,26 @@ func main() {
 	go PressCountTip()
 	go RandomStrTip()
 
+	inputReader := bufio.NewReader(os.Stdin)
 	for {
-		time.Sleep(time.Hour)
+		fmt.Print(">> ")
+		input, err := inputReader.ReadString('\n')
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		input = strings.TrimSpace(input)
+		if input == "mb on" {
+			mbSwitch = true
+		} else if input == "mb off" {
+			mbSwitch = false
+		} else if input == "mb" {
+			fmt.Println(mbSwitch)
+		} else if input == "exit" || input == "quit" {
+			os.Exit(0)
+		} else {
+			fmt.Printf("%q is not a valid input\n", input)
+		}
 	}
 }
 
@@ -173,13 +195,13 @@ func CPUUsage() {
 	}()
 
 	/*
-	go func() {
-		tick := time.Tick(time.Minute)
-		for true {
-			<-tick
-			fmt.Println(percentage[0], _1min.Average, _5min.Average, _15min.Average)
-		}
-	}()
+		go func() {
+			tick := time.Tick(time.Minute)
+			for true {
+				<-tick
+				fmt.Println(percentage[0], _1min.Average, _5min.Average, _15min.Average)
+			}
+		}()
 	*/
 }
 
