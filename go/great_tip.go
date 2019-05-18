@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"os"
 	"strings"
 	"syscall"
@@ -27,17 +28,18 @@ var (
 	procCloseDesktop        = user32.NewProc("CloseDesktop")
 	procSwitchDesktop       = user32.NewProc("SwitchDesktop")
 
-	keyboardPressCount = 0
-	lastPressTime      = time.Now()
-	mbSwitch = true
+	keyboardPressCount                        = 0
+	lastPressTime                             = time.Now()
+	mbSwitch                                  = true
 	cpuUsage1min, cpuUsage5min, cpuUsage15min *CPUUsageLoad
-	runTime = time.Now()
+	runTime                                   = time.Now()
 
 	everySecond                 *int
 	wantMinutesStr              *string
 	pressCountMinute            *int
 	pressCountMinimum           *int
 	messageBoxTypeProtectSecond *int
+	webListen                   *string
 )
 
 const (
@@ -113,6 +115,8 @@ func main() {
 	pressCountMinute = flag.Int("pm", 2, "press count period(minute)")
 	pressCountMinimum = flag.Int("pc", 20, "if press count low than this in period will alert")
 
+	webListen = flag.String("S", "", "web listen address and port")
+
 	messageBoxTypeProtectSecond = flag.Int("mbp", 1, "if in typing message box delay second")
 	flag.Parse()
 
@@ -120,6 +124,10 @@ func main() {
 	go PressCountStart()
 	go PressCountTip()
 	go RandomStrTip()
+
+	if *webListen != "" {
+		go Web()
+	}
 
 	inputReader := bufio.NewReader(os.Stdin)
 	for {
@@ -138,11 +146,30 @@ func main() {
 			fmt.Println(mbSwitch)
 		} else if input == "exit" || input == "quit" {
 			os.Exit(0)
-		} else if input =="uptime" {
+		} else if input == "uptime" {
 			fmt.Println(runTime, time.Now().Sub(runTime))
 		} else {
 			fmt.Printf("%q is not a valid input\n", input)
 		}
+	}
+}
+
+func cpuLoad(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "%s -> Press: %3d, CPU: %6.2f %6.2f %6.2f\n",
+		time.Now().Format("01-02 15:04:05"),
+		keyboardPressCount,
+		cpuUsage1min.Average,
+		cpuUsage5min.Average,
+		cpuUsage15min.Average)
+}
+
+func Web() {
+	http.HandleFunc("/", cpuLoad)
+	http.HandleFunc("/cpuLoad", cpuLoad)
+	fmt.Println("Listening on ", *webListen)
+	err := http.ListenAndServe(*webListen, nil)
+	if err != nil {
+		fmt.Println("ListenAndServe: ", err)
 	}
 }
 
