@@ -5,33 +5,96 @@
  * Date: 2016/5/19
  * Time: 9:18
  */
-define('DISCOUNT_BEFORE_SEVEN_CLOCK', 0.5);
-define('DISCOUNT_ALIPAY', 0.8);
-define('DISCOUNT_ALIPAY_FEE', 19.99);
-define('DISCOUNT_ALIPAY_FEE_DISCOUNT', 0.2);
-define('DISCOUNT_100', 0.8);
-define('DISCOUNT_150', 0.5);
 $website = 'Subway Calculation';
 
 $basePrice = isset($_POST['base_price']) ? $_POST['base_price'] : '';
 $maxPrice = 9;
 
-function discount($basePrice, $sum, $beforeSevenClock = false, $alipayDiscount = false)
+function dd($var)
 {
-    if ($beforeSevenClock) {
-        $basePrice *= DISCOUNT_BEFORE_SEVEN_CLOCK;
-    }
-    if ($alipayDiscount) {
-        $basePrice *= DISCOUNT_ALIPAY;
-    }
-    if ($sum < 100) {
+    var_dump($var);
+    die(0);
+}
 
-    } else if ($sum < 150) {
-        $basePrice *= DISCOUNT_100;
-    } else if ($sum < 400) {
-        $basePrice *= DISCOUNT_150;
+class Discount {
+    public $sum = 0;
+    public $discount_100 = 0.8;
+    public $discount_150 = 0.5;
+
+    public function add($price) {
+        $this->sum += $this->getDiscountPrice($price);
     }
-    return $basePrice;
+
+    public function getDiscountPrice($price) {
+        if ($this->sum < 100) {
+
+        } else if ($this->sum < 150) {
+            $price *= $this->discount_100;
+        } else if ($this->sum < 400) {
+            $price *= $this->discount_150;
+        }
+        return $price;
+    }
+}
+
+class AliDiscount extends Discount {
+    public function __construct()
+    {
+        $this->sum += $this->cardFee * $this->cardFeeDiscount;
+    }
+
+    public $discountRate = 0.8;
+    public $cardFee = 19.99;
+    public $cardFeeDiscount = 0.2;
+
+    public function getDiscountPrice($price)
+    {
+        $price *= $this->discountRate;
+
+        return parent::getDiscountPrice($price);
+    }
+}
+
+class JdDiscount extends Discount {
+    public function __construct()
+    {
+        $this->sum += $this->cardFee * $this->cardFeeDiscount;
+    }
+
+    public $discountFee = 1.5;
+    public $discountSum = 0;
+    public $maxDiscount = 90;
+    public $cardFee = 20;
+    public $cardFeeDiscount = 0.7245;
+
+    public function add($price) {
+        $this->sum += $this->getDiscountPrice($price, true);
+        var_dump($this->sum);
+    }
+
+    public function getDiscountPrice($price, $updateDiscountSum = false)
+    {
+        if ($this->discountSum < $this->maxDiscount) {
+            $price -= $this->discountFee;
+            if ($updateDiscountSum) {
+                $this->discountSum += $this->discountFee;
+            }
+        }
+
+        return parent::getDiscountPrice($price);
+    }
+}
+
+class SevenClockDiscount extends Discount {
+
+    public $discountRate = 0.5;
+
+    public function getDiscountPrice($price)
+    {
+        $price *= $this->discountRate;
+
+        return parent::getDiscountPrice($price);
+    }
 }
 
 ?>
@@ -147,41 +210,50 @@ return;
         var data = [
             <?php
             if ($basePrice != '') {
-                $sum = 0;
                 $day = 1;
+                $sevenClockDiscount = new SevenClockDiscount();
                 while ($day <= 31) {
-                    $sum += discount($basePrice, $sum, true, false);
-                    $sum += discount($basePrice, $sum, true, false);
-                    echo "{'day':$day,'price':$sum,'discount':'beforeSeven'},\n";
+                    $sevenClockDiscount->add($basePrice);
+                    $sevenClockDiscount->add($basePrice);
+                    echo "{'day':$day,'price':{$sevenClockDiscount->sum},'discount':'beforeSeven'},\n";
                     $day++;
                 }
 
-                $sum = DISCOUNT_ALIPAY_FEE * DISCOUNT_ALIPAY_FEE_DISCOUNT;
                 $day = 1;
+                $aliDiscount = new AliDiscount();
                 while ($day <= 31) {
-                    $sum += discount($basePrice, $sum, false, true);
-                    $sum += discount($basePrice, $sum, false, true);
-                    echo "{'day':$day,'price':$sum,'discount':'alipay'},\n";
+                    $aliDiscount->add($basePrice);
+                    $aliDiscount->add($basePrice);
+                    echo "{'day':$day,'price':{$aliDiscount->sum},'discount':'alipay'},\n";
                     $day++;
                 }
 
-                $sum = 0;
                 $day = 1;
+                $jdDiscount = new JdDiscount();
                 while ($day <= 31) {
-                    $sum += discount($basePrice, $sum, false, false);
-                    $sum += discount($basePrice, $sum, false, false);
-                    echo "{'day':$day,'price':$sum,'discount':'none'},\n";
+                    $jdDiscount->add($basePrice);
+                    $jdDiscount->add($basePrice);
+                    echo "{'day':$day,'price':{$jdDiscount->sum},'discount':'jd'},\n";
+                    $day++;
+                }
+
+                $day = 1;
+                $noneDiscount = new Discount();
+                while ($day <= 31) {
+                    $noneDiscount->add($basePrice);
+                    $noneDiscount->add($basePrice);
+                    echo "{'day':$day,'price':{$noneDiscount->sum},'discount':'none'},\n";
                     $day++;
                 }
             } else {
                 $price = 3;
                 while ($price <= $maxPrice) {
-                    $sum = 0;
                     $day = 1;
+                    $noneDiscount = new Discount();
                     while ($day <= 31) {
-                        $sum += discount($price, $sum);
-                        $sum += discount($price, $sum);
-                        echo "{'day':$day,'price':$sum,'Base price':'$price'},\n";
+                        $noneDiscount->add($basePrice);
+                        $noneDiscount->add($basePrice);
+                        echo "{'day':$day,'price':{$noneDiscount->sum},'Base price':'$price'},\n";
                         $day++;
                     }
                     $price++;
