@@ -69,7 +69,6 @@ class JdDiscount extends Discount {
 
     public function add($price) {
         $this->sum += $this->getDiscountPrice($price, true);
-        var_dump($this->sum);
     }
 
     public function getDiscountPrice($price, $updateDiscountSum = false)
