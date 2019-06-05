@@ -13,6 +13,7 @@ import (
 	"unsafe"
 
 	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/mem"
 	"golang.org/x/sys/windows"
 )
 
@@ -155,12 +156,14 @@ func main() {
 }
 
 func cpuLoad(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "%s -> Press: %3d, CPU: %6.2f %6.2f %6.2f\n",
+	v, _ := mem.VirtualMemory()
+	fmt.Fprintf(w, "%s -> Press: %3d, CPU: %6.2f %6.2f %6.2f Mem: %.0f%%\n",
 		time.Now().Format("01-02 15:04:05"),
 		keyboardPressCount,
 		cpuUsage1min.Average,
 		cpuUsage5min.Average,
-		cpuUsage15min.Average)
+		cpuUsage15min.Average,
+		v.UsedPercent)
 }
 
 func Web() {
@@ -428,12 +431,14 @@ func PressCountTip() {
 	for {
 		<-tick
 
-		fmt.Printf("%s -> Press: %3d, CPU: %6.2f %6.2f %6.2f\n",
+		v, _ := mem.VirtualMemory()
+		fmt.Printf("%s -> Press: %3d, CPU: %6.2f %6.2f %6.2f Mem: %.0f%%\n",
 			time.Now().Format("01-02 15:04:05"),
 			keyboardPressCount,
 			cpuUsage1min.Average,
 			cpuUsage5min.Average,
-			cpuUsage15min.Average)
+			cpuUsage15min.Average,
+			v.UsedPercent)
 		if keyboardPressCount < *pressCountMinimum {
 			pressStr := fmt.Sprintf("you have %d press in last %d minute(s)", keyboardPressCount, *pressCountMinute)
 			MessageBox("Press Count Tip", pressStr, MB_OK|MB_SYSTEMMODAL)
