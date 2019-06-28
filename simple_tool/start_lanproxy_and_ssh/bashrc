@@ -1,0 +1,5 @@
+alias ll='ls --color -al '
+alias ls='ls --color '
+
+export PATH=$PATH:/home/bae/app/qzhang:/home/bae/app/qzhang/bin:/home/admin/php/bin
+export LD_LIBRARY_PATH=/home/bae/app/qzhang/lib64/
