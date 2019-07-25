@@ -16,6 +16,27 @@ func GetFunctionName(i interface{}) string {
 }
 
 func main() {
+    u:= MyType{20, "张三"}
+	t:=reflect.TypeOf(u)
+	fmt.Println(t)
+	v := reflect.ValueOf(u)
+	fmt.Println(v)
+	t1:=v.Type()
+	fmt.Println(t1)
+	fmt.Printf("%T\n",u)
+	fmt.Printf("%v\n",u)
+
+    for i:=0;i<t.NumField();i++ {
+		fmt.Println(t.Field(i).Name)
+	}
+
+	for i:=0;i<t.NumMethod() ;i++  {
+		fmt.Println(t.Method(i).Name)
+	}
+
+    // refer https://www.flysnow.org/2017/06/13/go-in-action-go-reflect.html
+    fmt.Println("======")
+
 	fmt.Println(GetFunctionName(hello))
 	hl := hello
 	fv := reflect.ValueOf(hl)
