@@ -8,7 +8,16 @@
 
 define('DEBUG', false);
 $htmlFile = 'action.txt';
-$urlsRegex = '/data-src=\'(https?:\/\/.*?\.(gif|png|jpg|jpeg))\'/';
+
+$suffixes = ['gif', 'png', 'jpg', 'jpeg'];
+$upCaseSuffixes = [];
+foreach ($suffixes as $suffix) {
+    $upCaseSuffixes[] = strtoupper($suffix);
+}
+$suffixes = array_merge($suffixes, $upCaseSuffixes);
+$suffixesStr = implode('|', $suffixes);
+
+$urlsRegex = '/data-src=\'(https?:\/\/.*?\.(' . $suffixesStr . '))\'/';
 
 /**
  * @param $var
@@ -40,7 +49,9 @@ foreach ($matches[1] as $url) {
 
 function download($url)
 {
-    preg_match('/^https?:\/\/.*\/(.*?\.(gif|png|jpg|jpeg))/', $url, $matches);
+    global $suffixesStr;
+    $fileRegex = '/^https?:\/\/.*\/(.*?\.(' . $suffixesStr . '))/';
+    preg_match($fileRegex, $url, $matches);
     debug($matches);
     $fileName = $matches[1];
     echo "$url $fileName\n";
