@@ -7,7 +7,7 @@
  */
 
 define('DEBUG', false);
-define('THREAD', false);
+define('THREAD', false && class_exists(Thread::class));
 define('MULTI_CURL', false);
 $htmlFile = 'action.txt';
 
@@ -17,9 +17,9 @@ foreach ($suffixes as $suffix) {
     $upCaseSuffixes[] = strtoupper($suffix);
 }
 $suffixes = array_merge($suffixes, $upCaseSuffixes);
-$suffixesStr = implode('|', $suffixes);
+define('SUFFIXES_STR', implode('|', $suffixes));
 
-$urlsRegex = '/data-src=\'(https?:\/\/.*?\.(' . $suffixesStr . '))\'/';
+$urlsRegex = '/data-src=\'(https?:\/\/.*?\.(' . SUFFIXES_STR . '))\'/';
 
 /**
  * @param $var
@@ -42,7 +42,7 @@ function debug($var)
     }
 }
 
-if (class_exists(Thread::class)) {
+if (THREAD) {
     class AsyncDownload extends Thread
     {
         protected $url;
@@ -115,14 +115,20 @@ class MultiCurl
 
 $mc = new MultiCurl();
 
+if (THREAD) {
+    $pool = new Pool(4);
+}
+
 $fileContent = file_get_contents($htmlFile);
 preg_match_all($urlsRegex, $fileContent, $matches);
 debug($matches);
 foreach ($matches[1] as $url) {
-    if (THREAD && class_exists(AsyncDownload::class)) {
+    if (THREAD) {
         $thread = new AsyncDownload($url);
-        $thread->start();
+        // $thread->start();
         // $thread->join();
+        $pool->submit($thread);
+
     } else {
         download($url);
     }
@@ -132,10 +138,17 @@ if (MULTI_CURL) {
     $mc->run();
 }
 
+if (THREAD) {
+    while ($pool->collect()) {
+        continue;
+    }
+    $pool->shutdown();
+}
+
 function download($url)
 {
-    global $suffixesStr, $mc;
-    $fileRegex = '/^https?:\/\/.*\/(.*?\.(' . $suffixesStr . '))/';
+    global $mc;
+    $fileRegex = '/^https?:\/\/.*\/(.*?\.(' . SUFFIXES_STR . '))/';
     preg_match($fileRegex, $url, $matches);
     debug($matches);
     $fileName = $matches[1];
@@ -145,7 +158,7 @@ function download($url)
     } else {
         echo "not exist, downloading...\n";
 
-        $filePutContents = function ($content) use ($fileName){
+        $filePutContents = function ($content) use ($fileName) {
             $ret = file_put_contents($fileName, $content);
             if ($ret === false) {
                 dd(__LINE__);
