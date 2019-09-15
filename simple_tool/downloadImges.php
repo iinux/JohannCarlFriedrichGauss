@@ -40,11 +40,36 @@ function debug($var)
     }
 }
 
+if (class_exists(Thread::class)) {
+    class AsyncDownload extends Thread
+    {
+        protected $url;
+
+        public function __construct($url)
+        {
+            $this->url = $url;
+        }
+
+        public function run()
+        {
+            if ($this->url) {
+                download($this->url);
+            }
+        }
+    }
+}
+
 $fileContent = file_get_contents($htmlFile);
 preg_match_all($urlsRegex, $fileContent, $matches);
 debug($matches);
 foreach ($matches[1] as $url) {
-    download($url);
+    if (class_exists(AsyncDownload::class)) {
+        $thread = new AsyncDownload($url);
+        $thread->start();
+        // $thread->join();
+    } else {
+        download($url);
+    }
 }
 
 function download($url)
