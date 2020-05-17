@@ -176,7 +176,7 @@ int main(int argc, char **argv)
         }
         // printf("%d\n", __LINE__);
         n = read(sock, buffer, sizeof(buffer) - 1);
-        if (n < 0)
+        if (n <= 0)
         {
             perror("read");
             break;
