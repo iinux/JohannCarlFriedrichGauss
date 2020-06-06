@@ -42,11 +42,11 @@ func main() {
 
 	var (
 		icmp  ICMP
-		laddr net.IPAddr = net.IPAddr{IP: net.ParseIP("192.168.22.148")}  //***IP地址改成你自己的网段***
+		// laddr net.IPAddr = net.IPAddr{IP: net.ParseIP("192.168.22.148")}  //***IP地址改成你自己的网段***
 		raddr net.IPAddr = net.IPAddr{IP: net.ParseIP(*host)}
 	)
 	//如果你要使用网络层的其他协议还可以设置成 ip:ospf、ip:arp 等
-	conn, err := net.DialIP("ip4:" + *protocol, &laddr, &raddr)
+	conn, err := net.DialIP("ip4:" + *protocol, nil, &raddr)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
