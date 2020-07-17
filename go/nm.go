@@ -11,6 +11,10 @@ import (
 
 const TOKEN = "hello"
 
+var count int64
+var timeSum time.Duration
+var lastCost, maxCost, minCost time.Duration
+
 func handleConn(c net.Conn) {
 	fmt.Println(getTimeStr(), "start")
 	buf := make([]byte, len(TOKEN))
@@ -73,6 +77,9 @@ func client(host string, port int, interval int) {
 	var t time.Time
 	var cost time.Duration
 	var n int
+
+	minCost = time.Hour
+
 	for true {
 		time.Sleep(time.Duration(interval) * time.Second)
 
@@ -97,7 +104,40 @@ func client(host string, port int, interval int) {
 		}
 
 		cost = time.Since(t)
-		fmt.Println(getTimeStr(), cost)
+		count++
+		timeSum += cost
+		avg := timeSum / time.Duration(count)
+
+		if cost > maxCost {
+			maxCost = cost
+		}
+		if cost < minCost {
+			minCost = cost
+		}
+
+		truncate := time.Millisecond
+		if lastCost == 0 {
+			cost = cost.Truncate(truncate)
+			fmt.Printf("%s newest=%s\n", getTimeStr(), cost)
+		} else {
+			var changeFlag string
+			if cost > lastCost {
+				changeFlag = "↑"
+			} else if cost < lastCost {
+				changeFlag = "↓"
+			} else {
+				changeFlag = "="
+			}
+
+			timeSlice := []*time.Duration{&avg, &maxCost, &minCost, &cost}
+			for _, x := range timeSlice {
+				*x = x.Truncate(truncate)
+			}
+
+			fmt.Printf("%s count=%d avg=%s max=%s min=%s newest=%s %s\n", getTimeStr(), count, avg, maxCost, minCost, cost, changeFlag)
+		}
+
+		lastCost = cost
 	}
 }
 
