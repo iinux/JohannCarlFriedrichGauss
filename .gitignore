@@ -3,3 +3,5 @@ vendor
 .tags
 *.sublime-project
 *.sublime-workspace
+.vscode
+c/1
