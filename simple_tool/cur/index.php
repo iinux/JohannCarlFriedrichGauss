@@ -10,19 +10,34 @@ function jdd($var) {
     die(0);
 }
 
+function checkCookieSwitch($name) {
+    if (!empty($_COOKIE[$name])) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 // config
 $protocol = 'https://';
-$domain = 'duckduckgo.com';
+$domain = 'www.baidu.com';
 $authUsername = 'admin';
 $authPassword = 'admin';
-$host = $domain;
+$resolve = '';
+$headerValueReplace = [
+    'baidu.com' => 'iinux.cn',
+];
+if (file_exists('config.php')) {
+    require 'config.php';
+}
 
 // auth
 if (!empty($_COOKIE['username']) && !empty($_COOKIE['password'])
     && $_COOKIE['username'] == $authUsername && $_COOKIE['password'] == $authPassword
 ) {
 } elseif (!empty($_SERVER['PHP_AUTH_USER']) && !empty($_SERVER['PHP_AUTH_PW'])
-    && $_SERVER['PHP_AUTH_USER'] == $authUsername && $_SERVER['PHP_AUTH_PW'] == $authPassword) {
+    && $_SERVER['PHP_AUTH_USER'] == $authUsername && $_SERVER['PHP_AUTH_PW'] == $authPassword
+) {
 } else {
     header('WWW-Authenticate: Basic realm="My Realm"');
     header('HTTP/1.0 401 Unauthorized');
@@ -36,14 +51,15 @@ if (!empty($_COOKIE['domain'])) {
 if (!empty($_COOKIE['protocol'])) {
     $protocol = $_COOKIE['protocol'];
 }
-if (!empty($_COOKIE['host'])) {
-    $host = $_COOKIE['host'];
+if (!empty($_COOKIE['resolve'])) {
+    $resolve = $_COOKIE['resolve'];
 }
-if (!empty($_COOKIE['phpinfo'])) {
+
+if (checkCookieSwitch('phpinfo')) {
     phpinfo();
     die(0);
 }
-if (!empty($_COOKIE['displayError'])) {
+if (checkCookieSwitch('displayError')) {
     ini_set('display_errors', 1);
 }
 
@@ -55,12 +71,12 @@ $uri = $protocol . $domain . $requestUri;
 // header process
 $headers = getallheaders();
 $oldHost = $headers['Host'];
-$headers['Host'] = $host;
+$headers['Host'] = $domain;
 if (!empty($headers['Referer'])) {
-    $headers['Referer'] = str_replace($oldHost, $host, $headers['Referer']);
+    $headers['Referer'] = str_replace($oldHost, $domain, $headers['Referer']);
 }
 
-if (!empty($_COOKIE['dumpUH'])) {
+if (checkCookieSwitch('dumpUH')) {
     jdd([
         'uri'     => $uri,
         'headers' => $headers,
@@ -72,6 +88,13 @@ curl_setopt($ch, CURLOPT_URL, $uri);
 curl_setopt($ch, CURLOPT_HEADER, 1);
 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+if (!empty($resolve)) {
+    curl_setopt($ch, CURLOPT_DNS_USE_GLOBAL_CACHE, false);
+    curl_setopt($ch, CURLOPT_RESOLVE, [
+        $resolve,
+    ]);
+}
 
 $responseHeaders = [];
 curl_setopt($ch, CURLOPT_HEADERFUNCTION,
@@ -87,14 +110,24 @@ curl_setopt($ch, CURLOPT_HEADERFUNCTION,
     }
 );
 
-if (!empty($_COOKIE['skipSslCheck'])) {
+if (checkCookieSwitch('skipSslCheck')) {
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+}
+if (checkCookieSwitch('debug')) {
+    curl_setopt($ch, CURLOPT_VERBOSE, true);
+    $verbose = fopen('php://temp', 'w+');
+    curl_setopt($ch, CURLOPT_STDERR, $verbose);
 }
 
 $content = curl_exec($ch);
 
 if ($content === false) {
-    echo 'Curl error: ' . curl_error($ch);
+    echo 'Curl error ' . curl_errno($ch) . ' : ' . curl_error($ch);
+    if (checkCookieSwitch('debug')) {
+        rewind($verbose);
+        $verboseLog = stream_get_contents($verbose);
+        echo " Verbose information:\n<pre>", htmlspecialchars($verboseLog), "</pre>\n";
+    }
     die(0);
 }
 
@@ -102,7 +135,7 @@ $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 $contentHeader = substr($content, 0, $headerSize);
 $contentBody = substr($content, $headerSize);
 
-if (!empty($_COOKIE['dumpRH'])) {
+if (checkCookieSwitch('dumpRH')) {
     jdd($responseHeaders);
 }
 
@@ -118,10 +151,7 @@ foreach ($responseHeaders as $headerName => $headerValues) {
         continue;
     }
     foreach ($headerValues as $headerValue) {
-        $map = [
-            'baidu.com' => 'iinux.cn',
-        ];
-        foreach ($map as $k => $v) {
+        foreach ($headerValueReplace as $k => $v) {
             $headerValue = str_replace($k, $v, $headerValue);
         }
         header("$headerName: $headerValue", false);
