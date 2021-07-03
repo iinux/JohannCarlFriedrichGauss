@@ -1,4 +1,4 @@
-from machine import Pin
+from machine import Pin,PWM
 import utime
 
 led = Pin(25, Pin.OUT)
@@ -33,4 +33,17 @@ def keyboard():
             led.value(0)
 
 
-led_and_sound()
+PWM_PulseWidth=0
+#使用树莓派Pico板上LED，构建PWM对象pwm_LED
+pwm_LED=PWM(Pin(25))
+#设置pwm_LED频率
+pwm_LED.freq(500)
+while True:
+    while PWM_PulseWidth<65535:
+        PWM_PulseWidth=PWM_PulseWidth+50
+        utime.sleep_ms(1)   #延时1ms
+        pwm_LED.duty_u16(PWM_PulseWidth)
+    while PWM_PulseWidth>0:
+        PWM_PulseWidth=PWM_PulseWidth-50
+        utime.sleep_ms(1)
+        pwm_LED.duty_u16(PWM_PulseWidth)
