@@ -1,6 +1,8 @@
 from machine import Pin,PWM
 import utime
 
+# http://www.cxyzjd.com/article/yuanzywhu/113833544
+
 led = Pin(25, Pin.OUT)
 sound = Pin(0, Pin.OUT)
 o = Pin(1, Pin.OUT)
