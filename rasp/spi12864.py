@@ -8,6 +8,7 @@ from PIL import ImageDraw
 from PIL import ImageFont
 
 # https://www.chenxublog.com/2016/08/20/raspi-12864-spi-oled.html
+# https://mc.dfrobot.com.cn/thread-13396-1-1.html
 
 # Raspberry Pi pin configuration:
 RST = 17
@@ -48,15 +49,15 @@ font = ImageFont.load_default()
 
 # Alternatively load a TTF font.
 # Some other nice fonts to try: http://www.dafont.com/bitmap.php
-#font = ImageFont.truetype('Minecraftia.ttf', 8)
+#font = ImageFont.truetype('/home/pi/MingImperial.TTF', 8)
 
 # Write two lines of text.
-draw.text((x, top), 'This0is first line', font=font, fill=255)
-draw.text((x, top+10), 'This is second line', font=font, fill=255)
-draw.text((x, top+20), 'This is third line', font=font, fill=255)
-draw.text((x, top+30), 'This is fourth line', font=font, fill=255)
-draw.text((x, top+40), 'This is fifth line', font=font, fill=255)
-draw.text((x, top+50), 'This is last line', font=font, fill=255)
+draw.text((x, top), 'This is first line', font=font, fill=255)
+draw.text((x, top+13), 'This is second line', font=font, fill=255)
+draw.text((x, top+23), 'This is third line', font=font, fill=255)
+draw.text((x, top+33), 'This is fourth line', font=font, fill=255)
+draw.text((x, top+43), 'This is fifth line', font=font, fill=255)
+draw.text((x, top+53), 'This is last line', font=font, fill=255)
 
 # Display image.
 disp.image(image)
