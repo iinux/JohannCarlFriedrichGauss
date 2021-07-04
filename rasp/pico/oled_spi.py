@@ -20,9 +20,9 @@ RES = machine.Pin(4)
 oled = ssd1306.SSD1306_SPI(WIDTH, HEIGHT, spi,DC, RES, CS)
 oled.fill(0)
 
-oled.text("MicroPython", 0, 0)
-oled.text("OLED(ssd1306)", 0, 10)
-oled.text("RPi Pico", 0, 20)
+oled.text("MicroPython", 2, 3)
+oled.text("OLED(ssd1306)", 2, 18)
+oled.text("RPi Pico", 2, 28)
 oled.show()
 
 while True:
