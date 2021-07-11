@@ -1,0 +1,4 @@
+https://riscv-mcu.com/quickstart.html
+http://www.gd32mcu.com/cn/download?kw=dfu&lan=cn
+https://item.taobao.com/item.htm?spm=a1z09.2.0.0.1cfd2e8dmPHEaE&id=612678108776&_u=aoohcvu6a13
+https://nucleisys.com/
