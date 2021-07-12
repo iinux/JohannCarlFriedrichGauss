@@ -7,6 +7,12 @@
 -- http://www.lcdwiki.com/zh/1.44inch_SPI_Arduino_Module_Black_SKU:MAR1442
 -- https://sankios.imediabank.com/nodemcu-oled-ssd1306
 -- https://blog.csdn.net/weixin_42268054/article/details/104254955
+-- https://lceda.cn/
+-- https://www.ai-thinker.com/home
+-- https://www.espressif.com/
+-- https://nodemcu.readthedocs.io/en/release/upload/
+-- https://nodemcu.readthedocs.io/en/release/lua-developer-faq/#how-do-i-avoid-a-panic-loop-in-initlua
+-- http://httpbin.org/ip
 
 print(wifi.sta.getip())
 wifi.setmode(wifi.STATION)
