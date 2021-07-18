@@ -13,6 +13,7 @@
 -- https://nodemcu.readthedocs.io/en/release/upload/
 -- https://nodemcu.readthedocs.io/en/release/lua-developer-faq/#how-do-i-avoid-a-panic-loop-in-initlua
 -- http://httpbin.org/ip
+-- http://nodemcu-dev.doit.am/2.html
 
 print(wifi.sta.getip())
 wifi.setmode(wifi.STATION)
