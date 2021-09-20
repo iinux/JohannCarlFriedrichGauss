@@ -1,0 +1,11 @@
+文件 3：从「~/pico-sdk/external」目录复制「pico_sdk_import.cmake」文件：
+
+$ cp ../pico-sdk/external/pico_sdk_import.cmake .  
+准备好三个文件后，在「~/myProject」目录下新建并进入目录「build」并执行：
+
+$ mkdir build
+$ cd build
+$ export PICO_SDK_PATH=../../pico-sdk
+$ cmake ..
+$ make  
+make 命令即为「编译」，它将在「~/myProject/build」目录下生成 .uf2 文件和其他文件。

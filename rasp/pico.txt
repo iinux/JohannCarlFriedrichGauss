@@ -1,0 +1,6 @@
+https://blog.csdn.net/lifan0620/article/details/113362063
+https://bbs.huaweicloud.com/blogs/240147
+https://github.com/raspberrypi
+https://www.raspberrypi.org/documentation/rp2040/getting-started/#getting-started-with-micropython
+https://datasheets.raspberrypi.org/pico/raspberry-pi-pico-python-sdk.pdf
+https://sspai.com/post/64602
