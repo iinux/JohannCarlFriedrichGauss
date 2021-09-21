@@ -4,7 +4,6 @@ import (
 	"fmt"
 	//"log"
 	"time"
-	"sort"
 )
 
 func main() {
@@ -61,179 +60,49 @@ func judge(a string, b string, answer int) {
 }
 
 func minDistance(word1 string, word2 string) int {
-	if len(word1) > len(word2) {
-		word1, word2 = word2, word1
-	}
-	len1 := len(word1)
-	len2 := len(word2)
-
-	if len1 > 0 && len2 > 0 && word1[0] == word2[0] {
-		return minDistance(word1[1:], word2[1:])
-	}
-
-	word2Map := make(map[int32][]int)
-	for k, v := range word2 {
-		word2Map[v] = append(word2Map[v], k)
-	}
-
-	var lines lineSlice
-	for i := 0; i < len1; i++ {
-		alpha := word1[i]
-		list := word2Map[int32(alpha)]
-		for _, v := range list {
-			line := line{X: i, Y: v, Alpha: alpha}
-			lines = append(lines, &line)
+	l1 := len(word1)
+	l2 := len(word2)
+	// return len(word1) + len(word2) - 2*lcs(word1, word2, len(word1), len(word2))
+	var dp [][]int
+	for i := 0; i <= l1; i++ {
+		dp = append(dp, []int{})
+		for j := 0; j <= l2; j++ {
+			dp[i] = append(dp[i], 0)
 		}
 	}
 
-	sort.Sort(lines)
-	count = 0
-	fmt.Println(len(lines))
-	// len3 := calc(lines, 0, 0)
-	len3 := calc2(lines, 0)
-	fmt.Println(count)
+	for i := 0; i <= l1; i++ {
+		dp = append(dp, []int{0})
+		for j := 0; j <= l2; j++ {
+			if i == 0 || j == 0 {
+				continue
+			}
+			if word1[i-1] == word2[j-1] {
+				dp[i][j] = 1 + dp[i-1][j-1]
+			} else {
+				dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+			}
+		}
+	}
 
-	return len1 + len2 - 2*len3
+	return l1 + l2 - 2 * dp[l1][l2]
 }
 
-var count int
+func lcs(s string, s2 string, i int, i2 int) int {
+	if i == 0 || i2 == 0 {
+		return 0
+	}
 
-func calc2(lines lineSlice, start int) int {
-	var fi int
-	end := true
-	if start >= len(lines) {
-		return 0
+	if s[i-1] == s2[i2-1] {
+		return 1 + lcs(s, s2, i-1, i2-1)
+	} else {
+		return max(lcs(s, s2, i, i2-1), lcs(s, s2, i-1, i2))
 	}
-	for i, line := range lines {
-		if line.X >= lines[start].X && line.Y >= lines[start].Y {
-			end = false
-			fi = i
-			break
-		}
-	}
-	if end {
-		return 0
-	}
-	a := calc2(lines, fi+1) + 1
-	b := calc2(lines, start+1)
-	if a >= b {
+}
+
+func max(a, b int) int {
+	if a > b {
 		return a
-	} else {
-		return b
 	}
-}
-
-func calc(lines lineSlice, startX int, startY int) int {
-	count++
-	end := true
-	//var okLines lineSlice
-	minxi := -1
-	minyi := -1
-	for i, line := range lines {
-		if line.X >= startX && line.Y >= startY {
-			if minxi == -1 || line.X < lines[minxi].X || line.X == lines[minxi].X && line.Y < lines[minxi].Y {
-				minxi = i
-			}
-			if minyi == -1 || line.Y < lines[minyi].Y || line.Y == lines[minyi].Y && line.X < lines[minyi].X {
-				minyi = i
-			}
-			end = false
-		}
-	}
-	/*
-	for _, line := range lines {
-		if line.X >= startX && line.Y >= startY {
-			if line.X <= lines[minxi].X || line.Y <= lines[minxi].Y || line.X <= lines[minyi].X || line.Y <= lines[minyi].Y{
-				okLines = append(okLines, line)
-			}
-			end = false
-		}
-	}
-	*/
-
-	if end {
-		return 0
-	}
-
-	/*
-	max := 0
-	for _, line := range okLines {
-		v := calc(lines, line.X+1, line.Y+1) + 1
-		if v > max {
-			max = v
-		}
-	}
-	return max
-	*/
-	if minxi == minyi {
-		return calc(lines, lines[minxi].X+1, lines[minxi].Y+1) + 1
-	} else {
-		var a []int
-		a = append(a, calc(lines, lines[minxi].X+1, lines[minxi].Y+1)+1)
-		a = append(a, calc(lines, lines[minyi].X+1, lines[minyi].Y+1)+1)
-		a = append(a, calc(lines, lines[minxi].X+1, lines[minyi].Y+1))
-		//a = append(a, calc(lines, startX, startY+1))
-		max := 0
-		for _, v := range a {
-			if v > max {
-				max = v
-			}
-		}
-		return max
-	}
-}
-
-type line struct {
-	X     int
-	Y     int
-	Alpha uint8
-}
-
-type lineSlice []*line
-
-func (c lineSlice) Len() int {
-	return len(c)
-}
-func (c lineSlice) Swap(i, j int) {
-	c[i], c[j] = c[j], c[i]
-}
-func (c lineSlice) Less(i, j int) bool {
-	if c[i].X == c[j].X {
-		return c[i].Y < c[j].Y
-	} else {
-		return c[i].X < c[j].X
-	}
-}
-
-func minDistance_error(word1 string, word2 string) int {
-	len1 := len(word1)
-	len2 := len(word2)
-	ret := 0
-	for i := 0; i < len1; i++ {
-		for j := 0; j < len2; j++ {
-			l := comLen(word1[i:], word2[j:])
-			if l > ret {
-				ret = l
-			}
-		}
-	}
-
-	return len1 - ret + len2 - ret
-}
-
-func comLen(word1 string, word2 string) int {
-	len1 := len(word1)
-	len2 := len(word2)
-	if len2 < len1 {
-		len1 = len2
-	}
-	ret := 0
-	for i := 0; i < len1; i++ {
-		if word1[i] == word2[i] {
-			ret++
-		} else {
-			break
-		}
-	}
-	return ret
+	return b
 }
