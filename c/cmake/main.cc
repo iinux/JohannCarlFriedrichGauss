@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// https://www.hahack.com/codes/cmake/
+
 /**
  * power - Calculate the power of number.
  * @param base: Base value.
