@@ -1,0 +1,7 @@
+*.o
+Makefile
+.qmake.stash
+qt
+moc_finddialog.cpp
+moc_predefs.h
+qt2
