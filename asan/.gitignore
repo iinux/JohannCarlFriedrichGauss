@@ -1,0 +1,7 @@
+dangling_pointer_test
+heap_ovf_test
+invalid_free_test
+memory_leak_test
+stack_ovf_test
+use-after-return
+use-after-scope
