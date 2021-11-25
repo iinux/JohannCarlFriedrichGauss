@@ -4,6 +4,11 @@
 #include <unistd.h>
 #include <linux/user.h>   /* For constants ORIG_EAX etc */
 
+// https://www.cnblogs.com/mysky007/p/11047943.html
+// https://www.linuxjournal.com/article/6100?page=0,0
+// https://www.cnblogs.com/tangr206/articles/3094358.html
+//
+
 int main()
 {
     pid_t child;
