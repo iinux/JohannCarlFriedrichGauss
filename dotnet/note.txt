@@ -1,0 +1,6 @@
+download dotnet-sdk-6.0.100-linux-x64.tar.gz
+    https://dotnet.microsoft.com/download/dotnet/6.0
+dotnet new --list
+dotnet new console -o MyApp
+dotnet new angular -o MyApp2
+dotnet run
