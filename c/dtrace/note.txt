@@ -1,0 +1,5 @@
+
+strace -feopen python myfile.py
+
+dtruss -f -t open python myfile.py
+
