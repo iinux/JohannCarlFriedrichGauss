@@ -11,7 +11,7 @@ int main()
     int data_len = strlen(data);
 
     int sfd = socket(AF_INET, SOCK_STREAM, 0);
-    server = gethostbyname("localhost");
+    server = gethostbyname("hw.iinux.cn");
 
     bzero((char *)&serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
