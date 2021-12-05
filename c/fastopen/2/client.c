@@ -22,7 +22,7 @@ int main()
 
     if (clientSock == -1)
     {
-        write(STDERR_FILENO, "failed!\n", 8);
+        write(STDERR_FILENO, "create socket failed!\n", 8);
         return 1;
     }
 
@@ -38,29 +38,29 @@ int main()
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(7890);
-    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    addr.sin_addr.s_addr = inet_addr("1.1.1.1");
 
 #ifdef FAST_OPEN
-
-    int ret = sendto(clientSock, "Hello\n", 6, MSG_FASTOPEN,
+    char* str = "HelloFastOpen\n";
+    int ret = sendto(clientSock, str, strlen(str), MSG_FASTOPEN,
                      (struct sockaddr *)&addr, sizeof(addr));
 
     if (ret < 0)
     {
-        write(STDERR_FILENO, "failed!\n", 8);
+        write(STDERR_FILENO, "sendto failed!\n", 8);
         return 11;
     }
 
 #else
     if (connect(clientSock, (struct sockaddr *)&addr, sizeof(addr)) < 0)
     {
-        write(STDERR_FILENO, "failed!\n", 8);
+        write(STDERR_FILENO, "connect failed!\n", 8);
         return 2;
     }
-
-    if (send(clientSock, "Hello\n", 6, 0) < 0)
+    char* str = "HelloNoFastOpen\n";
+    if (send(clientSock, str, strlen(str), 0) < 0)
     {
-        write(STDERR_FILENO, "failed!\n", 8);
+        write(STDERR_FILENO, "send failed!\n", 8);
         return 3;
     }
 #endif
