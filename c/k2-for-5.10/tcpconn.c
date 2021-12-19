@@ -132,6 +132,7 @@ tcpconn_init(void)
 {
     printk(KERN_INFO "loading tcpconn\n");
 
+    /*
     sk_data_ready_addr = kallsyms_lookup_name("sock_def_readable");
     printk(KERN_INFO "CPU [%u] sk_data_ready_addr = "
         "kallsyms_lookup_name(sock_def_readable) = %lu\n",
@@ -140,6 +141,7 @@ tcpconn_init(void)
         printk(KERN_INFO "cannot find sock_def_readable.\n");
         goto err;
     }
+    */
 
     hook_tcpconn_functions();
 
