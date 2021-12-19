@@ -29,7 +29,6 @@ inet_stream_connect_tcpconn(struct socket *sock, struct sockaddr *uaddr,
     struct inet_sock *inet;
 
     wait_queue_head_t *q;
-    wait_queue_t *curr, *next;
     struct task_struct  *t;
 
     retval = inet_stream_connect(sock, uaddr, addr_len, flags);
