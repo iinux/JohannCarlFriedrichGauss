@@ -307,6 +307,130 @@
 							}
 						}
 					]
+				},
+				{
+					"type": "basic",
+					"from": {
+						"modifiers": {
+							"mandatory": [
+								"right_alt"
+							]
+						},
+						"key_code": "k"
+					},
+					"conditions": [
+						{
+							"type": "device_if",
+							"identifiers": [
+								{
+									"vendor_id": 9639,
+									"product_id": 64103,
+									"is_keyboard": true
+								}
+							],
+							"description": "bow"
+						}
+					],
+					"to": [
+						{
+							"mouse_key": {
+								"horizontal_wheel": 128
+							}
+						}
+					]
+				},
+				{
+					"type": "basic",
+					"from": {
+						"modifiers": {
+							"mandatory": [
+								"right_alt"
+							]
+						},
+						"key_code": "l"
+					},
+					"conditions": [
+						{
+							"type": "device_if",
+							"identifiers": [
+								{
+									"vendor_id": 9639,
+									"product_id": 64103,
+									"is_keyboard": true
+								}
+							],
+							"description": "bow"
+						}
+					],
+					"to": [
+						{
+							"mouse_key": {
+								"horizontal_wheel": -128
+							}
+						}
+					]
+				},
+				{
+					"type": "basic",
+					"from": {
+						"modifiers": {
+							"mandatory": [
+								"right_alt"
+							]
+						},
+						"key_code": "i"
+					},
+					"conditions": [
+						{
+							"type": "device_if",
+							"identifiers": [
+								{
+									"vendor_id": 9639,
+									"product_id": 64103,
+									"is_keyboard": true
+								}
+							],
+							"description": "bow"
+						}
+					],
+					"to": [
+						{
+							"mouse_key": {
+								"vertical_wheel": 128
+							}
+						}
+					]
+				},
+				{
+					"type": "basic",
+					"from": {
+						"modifiers": {
+							"mandatory": [
+								"right_alt"
+							]
+						},
+						"key_code": "o"
+					},
+					"conditions": [
+						{
+							"type": "device_if",
+							"identifiers": [
+								{
+									"vendor_id": 9639,
+									"product_id": 64103,
+									"is_keyboard": true
+								}
+							],
+							"description": "bow"
+						}
+					],
+					"to": [
+						{
+							"mouse_key": {
+								"vertical_wheel": -128
+							}
+						}
+					]
 				}
 			]
 		}
