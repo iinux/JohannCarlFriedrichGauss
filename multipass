@@ -1,0 +1,15 @@
+sudo apt install snapd
+sudo snap install multipass
+multipass launch --name foo
+multipass exec foo -- lsb_release -a
+multipass launch -n bar --cloud-init cloud-config.yaml
+multipass list
+multipass stop foo bar
+multipass start foo
+multipass delete bar
+multipass purge
+multipass find
+multipass help
+multipass help <command>
+
+https://multipass.run/

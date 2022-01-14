@@ -1,0 +1,7 @@
+sudo apt install xcape
+xcape -e 'Control_L=Escape'
+xcape -e 'Caps_Lock=Menu'
+
+xmodmap
+setxkbmap -option caps:ctrl_modifier
+
