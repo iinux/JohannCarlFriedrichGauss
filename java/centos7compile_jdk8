@@ -1,0 +1,23 @@
+yum install mercurial
+export LANG=en_US.UTF-8
+hg clone http://hg.openjdk.java.net/jdk8/jdk8
+dd if=/dev/zero  of=swap bs=1024 count 2048000
+dd if=/dev/zero  of=swap bs=1024 count=2048000
+mkswap swap 
+swapon swap
+cd jdk8/
+yum install java-1.7.0-openjdk
+yum install java-1.7.0-openjdk-devel
+yum groupinstall "Development Tools"
+yum install libXtst-devel libXt-devel libXrender-devel
+yum install cups-devel
+yum install freetype-devel
+yum install alsa-lib-devel
+sh configure 
+yum install ccache
+sh get_source.sh 
+make all
+cd build/linux-x86_64-normal-server-release/
+cd jdk/
+cd bin
+./java -version
