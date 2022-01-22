@@ -3,5 +3,7 @@ xcape -e 'Control_L=Escape'
 xcape -e 'Caps_Lock=Menu'
 
 xmodmap
+xmodmap -pke | less
+dumpkeys -f | less
 setxkbmap -option caps:ctrl_modifier
 
