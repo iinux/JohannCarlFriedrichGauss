@@ -25,5 +25,5 @@ jobs:
       uses: actions/upload-artifact@main
       if: (!cancelled())
       with:
-        name: nm
-        path: .
+        name: nm.zip
+        path: nm
