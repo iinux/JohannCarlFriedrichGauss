@@ -1,8 +1,7 @@
 # hello.s
-#
+# https://www.bookstack.cn/read/open-c-book/zh-chapters-02-chapter8.markdown
 # $ as --32 -o hello.o hello.s
 # $ ld -melf_i386 --oformat=binary -o hello hello.o
-# $ export PATH=./:$PATH
 # $ hello 0 0 0
 # hello
 #
