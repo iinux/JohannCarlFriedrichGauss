@@ -197,6 +197,74 @@
 					"from": {
 						"modifiers": {
 							"mandatory": [
+								"right_control",
+								"left_shift"
+							]
+						},
+						"key_code": "up_arrow"
+					},
+					"conditions": [
+						{
+							"type": "device_if",
+							"identifiers": [
+								{
+									"vendor_id": 9639,
+									"product_id": 64103,
+									"is_keyboard": true
+								}
+							],
+							"description": "bow"
+						}
+					],
+					"to": [
+						{
+							"repeat": true,
+							"key_code": "page_up",
+							"modifiers":[
+								"left_shift"
+							]
+						}
+					]
+				},
+				{
+					"type": "basic",
+					"from": {
+						"modifiers": {
+							"mandatory": [
+								"right_control",
+								"left_shift"
+							]
+						},
+						"key_code": "down_arrow"
+					},
+					"conditions": [
+						{
+							"type": "device_if",
+							"identifiers": [
+								{
+									"vendor_id": 9639,
+									"product_id": 64103,
+									"is_keyboard": true
+								}
+							],
+							"description": "bow"
+						}
+					],
+					"to": [
+						{
+							"repeat": true,
+							"key_code": "page_down",
+							"modifiers":[
+								"left_shift"
+							]
+						}
+					]
+				},
+				{
+					"type": "basic",
+					"from": {
+						"modifiers": {
+							"mandatory": [
 								"right_alt"
 							]
 						},
@@ -497,6 +565,39 @@
 							"mouse_key": {
 								"vertical_wheel": -128
 							}
+						}
+					]
+				},
+				{
+					"type": "basic",
+					"from": {
+						"key_code": "f12"
+					},
+					"conditions": [
+						{
+							"type": "device_if",
+							"identifiers": [
+								{
+									"vendor_id": 9639,
+									"product_id": 64103,
+									"is_keyboard": true
+								},
+								{
+									"vendor_id": 6700,
+									"product_id": 3620,
+									"is_keyboard": true
+								}
+							],
+							"description": "bowAndPajni"
+						}
+					],
+					"to": [
+						{
+							"repeat": true,
+							"key_code": "up_arrow",
+							"modifiers": [
+							  "right_control"
+							]
 						}
 					]
 				}
