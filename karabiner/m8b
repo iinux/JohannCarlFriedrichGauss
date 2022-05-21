@@ -1,0 +1,117 @@
+m8b_m201_1G#help
+?       - alias for 'help'
+adc     - M6 ADC test
+aml_sysrecovery- Burning with amlogic format package from partition sysrecovery
+amlnf   - AMLPHYNAND sub-system
+amlnf_test- AMLPHYNAND sub-system
+autoping- do auto ping test
+autoscr - run script from memory
+base    - print or set address offset
+bdinfo  - print Board Info structure
+bmp     - manipulate BMP image data
+boardid_prefetch- boardid sub-system
+bootm   - boot application image from memory
+bootp   - boot image via network using BOOTP/TFTP protocol
+cali    - configure clock phare
+calinfo - calinfo print the chip calibration info
+cbusreg - cbus register read/write
+checkhw - Get the hardware revsion
+clear_rebootmode- clear rebootmode
+clkmsr  - measure PLL clock
+cmp     - memory compare
+coninfo - print console devices and information
+cp      - memory copy
+cpu_temp- cpu temp-system
+crc32   - checksum calculation
+dcache  - enable or disable data cache
+defenv  - default environment
+defenv_reserve_env- reserve env
+defenv_without- defenv without environment variables
+dhcp    - boot image via network using DHCP/TFTP protocol
+dtbinit - init some env by reading dtb file
+dtbload - load binary dtb file from a dos filesystem
+echo    - echo args to console
+editenv - edit environment variable
+efuse   - efuse version/licence/mac/hdcp/usid read/write or dump raw efuse data commands or info(display chip efuse info)
+env     - environment handling commands
+ethchk  - check ethernet status
+ethdbg  - set ethernet debug level
+ethmode - set ethernet mac mode
+ethrst  - reset ethernet phy
+exit    - exit script
+ext2load- load binary file from a Ext2 filesystem
+ext2ls  - list files in a directory (default /)
+false   - do nothing, unsuccessfully
+fatexist- find the file from a dos filesystem
+fatinfo - print information about filesystem
+fatload - load binary file from a dos filesystem
+fatls   - list files in a directory (default /)
+fdt     - flattened device tree utility commands
+get_img_size- get img size and save the result as a environment variable
+get_rebootmode- get reboot mode
+go      - start application at address 'addr'
+gset    - gpio commands
+help    - print command description/usage
+icache  - enable or disable instruction cache
+imgread - Read the image from internal flash with actual size
+imxtract- extract a part of a multi-image
+irdetect- Detect IR Key to start recovery system
+irkey   - irkey key_value time_value
+itest   - return true/false on integer compare
+keyunify- key unify sub-system
+kgdb    - enter gdb remote debug mode
+loadb   - load binary file over serial line (kermit mode)
+loadenv - load environment at address 'addr'
+loads   - load S-Record file over serial line
+loadx   - load binary file over serial line (xmodem mode)
+loady   - load binary file over serial line (ymodem mode)
+logo    - logo sub-system
+loop    - infinite loop on address range
+macreg  - ethernet mac register read/write/dump
+md      - memory display
+mdc_clk - do mdc clock
+mm      - memory modify (auto-incrementing address)
+mmc     - MMC sub system
+mmcinfo - mmcinfo <dev num>-- display MMC info
+msleep  - delay execution for some time
+msr     - Meson msr sub-system
+mtest   - simple RAM read/write test
+mw      - memory write (fill)
+netspd_f- enforce eth speed
+nm      - memory modify (constant address)
+phyreg  - ethernet phy register read/write/dump
+ping    - send ICMP ECHO_REQUEST to network host
+printenv- print environment variables
+put     - put  storage 
+pwm     - pwm sub-system
+rarpboot- boot image via network using RARP/TFTP protocol
+reset   - Perform RESET of the CPU
+run     - run commands in an environment variable
+saradc  - saradc sub-system
+saveenv - save environment variables to persistent storage
+sdc_burn- Burning with amlogic format package in sdmmc 
+sdc_update- Burning a partition with image file in sdmmc card
+secukey - security KEY sub-system
+setenv  - set environment variables
+sf      - SPI flash sub-system
+showvar - print local hushshell variables
+sleep   - delay execution for some time
+source  - run script from memory
+ssecukey- NAND KEY sub-system
+store   - STORE sub-system
+suspend - suspend
+test    - minimal test like /bin/sh
+tftpboot- boot image via network using TFTP protocol
+true    - do nothing, successfully
+unifykey- unifykey read/write based on the driver keymanage
+unpackimg- unpack imgpack to single
+update  - Enter v2 usbburning mode
+usb     - USB sub-system
+usb_burn- Burning with amlogic format package in usb 
+usb_update- Burning a partition with image file in usb host
+usbbc   - test usb bc
+usbboot - boot from USB device
+usid_prefetch- usid sub-system
+uuid_prefetch- uuid sub-system
+version - print monitor, compiler and linker version
+video   - video sub-system
