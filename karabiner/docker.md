@@ -1,4 +1,6 @@
 
+# command
+
 * `docker version`
 * `docker info`
 * `docker --help`
@@ -16,7 +18,13 @@
     * -d
     * -P
     * -p
-        * 
+        * ip:hostPort:containerPort
+        * ip::containerPort
+        * hostPort:containerPort
+        * containerPort
+    * -v
+    * --privileged=true
+    * --volumes-from
 * ps
     * -a
     * -l
@@ -41,3 +49,26 @@
 * attach
 * exec
 * cp
+* commit
+* build
+    * -f 
+    * -t
+* history
+
+# dockerfile
+
+* FROM
+    * scratch
+* ENV
+* RUN
+* ARG
+* VOLUME
+* COPY
+* ENTRYPOINT
+* EXPOSE
+* CMD
+* MAINTAINER
+* ADD
+* LABEL
+* WORKDIR
+* ONBUILD
