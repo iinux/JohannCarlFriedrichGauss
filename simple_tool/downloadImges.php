@@ -19,7 +19,7 @@ foreach ($suffixes as $suffix) {
 $suffixes = array_merge($suffixes, $upCaseSuffixes);
 define('SUFFIXES_STR', implode('|', $suffixes));
 
-$urlsRegex = '/data-src=\'(https?:\/\/.*?\.(' . SUFFIXES_STR . '))\'/';
+$urlsRegex = '/ess-data=\'(https?:\/\/.*?\.(' . SUFFIXES_STR . '))\'/';
 
 /**
  * @param $var

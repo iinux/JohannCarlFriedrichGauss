@@ -1,11 +1,25 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
-func main()  {
+func main2()  {
 	nums := []int{1,1,2}
 	println(removeDuplicates(nums))
 	printNums(nums)
+}
+
+func main() {
+	str := "1"
+	fmt.Println(strconv.Atoi(str))	// int error
+	fmt.Println(strconv.ParseBool("false"))
+	fmt.Println(strconv.Itoa(1))
+	fmt.Println([]byte("test"))// 字符串转byte数组
+	// 2,byte转为string
+	byte1 := []byte{116,101,115,116}
+	fmt.Println(string(byte1[:]))
 }
 
 func main1() {

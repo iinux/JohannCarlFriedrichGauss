@@ -1,9 +1,9 @@
 
 # command
 
-* `docker version`
-* `docker info`
 * `docker --help`
+* version
+* info
 * images
     * `docker images -a`
     * `docker images -q`
@@ -54,6 +54,10 @@
     * -f 
     * -t
 * history
+* login
+* tag
+* push
+* pull
 
 # dockerfile
 
