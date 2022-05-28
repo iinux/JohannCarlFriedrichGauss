@@ -19,6 +19,9 @@ func abort(funcName string, err error) {
 }
 
 var (
+	kernel32, _        = syscall.LoadLibrary("kernel32.dll")
+	getModuleHandle, _ = syscall.GetProcAddress(kernel32, "GetModuleHandleW")
+
 	user32, _     = syscall.LoadLibrary("user32.dll")
 	messageBox, _ = syscall.GetProcAddress(user32, "MessageBoxW")
 	keybd_event, _ = syscall.GetProcAddress(user32, "keybd_event")
@@ -69,10 +72,6 @@ func MessageBox(caption, text string, style uintptr) (result int) {
 }
 
 func GetModuleHandle() (handle uintptr) {
-	kernel32, _ := syscall.LoadLibrary("kernel32.dll")
-	defer syscall.FreeLibrary(kernel32)
-	getModuleHandle, _ := syscall.GetProcAddress(kernel32, "GetModuleHandleW")
-
 	var nargs uintptr = 0
 	if ret, _, callErr := syscall.Syscall(uintptr(getModuleHandle), nargs, 0, 0, 0); callErr != 0 {
 		abort("Call GetModuleHandle", callErr)
@@ -83,6 +82,7 @@ func GetModuleHandle() (handle uintptr) {
 }
 
 func main() {
+	defer syscall.FreeLibrary(kernel32)
 	defer syscall.FreeLibrary(user32)
 	args := os.Args
 	var text, program string
@@ -167,4 +167,8 @@ func runCmd(cmd *exec.Cmd) string {
 		log.Fatal(err)
 	}
 	return string(opBytes)
+}
+
+func init() {
+	fmt.Print("Starting Up\n")
 }
