@@ -1,0 +1,164 @@
+Hit Enter key to stop autoboot -- :  1 tstc enter
+
+exit abortboot: 1
+m8b_m201_1G#
+m8b_m201_1G#
+m8b_m201_1G#
+m8b_m201_1G#
+m8b_m201_1G#
+m8b_m201_1G#setenv bootfromrecovery 0
+m8b_m201_1G#setenv bootfromnand 0
+m8b_m201_1G#setenv start_mmc_autoscript 'if fatload mmc 0 11000000 s805_autoscript; then autoscr 11000000; fi;'
+m8b_m201_1G#setenv start_usb_autoscript "if fatload usb 0 11000000 s805_autoscript; then autoscr 11000000; fi; if fatload usb 1 11000000 s805_autoscript; then autoscr 11000000; fi;"
+m8b_m201_1G#setenv start_autoscript 'if usb start; then run start_usb_autoscript; fi; if mmcinfo; then run start_mmc_autoscript; fi;'
+m8b_m201_1G#setenv bootcmd 'run start_autoscript; run storeboot'
+m8b_m201_1G#setenv firstboot 1
+m8b_m201_1G#saveenv
+Saving Environment to eMMC...
+MMC BOOT,emmc_saveenv : saveenv 131 
+mmc save env ok
+m8b_m201_1G#version
+
+U-boot-00000-g76b35b5-dirty(m8b_m201_v1@master) (May 17 2020 - 11:19:03)
+arm-none-eabi-gcc (Sourcery G++ Lite 2010q1-188) 4.4.1
+GNU ld (Sourcery G++ Lite 2010q1-188) 2.19.51.20090709
+m8b_m201_1G#reset
+resetting ...
+QA5:B;SVN:B72;POC:1FF;STS:0;BOOT:0;INIT:0;READ:0;CHECK:0;PASS:0;
+no sdio debug board detected 
+TE : 75811
+BT : 11:19:13 May 17 2020
+PMU:NONE
+##### VDDEE voltage = 0x044c
+
+CPU clock is 1200MHz
+
+DDR mode: 32 bit mode
+DDR size: 1GB (auto)
+DDR check: Pass!
+DDR clock: 912MHz with 2T mode
+DDR pll bypass: Disabled
+DDR init use : 16013 us
+
+HHH
+Boot From SDIO C
+SD_boot_type: 00000002
+card_type: 00000003
+0x0000009f
+ucl decompress...pass
+0x12345678
+Boot from internal device 1st eMMC on SDIO C
+
+TE : 290261
+
+System Started
+
+
+U-boot-00000-g76b35b5-dirty(m8b_m201_v1@master) (May 17 2020 - 11:19:03)
+
+clr h-ram
+DRAM:  1 GiB
+relocation Offset is: 2feb8000
+show partition table: 
+part: 0, name :       logo, size : 2000000
+part: 1, name :   recovery, size : 2000000
+part: 2, name :       misc, size : 2000000
+part: 3, name :       boot, size : 2000000
+part: 4, name :     system, size : 40000000
+part: 5, name :      cache, size : 20000000
+part: 6, name :    private, size : 2000000
+part: 7, name :       data, size : end 
+aml_card_type=0x200
+MMC:
+[mmc_register] add mmc dev_num=0, port=1, if_type=7
+ [sdio_register] port=1, aml_card_type=0x200, card_type=0, mmc->block_dev.if_type=7 
+[mmc_register] add mmc dev_num=1, port=2, if_type=6
+ [sdio_register] port=2, aml_card_type=0x200, card_type=2, mmc->block_dev.if_type=6 
+SDIO Port B: 0, SDIO Port C: 1
+power init
+out reg=c110804c,value=dfffffff
+IR init done!
+register usb cfg[0][1] = 3ff67f10
+register usb cfg[2][0] = 3ff6afe4
+out reg=c8100024,value=bfff3fef
+enter emmc boot
+
+Snail, part_dos.c:104, Vendor: Man 150100 Snr 01ac0747 Rev: 5.2 Prod: 8GME4, IfType: 6
+[mmc_init] SDIO Port C:1, if_type=6, initialized OK!
+[mmc_get_partition_table] skip cache partition.
+Partition table get from SPL is : 
+        name                        offset              size              flag
+===================================================================================
+   0: bootloader                         0            400000                  0
+   1: reserved                     2400000           4000000                  0
+   2: cache                        6c00000          20000000                  2
+   3: env                         27400000            800000                  0
+   4: logo                        28400000           2000000                  1
+   5: recovery                    2ac00000           2000000                  1
+   6: misc                        2d400000           2000000                  1
+   7: boot                        2fc00000           2000000                  1
+   8: system                      32400000          40000000                  1
+   9: private                     72c00000           2000000                  1
+  10: data                        75400000         15cc00000                  4
+mmc read lba=0x12000, blocks=0x1
+mmc read lba=0x12001, blocks=0x1
+mmc_read_partition_tbl: mmc read partition OK!
+eMMC/TSD partition table have been checked OK!
+i=0,register --- emmc_key
+device_boot_flag=2
+EMMC BOOT: not init nand
+do not init nand : cause boot_device_flag without nand 
+MMC BOOT, emmc_env_relocate_spec : env_relocate_spec 74 
+set_storage_device_flag: store 2
+Err imgread(L129):Fmt unsupported!genFmt 0x0 != 0x3
+check dts: FDT_ERR_BADMAGIC, load default vpu parameters
+vpu clk_level = 3
+set vpu clk: 182150000Hz, readback: 182150000Hz(0x701)
+Net:   Meson_Ethernet
+init suspend firmware done. (ret:0)
+cvbs trimming.1.v5: 0xa0, 0x1
+reboot_mode=charging
+hdmi tx power init
+TV mode 1080p selected.
+mode = 8  vic = 16
+set HDMI vic: 16
+mode is: 8
+viu chan = 1
+config HPLL
+config HPLL done
+reconfig packet setting done
+Hit Enter key to stop autoboot -- :  0 
+exit abortboot: 0
+(Re)start USB(0)...
+USB0:   dwc_usb driver version: 2.94 6-June-2012
+USB (1) peri reg base: c1108820
+USB (1) use clock source: XTAL input
+USB (1) base addr: 0xc90c0000
+Force id mode: Host
+dwc_otg: No USB device found !
+lowlevel init failed
+USB error: all controllers failed lowlevel init
+
+** Invalid boot device **
+
+** Invalid boot device **
+[mmc_init] SDIO Port B:0, SD or TSD: Card did not respond to voltage select! mmc->block_dev.if_type=7
+Enter USB burn
+Try connect time out 701, 700, 5931
+Booting...
+There is no valid bmp file at the given address
+Saving Environment to eMMC...
+MMC BOOT,emmc_saveenv : saveenv 131 
+mmc save env ok
+ error: image data is not a fdt
+key_unify_init:375,unify key config table parse fail
+Err key(L47):fail in key_drv_init
+ error: image data is not a fdt
+key_unify_init:375,unify key config table parse fail
+Err key(L47):fail in key_drv_init
+Err imgread(L330):Fmt unsupported!genFmt 0x0 != 0x3
+Wrong Image Format for bootm command
+ERROR: can't get kernel image!
+Saving Environment to eMMC...
+MMC BOOT,emmc_saveenv : saveenv 131 
+mmc save env ok
