@@ -1,0 +1,513 @@
+QA5:B;SVN:B72;POC:1FF;STS:0;BOOT:0;INIT:0;READ:0;CHECK:0;PASS:0;
+no sdio debug board detected 
+TE : 75825
+BT : 11:19:13 May 17 2020
+PMU:NONE
+##### VDDEE voltage = 0x044c
+
+CPU clock is 1200MHz
+
+DDR mode: 32 bit mode
+DDR size: 1GB (auto)
+DDR check: Pass!
+DDR clock: 912MHz with 2T mode
+DDR pll bypass: Disabled
+DDR init use : 16011 us
+
+HHH
+Boot From SDIO C
+SD_boot_type: 00000002
+card_type: 00000003
+0x0000009f
+ucl decompress...pass
+0x12345678
+Boot from internal device 1st eMMC on SDIO C
+
+TE : 290312
+
+System Started
+
+
+U-boot-00000-g76b35b5-dirty(m8b_m201_v1@master) (May 17 2020 - 11:19:03)
+
+clr h-ram
+DRAM:  1 GiB
+relocation Offset is: 2feb8000
+show partition table: 
+part: 0, name :       logo, size : 2000000
+part: 1, name :   recovery, size : 2000000
+part: 2, name :       misc, size : 2000000
+part: 3, name :       boot, size : 2000000
+part: 4, name :     system, size : 40000000
+part: 5, name :      cache, size : 20000000
+part: 6, name :    private, size : 2000000
+part: 7, name :       data, size : end 
+aml_card_type=0x200
+MMC:
+[mmc_register] add mmc dev_num=0, port=1, if_type=7
+ [sdio_register] port=1, aml_card_type=0x200, card_type=0, mmc->block_dev.if_type=7 
+[mmc_register] add mmc dev_num=1, port=2, if_type=6
+ [sdio_register] port=2, aml_card_type=0x200, card_type=2, mmc->block_dev.if_type=6 
+SDIO Port B: 0, SDIO Port C: 1
+power init
+out reg=c110804c,value=dfffffff
+IR init done!
+register usb cfg[0][1] = 3ff67f10
+register usb cfg[2][0] = 3ff6afe4
+out reg=c8100024,value=bfff3fff
+enter emmc boot
+
+Snail, part_dos.c:104, Vendor: Man 150100 Snr 01ac0747 Rev: 5.2 Prod: 8GME4, IfType: 6
+[mmc_init] SDIO Port C:1, if_type=6, initialized OK!
+[mmc_get_partition_table] skip cache partition.
+Partition table get from SPL is : 
+        name                        offset              size              flag
+===================================================================================
+   0: bootloader                         0            400000                  0
+   1: reserved                     2400000           4000000                  0
+   2: cache                        6c00000          20000000                  2
+   3: env                         27400000            800000                  0
+   4: logo                        28400000           2000000                  1
+   5: recovery                    2ac00000           2000000                  1
+   6: misc                        2d400000           2000000                  1
+   7: boot                        2fc00000           2000000                  1
+   8: system                      32400000          40000000                  1
+   9: private                     72c00000           2000000                  1
+  10: data                        75400000         15cc00000                  4
+mmc read lba=0x12000, blocks=0x1
+mmc read lba=0x12001, blocks=0x1
+mmc_read_partition_tbl: mmc read partition OK!
+eMMC/TSD partition table have been checked OK!
+i=0,register --- emmc_key
+device_boot_flag=2
+EMMC BOOT: not init nand
+do not init nand : cause boot_device_flag without nand 
+MMC BOOT, emmc_env_relocate_spec : env_relocate_spec 74 
+set_storage_device_flag: store 2
+Err imgread(L129):Fmt unsupported!genFmt 0x0 != 0x3
+check dts: FDT_ERR_BADMAGIC, load default vpu parameters
+vpu clk_level = 3
+set vpu clk: 182150000Hz, readback: 182150000Hz(0x701)
+Net:   Meson_Ethernet
+init suspend firmware done. (ret:0)
+cvbs trimming.1.v5: 0xa0, 0x1
+hdmi tx power init
+TV mode 1080p selected.
+mode = 8  vic = 16
+set HDMI vic: 16
+mode is: 8
+viu chan = 1
+config HPLL
+config HPLL done
+reconfig packet setting done
+reboot_mode=charging
+Hit Enter key to stop autoboot -- :  0 
+exit abortboot: 0
+(Re)start USB(0)...
+USB0:   dwc_usb driver version: 2.94 6-June-2012
+USB (1) peri reg base: c1108820
+USB (1) use clock source: XTAL input
+USB (1) base addr: 0xc90c0000
+Force id mode: Host
+dwc_otg: Highspeed device found !
+
+scanning bus 0 for devices... 1 USB Device(s) found
+       scanning usb for storage devices... 
+Snail, part_dos.c:104, Vendor: aigo     Rev: 2.00 Prod: U268            , IfType: 4
+1 Storage Device(s) found
+reading s805_autoscript
+
+894 bytes read
+## Executing script at 12000000
+reading uEnv.txt
+
+260 bytes read
+hdmi tx power init
+TV mode 1080p selected.
+mode = 8  vic = 16
+set HDMI vic: 16
+mode is: 8
+viu chan = 1
+config HPLL
+config HPLL done
+reconfig packet setting done
+reading /uImage
+
+10831616 bytes read
+reading /uInitrd
+
+8746197 bytes read
+reading /dtb/meson8b-onecloud.dtb
+
+24410 bytes read
+## Booting kernel from Legacy Image at 14000000 ...
+   Image Name:   Linux kernel
+   Image Type:   ARM Linux Kernel Image (uncompressed)
+   Data Size:    10831552 Bytes = 10.3 MiB
+   Load Address: 00208000
+   Entry Point:  00208000
+   Verifying Checksum ... OK
+## Loading init Ramdisk from Legacy Image at 15000000 ...
+   Image Name:   uInitrd
+   Image Type:   ARM Linux RAMDisk Image (gzip compressed)
+   Data Size:    8746133 Bytes = 8.3 MiB
+   Load Address: 00000000
+   Entry Point:  00000000
+   Verifying Checksum ... OK
+## Flattened Device Tree blob at 11800000
+   Booting using the fdt blob at 0x11800000
+board_usb_stop cfg: 0
+   Loading Kernel Image ... OK
+OK
+uboot time: 27243803 us.
+EFUSE machid is not set.
+Using machid 0xf81 from environment
+faild to get aml_reserved_end address
+the default relocate ramdisk and fdt address-relocate_addr: 0x20000000
+   Loading Ramdisk to 1f7a8000, end 1ffff495 ... OK
+   Loading Device Tree to 1f79f000, end 1f7a7f59 ... OK
+
+Starting kernel ...
+
+[    0.000000] Booting Linux on physical CPU 0x200
+[    0.000000] Linux version 5.9.0-rc7-aml-s812 (root@debian-leoslion) (arm-none-linux-gnueabihf-gcc (GNU Toolchain for the 0
+[    0.000000] CPU: ARMv7 Processor [410fc051] revision 1 (ARMv7), cr=10c5387d
+[    0.000000] CPU: PIPT / VIPT nonaliasing data cache, VIPT aliasing instruction cache
+[    0.000000] OF: fdt: Machine model: OneCloud
+[    0.000000] Memory policy: Data cache writealloc
+[    0.000000] cma: Reserved 64 MiB at 0x3c000000
+[    0.000000] Zone ranges:
+[    0.000000]   Normal   [mem 0x0000000000200000-0x000000002fffffff]
+[    0.000000]   HighMem  [mem 0x0000000030000000-0x000000003fffffff]
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000000200000-0x000000003fffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000000200000-0x000000003fffffff]
+[    0.000000] percpu: Embedded 16 pages/cpu s34760 r8192 d22584 u65536
+[    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 259908
+[    0.000000] Kernel command line: root=LABEL=ROOTFS rootfstype=ext4 rootflags=data=writeback rw console=ttyAML0,115200n8 c0
+[    0.000000] Dentry cache hash table entries: 131072 (order: 7, 524288 bytes, linear)
+[    0.000000] Inode-cache hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    0.000000] mem auto-init: stack:off, heap alloc:off, heap free:off
+[    0.000000] Memory: 937916K/1046528K available (16384K kernel code, 661K rwdata, 4488K rodata, 1024K init, 951K bss, 4307)
+[    0.000000] random: get_random_u32 called from cache_random_seq_create+0x88/0x138 with crng_init=0
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=4, Nodes=1
+[    0.000000] rcu: Hierarchical RCU implementation.
+[    0.000000] rcu:     RCU restricting CPUs from NR_CPUS=8 to nr_cpu_ids=4.
+[    0.000000] rcu: RCU calculated value of scheduler-enlistment delay is 25 jiffies.
+[    0.000000] rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=4
+[    0.000000] NR_IRQS: 16, nr_irqs: 16, preallocated irqs: 16
+[    0.000000] irq_meson_gpio: 119 to 8 gpio interrupt mux initialized
+[    0.000000] L2C-310 erratum 769419 enabled
+[    0.000000] L2C-310 early BRESP only supported with Cortex-A9
+[    0.000000] L2C-310: disabling Cortex-A9 specific feature bits
+[    0.000000] L2C-310 ID prefetch enabled, offset 8 lines
+[    0.000000] L2C-310 dynamic clock gating enabled, standby mode enabled
+[    0.000000] L2C-310 cache controller enabled, 8 ways, 512 kB
+[    0.000000] L2C-310: CACHE_ID 0x4100a0c9, AUX_CTRL 0x3ec60000
+[    0.000012] sched_clock: 32 bits at 1000kHz, resolution 1000ns, wraps every 2147483647500ns
+[    0.000029] clocksource: timer: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 1911260446275 ns
+[    0.000062] Switching to timer-based delay loop, resolution 1000ns
+[    0.000531] Console: colour dummy device 80x30
+[    0.000933] printk: console [tty0] enabled
+[    0.000979] Calibrating delay loop (skipped), value calculated using timer frequency.. 2.00 BogoMIPS (lpj=4000)
+[    0.001005] pid_max: default: 32768 minimum: 301
+[    0.001233] LSM: Security Framework initializing
+[    0.001429] Smack:  Initializing.
+[    0.001444] Smack:  IPv6 port labeling enabled.
+[    0.001600] Mount-cache hash table entries: 2048 (order: 1, 8192 bytes, linear)
+[    0.001628] Mountpoint-cache hash table entries: 2048 (order: 1, 8192 bytes, linear)
+[    0.002616] CPU: Testing write buffer coherency: ok
+[    0.002889] CPU0: thread -1, cpu 0, socket 2, mpidr 80000200
+[    0.003745] Setting up static identity map for 0x300000 - 0x300060
+[    0.003908] rcu: Hierarchical SRCU implementation.
+[    0.004648] smp: Bringing up secondary CPUs ...
+[    0.005321] CPU1: thread -1, cpu 1, socket 2, mpidr 80000201
+[    0.006094] CPU2: thread -1, cpu 2, socket 2, mpidr 80000202
+[    0.006819] CPU3: thread -1, cpu 3, socket 2, mpidr 80000203
+[    0.006922] smp: Brought up 1 node, 4 CPUs
+[    0.006973] SMP: Total of 4 processors activated (8.00 BogoMIPS).
+[    0.006986] CPU: All CPU(s) started in SVC mode.
+[    0.007573] devtmpfs: initialized
+[    0.013112] VFP support v0.3: implementor 41 architecture 2 part 30 variant 5 rev 1
+[    0.013395] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645041785100000 ns
+[    0.013430] futex hash table entries: 1024 (order: 4, 65536 bytes, linear)
+[    0.016049] xor: measuring software checksum speed
+[    0.052200]    arm4regs  :  1012.000 MB/sec
+[    0.092197]    8regs     :   961.000 MB/sec
+[    0.132206]    32regs    :   890.000 MB/sec
+[    0.172198]    neon      :  1017.000 MB/sec
+[    0.172213] xor: using function: neon (1017.000 MB/sec)
+[    0.172288] pinctrl core: initialized pinctrl subsystem
+[    0.173356] NET: Registered protocol family 16
+[    0.176555] DMA: preallocated 2048 KiB pool for atomic coherent allocations
+[    0.177464] thermal_sys: Registered thermal governor 'fair_share'
+[    0.177468] thermal_sys: Registered thermal governor 'bang_bang'
+[    0.177488] thermal_sys: Registered thermal governor 'step_wise'
+[    0.177502] thermal_sys: Registered thermal governor 'user_space'
+[    0.177853] cpuidle: using governor menu
+[    0.178206] No ATAGs?
+[    0.178340] hw-breakpoint: found 2 (+1 reserved) breakpoint and 1 watchpoint registers.
+[    0.178362] hw-breakpoint: maximum watchpoint size is 4 bytes.
+[    0.212548] cryptd: max_cpu_qlen set to 1000
+[    0.288205] raid6: neonx8   gen()   756 MB/s
+[    0.356204] raid6: neonx8   xor()   537 MB/s
+[    0.424219] raid6: neonx4   gen()   839 MB/s
+[    0.492208] raid6: neonx4   xor()   598 MB/s
+[    0.560208] raid6: neonx2   gen()   939 MB/s
+[    0.628199] raid6: neonx2   xor()   654 MB/s
+[    0.696214] raid6: neonx1   gen()   625 MB/s
+[    0.764212] raid6: neonx1   xor()   563 MB/s
+[    0.832240] raid6: int32x8  gen()   289 MB/s
+[    0.900208] raid6: int32x8  xor()   183 MB/s
+[    0.968199] raid6: int32x4  gen()   330 MB/s
+[    1.036249] raid6: int32x4  xor()   200 MB/s
+[    1.104255] raid6: int32x2  gen()   391 MB/s
+[    1.172230] raid6: int32x2  xor()   202 MB/s
+[    1.240221] raid6: int32x1  gen()   391 MB/s
+[    1.308200] raid6: int32x1  xor()   192 MB/s
+[    1.308215] raid6: using algorithm neonx2 gen() 939 MB/s
+[    1.308228] raid6: .... xor() 654 MB/s, rmw enabled
+[    1.308240] raid6: using neon recovery algorithm
+[    1.309502] VCC1V8: supplied by P5V0
+[    1.309865] VCC3V3: supplied by P5V0
+[    1.310225] DDR_VDDC: supplied by P5V0
+[    1.310573] VDD_RTC: supplied by VCC3V3
+[    1.311291] iommu: Default domain type: Translated 
+[    1.311817] SCSI subsystem initialized
+[    1.312274] usbcore: registered new interface driver usbfs
+[    1.312348] usbcore: registered new interface driver hub
+[    1.312453] usbcore: registered new device driver usb
+[    1.312901] pps_core: LinuxPPS API ver. 1 registered
+[    1.312918] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    1.312952] PTP clock support registered
+[    1.313001] EDAC MC: Ver: 3.0.0
+[    1.313849] Advanced Linux Sound Architecture Driver Initialized.
+[    1.314415] NetLabel: Initializing
+[    1.314432] NetLabel:  domain hash size = 128
+[    1.314444] NetLabel:  protocols = UNLABELED CIPSOv4 CALIPSO
+[    1.314518] NetLabel:  unlabeled traffic allowed by default
+[    1.315059] clocksource: Switched to clocksource timer
+[    1.315378] VFS: Disk quotas dquot_6.6.0
+[    1.315457] VFS: Dquot-cache hash table entries: 1024 (order 0, 4096 bytes)
+[    1.315618] FS-Cache: Loaded
+[    1.315837] CacheFiles: Loaded
+[    1.325615] NET: Registered protocol family 2
+[    1.326317] tcp_listen_portaddr_hash hash table entries: 512 (order: 0, 6144 bytes, linear)
+[    1.326365] TCP established hash table entries: 8192 (order: 3, 32768 bytes, linear)
+[    1.326447] TCP bind hash table entries: 8192 (order: 4, 65536 bytes, linear)
+[    1.326555] TCP: Hash tables configured (established 8192 bind 8192)
+[    1.326677] UDP hash table entries: 512 (order: 2, 16384 bytes, linear)
+[    1.326720] UDP-Lite hash table entries: 512 (order: 2, 16384 bytes, linear)
+[    1.326929] NET: Registered protocol family 1
+[    1.327269] Trying to unpack rootfs image as initramfs...
+[    1.763042] Freeing initrd memory: 8544K
+[    1.764127] hw perfevents: enabled with armv7_cortex_a5 PMU driver, 3 counters available
+[    1.767921] Initialise system trusted keyrings
+[    1.768129] workingset: timestamp_bits=14 max_order=18 bucket_order=4
+[    1.773401] zbud: loaded
+[    1.774500] DLM installed
+[    1.775676] squashfs: version 4.0 (2009/01/31) Phillip Lougher
+[    1.776894] ntfs: driver 2.1.32 [Flags: R/W].
+[    1.777280] jffs2: version 2.2. (NAND) © 2001-2006 Red Hat, Inc.
+[    1.777730] fuse: init (API version 7.31)
+[    1.778499] JFS: nTxBlock = 7906, nTxLock = 63249
+[    1.782419] SGI XFS with security attributes, no debug enabled
+[    1.784170] NILFS version 2 loaded
+[    1.785447] gfs2: GFS2 installed
+[    1.881979] NET: Registered protocol family 38
+[    1.882009] Key type asymmetric registered
+[    1.882022] Asymmetric key parser 'x509' registered
+[    1.882092] bounce: pool size: 64 pages
+[    1.882146] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 244)
+[    1.882167] io scheduler mq-deadline registered
+[    1.882179] io scheduler kyber registered
+[    1.890763] soc soc0: Amlogic Meson8b (S805) RevA (1b - 0:B72) detected
+[    1.891640] pwm-regulator: supplied by regulator-dummy
+[    1.892141] pwm-regulator: supplied by regulator-dummy
+[    1.896737] Serial: 8250/16550 driver, 6 ports, IRQ sharing enabled
+[    1.899593] c81004c0.serial: ttyAML0 at MMIO 0xc81004c0 (irq = 28, base_baud = 9960937) is a meson_uart
+[    2.778484] printk: console [ttyAML0] enabled
+[    2.785031] usbcore: registered new interface driver udl
+[    2.793432] lima d00c0000.gpu: gp - mali450 version major 0 minor 0
+[    2.794400] lima d00c0000.gpu: pp0 - mali450 version major 0 minor 0
+[    2.800810] lima d00c0000.gpu: pp1 - mali450 version major 0 minor 0
+[    2.807111] lima d00c0000.gpu: l2 cache 8K, 4-way, 64byte cache line, 128bit external bus
+[    2.815220] lima d00c0000.gpu: l2 cache 64K, 4-way, 64byte cache line, 128bit external bus
+[    2.823975] lima d00c0000.gpu: bus rate = 159375000
+[    2.828338] lima d00c0000.gpu: mod rate = 24000000
+[    2.833190] debugfs: Directory 'd00c0000.gpu-mali' with parent 'VDDEE' already present!
+[    2.842241] [drm] Initialized lima 1.1.0 20191231 for d00c0000.gpu on minor 0
+[    2.858582] brd: module loaded
+[    2.867371] loop: module loaded
+[    2.867407] dummy-irq: no IRQ given.  Use irq=N
+[    2.870736] Loading iSCSI transport class v2.0-870.
+[    2.874959] rdac: device handler registered
+[    2.878608] hp_sw: device handler registered
+[    2.882715] emc: device handler registered
+[    2.886943] alua: device handler registered
+[    2.891341] iscsi: registered transport (tcp)
+[    2.896095] SSFDC read-only Flash Translation layer
+[    2.900175] mtdoops: mtd device (mtddev=name/number) must be supplied
+[    2.907995] libphy: Fixed MDIO Bus: probed
+[    2.911014] tun: Universal TUN/TAP device driver, 1.6
+[    2.915941] ipddp.c:v0.01 8/28/97 Bradford W. Johnson <johns393@maroon.tc.umn.edu>
+[    2.923683] ipddp0: Appletalk-IP Encap. mode by Bradford W. Johnson <johns393@maroon.tc.umn.edu>
+[    2.936175] ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
+[    2.938526] ehci-platform: EHCI generic platform driver
+[    2.943934] ohci_hcd: USB 1.1 'Open' Host Controller (OHCI) Driver
+[    2.949939] ohci-platform: OHCI generic platform driver
+[    2.955694] usbcore: registered new interface driver usb-storage
+[    2.961151] udc-core: couldn't find an available UDC - added [g_ether] to list of pending drivers
+[    2.970224] mousedev: PS/2 mouse device common for all mice
+[    2.976467] i2c /dev entries driver
+[    2.979474] pps_ldisc: PPS line discipline registered
+[    2.985611] usbcore: registered new interface driver pcwd_usb
+[    2.990581] meson_wdt c1109900.watchdog: Watchdog enabled (timeout=8 sec, nowayout=1)
+[    2.998126] softdog: initialized. soft_noboot=0 soft_margin=60 sec soft_panic=0 (nowayout=1)
+[    3.006024] softdog:              soft_reboot_cmd=<not set> soft_active_on_boot=0
+[    3.018012] sdhci: Secure Digital Host Controller Interface driver
+[    3.019687] sdhci: Copyright(c) Pierre Ossman
+[    3.024284] usbcore: registered new interface driver ushc
+[    3.030746] meson-mx-sdhc c1108e00.mmc: allocated mmc-pwrseq
+[    3.073467] sdhci-pltfm: SDHCI platform and OF driver helper
+[    3.078708] ledtrig-cpu: registered to indicate activity on CPUs
+[    3.080065] hid: raw HID events driver (C) Jiri Kosina
+[    3.086868] usbcore: registered new interface driver usbhid
+[    3.090257] usbhid: USB HID core driver
+[    3.094452] remoteproc remoteproc0: meson-mx-ao-arc is available
+[    3.100244] remoteproc remoteproc0: Direct firmware load for rproc-meson-mx-ao-arc-fw failed with error -2
+[    3.105775] no UART detected at 0x1
+[    3.109706] remoteproc remoteproc0: powering up meson-mx-ao-arc
+[    3.109800] remoteproc remoteproc0: Direct firmware load for rproc-meson-mx-ao-arc-fw failed with error -2
+[    3.115425] NET: Registered protocol family 26
+[    3.119091] remoteproc remoteproc0: request_firmware failed: -2
+[    3.128772] GACT probability on
+[    3.142204] Mirror/redirect action on
+[    3.145831] Simple TC action Loaded
+[    3.149701] netem: version 1.3
+[    3.152373] u32 classifier
+[    3.154996]     Performance counters on
+[    3.158856]     input device check on
+[    3.162487]     Actions configured
+[    3.192124] xt_time: kernel timezone is -0000
+[    3.192182] IPVS: Registered protocols ()
+[    3.194877] IPVS: Connection hash table configured (size=4096, memory=32Kbytes)
+[    3.203522] IPVS: ipvs loaded.
+[    3.205330] ipip: IPv4 and MPLS over IPv4 tunneling driver
+[    3.213019] gre: GRE over IPv4 demultiplexor driver
+[    3.215561] ip_gre: GRE over IPv4 tunneling driver
+[    3.221469] IPv4 over IPsec tunneling driver
+[    3.225619] ipt_CLUSTERIP: ClusterIP Version 0.8 loaded successfully
+[    3.231079] Initializing XFRM netlink socket
+[    3.235204] IPsec XFRM device driver
+[    3.239229] NET: Registered protocol family 10
+[    3.252168] mmc0: new HS200 MMC card at address 0001
+[    3.252850] mmcblk0: mmc0:0001 8GME4R 7.28 GiB 
+[    3.257460] mmcblk0boot0: mmc0:0001 8GME4R partition 1 4.00 MiB
+[    3.262186] mmcblk0boot1: mmc0:0001 8GME4R partition 2 4.00 MiB
+[    3.271721]  mmcblk0: p1 p2 p3
+[    3.281934] Segment Routing with IPv6
+[    3.282127] mip6: Mobile IPv6
+[    3.284562] sit: IPv6, IPv4 and MPLS over IPv4 tunneling driver
+[    3.290186] ip6_gre: GRE over IPv6 tunneling driver
+[    3.297081] NET: Registered protocol family 17
+[    3.298144] NET: Registered protocol family 15
+[    3.304883] Bridge firewalling registered
+[    3.306756] NET: Registered protocol family 5
+[    3.312910] 8021q: 802.1Q VLAN Support v1.8
+[    3.319163] DCCP: Activated CCID 2 (TCP-like)
+[    3.319436] DCCP: Activated CCID 3 (TCP-Friendly Rate Control)
+[    3.325772] sctp: Hash tables configured (bind 512/512)
+[    3.330961] NET: Registered protocol family 21
+[    3.335033] Registered RDS/tcp transport
+[    3.338884] 9pnet: Installing 9P2000 support
+[    3.343133] Key type dns_resolver registered
+[    3.347346] openvswitch: Open vSwitch switching datapath
+[    3.353183] NET: Registered protocol family 40
+[    3.357106] mpls_gso: MPLS GSO support
+[    3.361399] oprofile: using timer interrupt.
+[    3.365347] ThumbEE CPU extension supported.
+[    3.369328] Registering SWP/SWPB emulation handler
+[    3.375433] registered taskstats version 1
+[    3.378109] Loading compiled-in X.509 certificates
+[    3.385744] zswap: loaded using pool zstd/zbud
+[    3.387891] Key type ._fscrypt registered
+[    3.391344] Key type .fscrypt registered
+[    3.395282] Key type fscrypt-provisioning registered
+[    3.401117] Btrfs loaded, crc32c=crc32c-generic
+[    3.418138] TFLASH_VDD: supplied by VCC3V3
+[    3.418548] USB0_VBUS: supplied by P5V0
+[    3.422927] meson8b-dwmac c9410000.ethernet: IRQ eth_wake_irq not found
+[    3.427090] meson8b-dwmac c9410000.ethernet: IRQ eth_lpi not found
+[    3.433335] meson8b-dwmac c9410000.ethernet: PTP uses main clock
+[    3.439999] meson8b-dwmac c9410000.ethernet: User ID: 0x10, Synopsys ID: 0x37
+[    3.446332] meson8b-dwmac c9410000.ethernet:         DWMAC1000
+[    3.451532] meson8b-dwmac c9410000.ethernet: DMA HW capability register supported
+[    3.458998] meson8b-dwmac c9410000.ethernet: RX Checksum Offload Engine supported
+[    3.466465] meson8b-dwmac c9410000.ethernet: COE Type 2
+[    3.471675] meson8b-dwmac c9410000.ethernet: TX Checksum insertion supported
+[    3.478706] meson8b-dwmac c9410000.ethernet: Wake-Up On Lan supported
+[    3.485194] meson8b-dwmac c9410000.ethernet: Normal descriptors
+[    3.491049] meson8b-dwmac c9410000.ethernet: Ring mode enabled
+[    3.496858] meson8b-dwmac c9410000.ethernet: Enable RX Mitigation via HW Watchdog Timer
+[    3.504852] meson8b-dwmac c9410000.ethernet: device MAC address 3a:28:dd:36:03:99
+[    3.512768] libphy: stmmac: probed
+[    3.635301] dwc2 c9040000.usb: supply vusb_d not found, using dummy regulator
+[    3.637657] dwc2 c9040000.usb: supply vusb_a not found, using dummy regulator
+[    3.659031] dwc2 c9040000.usb: DWC OTG Controller
+[    3.659221] dwc2 c9040000.usb: new USB bus registered, assigned bus number 1
+[    3.665268] dwc2 c9040000.usb: irq 30, io mem 0xc9040000
+[    3.670972] usb usb1: New USB device found, idVendor=1d6b, idProduct=0002, bcdDevice= 5.09
+[    3.678773] usb usb1: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[    3.685962] usb usb1: Product: DWC OTG Controller
+[    3.690647] usb usb1: Manufacturer: Linux 5.9.0-rc7-aml-s812 dwc2_hsotg
+[    3.697254] usb usb1: SerialNumber: c9040000.usb
+[    3.705115] hub 1-0:1.0: USB hub found
+[    3.705583] hub 1-0:1.0: 1 port detected
+[    3.710313] dwc2 c90c0000.usb: supply vusb_d not found, using dummy regulator
+[    3.716735] dwc2 c90c0000.usb: supply vusb_a not found, using dummy regulator
+[    3.784345] dwc2 c90c0000.usb: DWC OTG Controller
+[    3.784661] dwc2 c90c0000.usb: new USB bus registered, assigned bus number 2
+[    3.790830] dwc2 c90c0000.usb: irq 31, io mem 0xc90c0000
+[    3.797127] usb usb2: New USB device found, idVendor=1d6b, idProduct=0002, bcdDevice= 5.09
+[    3.804239] usb usb2: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[    3.811493] usb usb2: Product: DWC OTG Controller
+[    3.816107] usb usb2: Manufacturer: Linux 5.9.0-rc7-aml-s812 dwc2_hsotg
+[    3.822676] usb usb2: SerialNumber: c90c0000.usb
+[    3.830983] hub 2-0:1.0: USB hub found
+[    3.831063] hub 2-0:1.0: 1 port detected
+[    3.837922] platform c1108c20.mmc:slot@1: Got CD GPIO
+[    3.866357] meson-mx-ao-arc-firmware ao-arc-firmware: Failed to request mbox channel #0
+[    3.881693] printk: console [netcon0] enabled
+[    3.881731] netconsole: network logging started
+[    3.885583] ALSA device list:
+[    3.888423]   No soundcards found.
+[    3.893384] Freeing unused kernel memory: 1024K
+[    3.911869] Run /init as init process
+[    4.227127] usb 2-1: new high-speed USB device number 2 using dwc2
+[    4.437085] usb 2-1: New USB device found, idVendor=ffff, idProduct=5678, bcdDevice= 2.00
+[    4.439708] usb 2-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[    4.446804] usb 2-1: Product: U268
+[    4.450175] usb 2-1: Manufacturer: aigo
+[    4.453995] usb 2-1: SerialNumber: 56084E150D257F1B
+[    4.471504] usb-storage 2-1:1.0: USB Mass Storage device detected
+[    4.479141] scsi host0: usb-storage 2-1:1.0
+[    4.572224] random: fast init done
+[    4.633548] usbcore: registered new interface driver uas
+[    4.935977] BTRFS: device label USERFS devid 1 transid 6 /dev/mmcblk0p3 scanned by btrfs (274)
+[    5.179699] EXT4-fs (mmcblk0p2): mounted filesystem with writeback data mode. Opts: data=writeback
+[    5.507764] scsi 0:0:0:0: Direct-Access     aigo     U268             2.00 PQ: 0 ANSI: 4
+[    5.510783] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[    5.511122] sd 0:0:0:0: [sda] 61440000 512-byte logical blocks: (31.5 GB/29.3 GiB)
+[    5.523435] sd 0:0:0:0: [sda] Write Protect is off
+[    5.528094] sd 0:0:0:0: [sda] No Caching mode page found
+[    5.533198] sd 0:0:0:0: [sda] Assuming drive cache: write through
+[    5.565671]  sda: sda1 sda2
+[    5.567845] sd 0:0:0:0: [sda] Attached SCSI removable disk
+[   35.811369] DDR_VDDC: disabling
+[   35.811531] VDD_RTC: disabling
+[   35.812025] TFLASH_VDD: disabling
+[   35.815436] USB0_VBUS: disabling
+[   35.818553] TF_IO: disabling
+[  191.267597] random: crng init done
