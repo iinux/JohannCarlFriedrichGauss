@@ -62,7 +62,8 @@ class ProxyMessage:
             else:
                 bs += uri.encode()
         else:
-            bs += 0
+            zero = 0
+            bs += zero.to_bytes(1, 'big')
 
         if data is not None:
             if isinstance(data, bytes):
@@ -84,12 +85,25 @@ class ClientThread(threading.Thread):
             if getattr(self.socket_ins, '_closed'):
                 print('socket is close')
                 break
+            try:
+                data = self.socket_ins.recv(1024)
+                data_len = len(data)
+                print('uri %s socket %s recv data len %d' % (self.uri, self.socket_ins.getsockname(), data_len))
+                if data_len > 0:
+                    core_socket.sendall(pm.encode(ProxyMessage.P_TYPE_TRANSFER, 0, self.uri, data))
+                else:
+                    break
+            except socket.timeout:
+                print("socket ins timeout")
+                self.socket_ins.close()
+                break
 
-            data = self.socket_ins.recv(1024)
-            data_len = len(data)
-            print("socket ins recv len " + str(data_len))
-            if data_len > 0:
-                core_socket.sendall(pm.encode(ProxyMessage.P_TYPE_TRANSFER, 0, self.uri, data))
+
+class HeartBeat(threading.Thread):
+    def run(self):
+        while True:
+            time.sleep(10)
+            core_socket.sendall(pm.encode(ProxyMessage.TYPE_HEARTBEAT, 0, None, None))
 
 
 ip_port = ('127.0.0.1', 4900)
@@ -101,10 +115,19 @@ core_socket.connect(ip_port)  # 连接服务器
 pm = ProxyMessage()
 core_socket.sendall(pm.encode(ProxyMessage.C_TYPE_AUTH, 0, key, None))
 
+heat_beat_thread = HeartBeat()
+heat_beat_thread.setDaemon(True)
+heat_beat_thread.start()
+
 socket_map = {}
 
 while True:
     msg_len_str = core_socket.recv(4)
+
+    if len(msg_len_str) < 1:
+        print('recv empty continue')
+        break
+
     msg_len = int.from_bytes(msg_len_str, 'big')
     print("msg_len is " + str(msg_len))
 
@@ -127,17 +150,25 @@ while True:
         ip_port = (ds[0], int(ds[1]))
         client_socket = socket.socket()
         client_socket.connect(ip_port)
-        ClientThread(client_socket, uri).start()
+
+        client_thread = ClientThread(client_socket, uri)
+        client_thread.setDaemon(True)
+        client_thread.start()
+
         socket_map[uri] = client_socket
         core_socket.sendall(pm.encode(ProxyMessage.TYPE_CONNECT, 0, uri.decode() + '@' + key, None))
     elif msg_type == ProxyMessage.P_TYPE_TRANSFER:
-        print("type transfer")
+        print('type transfer')
 
         if socket_map[uri] is None:
             print('uri is none')
         else:
-            socket_map[uri].sendall(data)
+            client_socket = socket_map[uri]
+            client_socket.sendall(data)
+            print('uri %s socket %s send data len %d' % (uri, client_socket.getsockname(), len(data)))
+    elif msg_type == ProxyMessage.TYPE_HEARTBEAT:
+        print('heart beat')
 
     time.sleep(0.1)
 
-# s.close()
+core_socket.close()
