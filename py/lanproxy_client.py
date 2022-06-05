@@ -129,7 +129,7 @@ while True:
         break
 
     msg_len = int.from_bytes(msg_len_str, 'big')
-    print("msg_len is " + str(msg_len))
+    # print("msg_len is " + str(msg_len))
 
     msg = core_socket.recv(msg_len)
 
@@ -141,7 +141,7 @@ while True:
     uri = msg[10: 10 + uri_len]
     data = msg[10 + uri_len:]
 
-    print(msg_type)
+    # print(msg_type)
 
     if msg_type == ProxyMessage.TYPE_CONNECT:
         print("type connect")
@@ -167,7 +167,8 @@ while True:
             client_socket.sendall(data)
             print('uri %s socket %s send data len %d' % (uri, client_socket.getsockname(), len(data)))
     elif msg_type == ProxyMessage.TYPE_HEARTBEAT:
-        print('heart beat')
+        # print('heart beat')
+        pass
 
     time.sleep(0.1)
 
