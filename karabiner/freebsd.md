@@ -360,3 +360,10 @@ The md(4) device md99 is used, leaving lower device numbers available for intera
 `swapon -aL`
 
 refer https://www.freebsd.org/doc/handbook/adding-swap-space.html
+
+# pf
+sysrc pf_enable=yes
+
+refer https://docs.freebsd.org/en/books/handbook/firewalls/#firewalls-pf
+
+tcpdump -n -e -ttt -r /var/log/pflog
