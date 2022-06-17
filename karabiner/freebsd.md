@@ -367,3 +367,12 @@ sysrc pf_enable=yes
 refer https://docs.freebsd.org/en/books/handbook/firewalls/#firewalls-pf
 
 tcpdump -n -e -ttt -r /var/log/pflog
+
+# remote x server
+
+```bash
+DISPLAY=127.0.0.1:0 xclock
+xhost +
+DISPLAY=192.168.1.5:0 xclock
+xauth list
+```
