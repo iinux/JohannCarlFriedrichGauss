@@ -371,8 +371,15 @@ tcpdump -n -e -ttt -r /var/log/pflog
 # remote x server
 
 ```bash
+lsof | grep -i xorg
+socat -d -d TCP-LISTEN:6000,fork UNIX-CONNECT:/tmp/.X11-unix/X0
+
 DISPLAY=127.0.0.1:0 xclock
+
 xhost +
 DISPLAY=192.168.1.5:0 xclock
+
 xauth list
 ```
+
+
