@@ -76,3 +76,16 @@
 * LABEL
 * WORKDIR
 * ONBUILD
+
+# remote docker
+
+server
+
+/etc/sysconfig/docker
+
+OPTIONS add -H tcp://0.0.0.0:2375
+
+client
+
+export DOCKER_HOST=tcp://127.0.0.1:2375
+

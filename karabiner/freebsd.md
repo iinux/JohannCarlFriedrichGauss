@@ -360,3 +360,26 @@ The md(4) device md99 is used, leaving lower device numbers available for intera
 `swapon -aL`
 
 refer https://www.freebsd.org/doc/handbook/adding-swap-space.html
+
+# pf
+sysrc pf_enable=yes
+
+refer https://docs.freebsd.org/en/books/handbook/firewalls/#firewalls-pf
+
+tcpdump -n -e -ttt -r /var/log/pflog
+
+# remote x server
+
+```bash
+lsof | grep -i xorg
+socat -d -d TCP-LISTEN:6000,fork UNIX-CONNECT:/tmp/.X11-unix/X0
+
+DISPLAY=127.0.0.1:0 xclock
+
+xhost +
+DISPLAY=192.168.1.5:0 xclock
+
+xauth list
+```
+
+

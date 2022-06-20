@@ -214,9 +214,9 @@ class Handler(threading.Thread):
 
 
 parser = argparse.ArgumentParser(description='lanproxy client')
-parser.add_argument('-s', help='proxy server host', default='127.0.0.1')
-parser.add_argument('-p', help='proxy server port', default=4900)
-parser.add_argument('-k', help='client key', default='4ec72fba10664f748cf4bfda005cefc6')
+parser.add_argument('-s', '--server', help='proxy server host', default='127.0.0.1')
+parser.add_argument('-p', '--port', help='proxy server port', default=4900)
+parser.add_argument('-k', '--key', help='client key', default='4ec72fba10664f748cf4bfda005cefc6')
 args = parser.parse_args()
 
 proxy_server_ip_port = (args.s, args.p)
