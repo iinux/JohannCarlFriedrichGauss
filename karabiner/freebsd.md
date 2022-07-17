@@ -382,4 +382,11 @@ DISPLAY=192.168.1.5:0 xclock
 xauth list
 ```
 
+# proc
+```bash
+mount -t linprocfs linproc /compat/linux/proc
+/etc/fstab
+linproc /compat/linux/proc linprocfs rw 0 0
+```
+
 
