@@ -389,4 +389,7 @@ mount -t linprocfs linproc /compat/linux/proc
 linproc /compat/linux/proc linprocfs rw 0 0
 ```
 
+# sleep
+`acpiconf -s 3`
+
 
