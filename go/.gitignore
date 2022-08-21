@@ -6,3 +6,6 @@ icmp2
 ip0x29
 nm
 ui
+udp_server
+udp_client
+udp_client2
