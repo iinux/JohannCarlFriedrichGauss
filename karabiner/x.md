@@ -49,3 +49,11 @@ xmodmap -pke | less
 dumpkeys -f | less
 setxkbmap -option caps:ctrl_modifier
 ```
+
+# cmd
+
+* xev
+* xset
+* xkeycaps
+* xrandr
+
