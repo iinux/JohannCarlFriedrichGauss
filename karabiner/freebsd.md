@@ -392,4 +392,13 @@ linproc /compat/linux/proc linprocfs rw 0 0
 # sleep
 `acpiconf -s 3`
 
+# dlv
+
+## Allow Delve to compile your application: 
+`dlv debug --headless --listen=:2345 --api-version=2 --accept-multiclient`
+## Or compile the application using Go 1.10 or newer: 
+`go build -gcflags \"all=-N -l\" github.com/app/demo`
+## and then run it with Delve using the following command: 
+`dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient exec ./demo`
+
 
