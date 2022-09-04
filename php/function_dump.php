@@ -8,13 +8,13 @@ class b {
     }
 }
 
-function function_dump($funcname) {
+function function_dump($funcName) {
     try {
-        if(is_array($funcname)) {
-            $func = new ReflectionMethod($funcname[0], $funcname[1]);
-            $funcname = $funcname[1];
+        if(is_array($funcName)) {
+            $func = new ReflectionMethod($funcName[0], $funcName[1]);
+            $funcName = $funcName[1];
         } else {
-            $func = new ReflectionFunction($funcname);
+            $func = new ReflectionFunction($funcName);
         }
     } catch (ReflectionException $e) {
         echo $e->getMessage();
@@ -23,10 +23,10 @@ function function_dump($funcname) {
     $start = $func->getStartLine() - 1;
     $end =  $func->getEndLine() - 1;
     $filename = $func->getFileName();
-    echo "function $funcname defined by $filename($start - $end)\n";
+    echo "function $funcName defined by $filename($start - $end)\n";
 }
 function_dump('a');
 function_dump(array('b', 'f'));
 $b = new b();
 function_dump(array($b, 'f'));
-?>
+

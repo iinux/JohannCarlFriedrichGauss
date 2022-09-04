@@ -4,6 +4,7 @@
  * User: qzhang
  * Date: 2018/4/25
  * Time: 14:12
+ * @throws Exception
  */
 
 function curl_call($p1, $p2, $times = 1)

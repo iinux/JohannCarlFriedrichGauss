@@ -14,11 +14,9 @@ if (mysqli_connect_errno()) {
     exit();
 }
 
-$provincie = array();
+$provinces = array();
 
-$query = 'SELECT nume_prov FROM sa_Provincie ';
-$query .= 'WHERE provincie_id > 777 ';
-$query .= 'ORDER BY nume_prov';
+$query = 'SELECT prov FROM provinces ';
 
 // Get query ---------------------------------------------------
 
@@ -30,21 +28,21 @@ if ($query_data == FALSE)
 $rows = mysqli_num_rows($query_data);
 if ($rows == 0)
 {
-    array_push($provincie, 'None found');
+    $provinces[] = 'None found';
     goto _adr1;
 }
 
 // Build array -------------------------------------------------
 
-array_push($provincie, 'All_');
+$provinces[] = 'All_';
 
 while ($row = mysqli_fetch_array($query_data))
-      array_push($provincie, $row['nume_prov']);
+      $provinces[] = $row['prov'];
 
 // End 
 
 _adr1:
-print json_encode($provincie);
+print json_encode($provinces);
 
 mysqli_free_result($query_data);
 mysqli_close($db_conn);
