@@ -78,11 +78,27 @@ int main()
     //,0x00
     };
 
-    for (uint16_t poly = 0x0000; poly <= 0xffff; poly++) {
-        uint16_t ret = crc16_free(data, sizeof(data), 0x0000, poly);
-        printf("%02x", poly);
-        if (ret == 0x9478) {
-            printf("success:%02x", poly);
+    int end = 0;
+    for (uint16_t init_value = 0x0005; init_value <= 0xffff; init_value++) {
+        for (uint16_t poly = 0x0000; poly <= 0xffff; poly++) {
+            uint16_t ret = crc16_free(data, sizeof(data), init_value, poly);
+            printf("%02x %02x %02x\n", init_value, poly, ret);
+            if (ret == 0x9478) {
+                printf("success:%02x %02x", init_value, poly);
+                end = 1;
+                break;
+            }
+
+            if (poly == 0xffff) {
+                break;
+            }
+        }
+
+        if (end == 1) {
+            break;
+        }
+
+        if (init_value == 0xffff) {
             break;
         }
     }
