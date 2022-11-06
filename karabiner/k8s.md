@@ -61,6 +61,7 @@ kubectl get node
 
 # 解决国内网络环境
 minikube 提供了特殊的启动参数 --image-mirror-country=cn  --registry-mirror=xxx --image-repository=xxx 等
+https://minikube.sigs.k8s.io/docs/handbook/vpn_and_proxy/
 
 # component and addon
 
@@ -121,6 +122,10 @@ kubectl get pod --v=9
 kubectl get pod
 kubectl get job
 kubectl get cj
+kubectl get pod -o wide
+kubectl get pod -w
+kubectl get cm
+kubectl get secret
 
 
 ```yaml
@@ -172,6 +177,7 @@ kubectl delete -f ngx-pod.yml
 
 kubectl delete pod busy-pod
 kubectl logs busy-pod
+
 kubectl describe pod busy-pod
 
 echo 'aaa' > a.txt
@@ -240,7 +246,6 @@ spec:
 
 ```
 
-kubectl get pod -w
 
 export out="--dry-run=client -o yaml"              # 定义Shell变量
 kubectl create cj echo-cj --image=busybox --schedule="" $out
@@ -295,7 +300,6 @@ data:
 ```
 
 kubectl create cm info --from-literal=k=v $out
-kubectl get cm
 kubectl describe cm info
 
 kubectl create secret generic user --from-literal=name=root $out
@@ -310,7 +314,6 @@ data:
   name: cm9vdA==
 ```
 
-kubectl get secret
 kubectl describe secret user
 
 kubectl explain pod.spec.containers.env.valueFrom
@@ -381,3 +384,110 @@ spec:
 
 
 ```
+
+如果已经存在的配置文件，可以使用 --from-file 从文件自动创建出ConfigMap 或 Secret
+
+https://kubernetes.io/blog/2018/07/18/11-ways-not-to-get-hacked/
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: maria-cm
+
+data:
+  DATABASE: 'db'
+  USER: 'wp'
+  PASSWORD: '123'
+  ROOT_PASSWORD: '123'
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: maria-cm
+
+data:
+  DATABASE: 'db'
+  USER: 'wp'
+  PASSWORD: '123'
+  ROOT_PASSWORD: '123'
+```
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: maria-pod
+  labels:
+    app: wordpress
+    role: database
+
+spec:
+  containers:
+  - image: mariadb:10
+    name: maria
+    imagePullPolicy: IfNotPresent
+    ports:
+    - containerPort: 3306
+
+    envFrom:
+    - prefix: 'MARIADB_'
+      configMapRef:
+        name: maria-cm
+
+```
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wp-cm
+
+data:
+  HOST: '172.17.0.2'
+  USER: 'wp'
+  PASSWORD: '123'
+  NAME: 'db'
+
+```
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: wp-pod
+  labels:
+    app: wordpress
+    role: website
+
+spec:
+  containers:
+  - image: wordpress:5
+    name: wp-pod
+    imagePullPolicy: IfNotPresent
+    ports:
+    - containerPort: 80
+
+    envFrom:
+    - prefix: 'WORDPRESS_DB_'
+      configMapRef:
+        name: wp-cm
+
+```
+
+kubectl port-forward wp-pod 8080:80 &
+
+```nginx
+server {
+  listen 80;
+  default_type text/html;
+
+  location / {
+      proxy_http_version 1.1;
+      proxy_set_header Host $host;
+      proxy_pass http://127.0.0.1:8080;
+  }
+}
+```
+
+minikube dashboard
