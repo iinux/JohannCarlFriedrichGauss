@@ -56,6 +56,7 @@ source <(kubectl completion bash)
 kubectl run ngx --image=nginx:alpine
 kubectl get pod
 kubectl get node
+kubectl get pod -n kube-system
 ```
 
 
@@ -123,6 +124,7 @@ kubectl get pod
 kubectl get job
 kubectl get cj
 kubectl get pod -o wide
+kubectl get pod -o yaml
 kubectl get pod -w
 kubectl get cm
 kubectl get secret
@@ -185,8 +187,6 @@ kubectl cp a.txt ngx-pod:/tmp
 
 kubectl exec -it ngx-pod -- sh
 
-
-
 kubectl explain pod
 kubectl explain pod.metadata
 kubectl explain pod.spec
@@ -194,82 +194,12 @@ kubectl explain pod.spec.containers
 
 kubectl run ngx --image=nginx:alpine --dry-run=client -o yaml
 
-
 export out="--dry-run=client -o yaml"
 kubectl run ngx --image=nginx:alpine $out
 
-export out="--dry-run=client -o yaml"              # 定义Shell变量
 kubectl create job echo-job --image=busybox $out
-
-```yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: echo-job
-
-spec:
-  template:
-    spec:
-      restartPolicy: OnFailure
-      containers:
-      - image: busybox
-        name: echo-job
-        imagePullPolicy: IfNotPresent
-        command: ["/bin/echo"]
-        args: ["hello", "world"]
-
-```
-
-```yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: sleep-job
-
-spec:
-  activeDeadlineSeconds: 15
-  backoffLimit: 2
-  completions: 4
-  parallelism: 2
-
-  template:
-    spec:
-      restartPolicy: OnFailure
-      containers:
-      - image: busybox
-        name: echo-job
-        imagePullPolicy: IfNotPresent
-        command:
-          - sh
-          - -c
-          - sleep $(($RANDOM % 10 + 1)) && echo done
-
-```
-
-
-export out="--dry-run=client -o yaml"              # 定义Shell变量
 kubectl create cj echo-cj --image=busybox --schedule="" $out
 
-```yaml
-apiVersion: batch/v1
-kind: CronJob
-metadata:
-  name: echo-cj
-
-spec:
-  schedule: '*/1 * * * *'
-  jobTemplate:
-    spec:
-      template:
-        spec:
-          restartPolicy: OnFailure
-          containers:
-          - image: busybox
-            name: echo-cj
-            imagePullPolicy: IfNotPresent
-            command: ["/bin/echo"]
-            args: ["hello", "world"]
-```
 
 Cron 来源于希腊语  Chronos 意思是时间
 
@@ -281,199 +211,20 @@ https://crontab.guru/
 successfulJobsHistoryLimit
 保留最近N个job执行结果
 
-export out="--dry-run=client -o yaml"        # 定义Shell变量
 kubectl create cm info $out
-
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: info
-
-data:
-  count: '10'
-  debug: 'on'
-  path: '/etc/systemd'
-  greeting: |
-    say hello to kubernetes.
-
-```
-
 kubectl create cm info --from-literal=k=v $out
 kubectl describe cm info
 
 kubectl create secret generic user --from-literal=name=root $out
-
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: user
-
-data:
-  name: cm9vdA==
-```
-
 kubectl describe secret user
 
 kubectl explain pod.spec.containers.env.valueFrom
 
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: env-pod
-
-spec:
-  containers:
-  - env:
-      - name: COUNT
-        valueFrom:
-          configMapKeyRef:
-            name: info
-            key: count
-      - name: GREETING
-        valueFrom:
-          configMapKeyRef:
-            name: info
-            key: greeting
-      - name: USERNAME
-        valueFrom:
-          secretKeyRef:
-            name: user
-            key: name
-      - name: PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: user
-            key: pwd
-
-    image: busybox
-    name: busy
-    imagePullPolicy: IfNotPresent
-    command: ["/bin/sleep", "300"]
-
-```
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: vol-pod
-
-spec:
-  volumes:
-  - name: cm-vol
-    configMap:
-      name: info
-  - name: sec-vol
-    secret:
-      secretName: user
-
-  containers:
-  - volumeMounts:
-    - mountPath: /tmp/cm-items
-      name: cm-vol
-    - mountPath: /tmp/sec-items
-      name: sec-vol
-
-    image: busybox
-    name: busy
-    imagePullPolicy: IfNotPresent
-    command: ["/bin/sleep", "300"]
-
-
-```
 
 如果已经存在的配置文件，可以使用 --from-file 从文件自动创建出ConfigMap 或 Secret
 
 https://kubernetes.io/blog/2018/07/18/11-ways-not-to-get-hacked/
 
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: maria-cm
-
-data:
-  DATABASE: 'db'
-  USER: 'wp'
-  PASSWORD: '123'
-  ROOT_PASSWORD: '123'
-
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: maria-cm
-
-data:
-  DATABASE: 'db'
-  USER: 'wp'
-  PASSWORD: '123'
-  ROOT_PASSWORD: '123'
-```
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: maria-pod
-  labels:
-    app: wordpress
-    role: database
-
-spec:
-  containers:
-  - image: mariadb:10
-    name: maria
-    imagePullPolicy: IfNotPresent
-    ports:
-    - containerPort: 3306
-
-    envFrom:
-    - prefix: 'MARIADB_'
-      configMapRef:
-        name: maria-cm
-
-```
-
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: wp-cm
-
-data:
-  HOST: '172.17.0.2'
-  USER: 'wp'
-  PASSWORD: '123'
-  NAME: 'db'
-
-```
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: wp-pod
-  labels:
-    app: wordpress
-    role: website
-
-spec:
-  containers:
-  - image: wordpress:5
-    name: wp-pod
-    imagePullPolicy: IfNotPresent
-    ports:
-    - containerPort: 80
-
-    envFrom:
-    - prefix: 'WORDPRESS_DB_'
-      configMapRef:
-        name: wp-cm
-
-```
 
 kubectl port-forward wp-pod 8080:80 &
 
@@ -491,3 +242,4 @@ server {
 ```
 
 minikube dashboard
+kubectl  edit
