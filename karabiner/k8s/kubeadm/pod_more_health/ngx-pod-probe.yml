@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ngx-pod-probe
+
+spec:
+  volumes:
+  - name: ngx-conf-vol
+    configMap:
+      name: ngx-conf
+
+  containers:
+  - image: nginx:alpine
+    name: ngx
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - mountPath: /etc/nginx/conf.d
+      name: ngx-conf-vol
+
+    startupProbe:
+      periodSeconds: 1
+      exec:
+        command: ["cat", "/var/run/nginx.pid"]
+
+    livenessProbe:
+      periodSeconds: 10
+      tcpSocket:
+        port: 80
+
+    readinessProbe:
+      periodSeconds: 5
+      httpGet:
+        path: /ready
+        port: 80
+
