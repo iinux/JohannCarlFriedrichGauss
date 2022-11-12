@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: wp-dep
+  name: wp-dep
+
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: wp-dep
+
+  template:
+    metadata:
+      labels:
+        app: wp-dep
+    spec:
+      containers:
+      - image: wordpress:5
+        name: wordpress
+        ports:
+        - containerPort: 80
+
+        envFrom:
+        - prefix: 'WORDPRESS_DB_'
+          configMapRef:
+            name: wp-cm
+

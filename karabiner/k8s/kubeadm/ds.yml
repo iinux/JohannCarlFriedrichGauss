@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: redis-ds
+  labels:
+    app: redis-ds
+
+spec:
+  selector:
+    matchLabels:
+      name: redis-ds
+
+  template:
+    metadata:
+      labels:
+        name: redis-ds
+    spec:
+      containers:
+      - image: redis:5-alpine
+        name: redis
+        ports:
+        - containerPort: 6379
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+        operator: Exists
+

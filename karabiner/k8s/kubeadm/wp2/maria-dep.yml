@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: maria-dep
+  name: maria-dep
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: maria-dep
+
+  template:
+    metadata:
+      labels:
+        app: maria-dep
+    spec:
+      containers:
+      - image: mariadb:10
+        name: mariadb
+        ports:
+        - containerPort: 3306
+
+        envFrom:
+        - prefix: 'MARIADB_'
+          configMapRef:
+            name: maria-cm
+

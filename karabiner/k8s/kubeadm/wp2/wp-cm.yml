@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wp-cm
+
+data:
+  HOST: 'maria-svc'
+  USER: 'wp'
+  PASSWORD: '123'
+  NAME: 'db'
+
