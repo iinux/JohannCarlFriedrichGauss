@@ -1,0 +1,16 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  creationTimestamp: null
+  name: ngx-hpa-dep
+spec:
+  maxReplicas: 10
+  minReplicas: 2
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ngx-hpa-dep
+  targetCPUUtilizationPercentage: 5
+status:
+  currentReplicas: 0
+  desiredReplicas: 0

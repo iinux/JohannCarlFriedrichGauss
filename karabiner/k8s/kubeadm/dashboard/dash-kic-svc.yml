@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dash-kic-svc
+  namespace: nginx-ingress
+
+spec:
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 443
+    nodePort: 30443
+
+  selector:
+    app: dash-kic-dep
+  type: NodePort
+

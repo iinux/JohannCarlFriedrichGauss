@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: dash-ing
+  namespace: kubernetes-dashboard
+  annotations:
+    nginx.org/ssl-services: "kubernetes-dashboard"
+
+spec:
+  ingressClassName: dash-ink
+
+  tls:
+    - hosts:
+      - k8s.test
+      secretName: dash-tls
+
+  rules:
+  - host: k8s.test
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kubernetes-dashboard
+            port:
+              number: 443
+
