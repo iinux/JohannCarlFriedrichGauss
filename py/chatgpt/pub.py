@@ -63,6 +63,7 @@ def wechat():
     if encrypt_type == "raw":
         # plaintext mode
         msg = parse_message(request.data)
+        print(msg)
         if msg.type == "text":
             r = redis.Redis(host='localhost', port=6379, decode_responses=True)
             key = 'chatgpt_answer_' + msg.content
@@ -75,18 +76,31 @@ def wechat():
                     read_times -= 1
                     time.sleep(1)
                     answer_cache = r.get(key)
-                    if answer_cache != THINKING:
+                    if answer_cache is None:
+                        reply_content = "loop result fail, try again"
+                        break
+                    elif answer_cache != THINKING:
                         print('GOT')
                         reply_content = answer_cache
                         break
+                reply_content += '[L]'
             elif answer_cache:
                 print('answer from cache')
                 reply_content = answer_cache
+                reply_content += '[C]'
             else:
                 print('call openapi')
                 r.set(key, THINKING, 300)
-                reply_content = chat_with_gpt3(msg.content).strip()
-                r.set(key, reply_content, 300)
+                try:
+                    time_start = time.time()
+                    reply_content = chat_with_gpt3(msg.content).lstrip('?？').strip()
+                    time_end = time.time()
+                    reply_content += '\n(time cost %.3f s)' % (time_end - time_start)
+                    r.set(key, reply_content, 300)
+                except openai.error.APIConnectionError:
+                    reply_content = "call openapi fail, try again"
+                    r.delete(key)
+                reply_content += '[I]'
             print('ask {} response {}'.format(msg.content, reply_content))
             reply = create_reply(reply_content, msg)
         else:
