@@ -14,10 +14,16 @@ from wechatpy.exceptions import (
 )
 
 # set token or get from environments
-TOKEN = os.getenv("WECHAT_TOKEN", my_config.wechat_token)
-AES_KEY = os.getenv("WECHAT_AES_KEY", my_config.wechat_aes_key)
-APPID = os.getenv("WECHAT_APPID", my_config.wechat_app_id)
+TOKEN = os.getenv('WECHAT_TOKEN', my_config.wechat_token)
+AES_KEY = os.getenv('WECHAT_AES_KEY', my_config.wechat_aes_key)
+APPID = os.getenv('WECHAT_APPID', my_config.wechat_app_id)
 THINKING = 'THINKING'
+DEFAULT_MODEL = 'text-davinci-003'
+USER_MODEL_CACHE_PREFIX = 'user_model_'
+CMD_LIST_MODEL = 'list model'
+CMD_GET_MODEL = 'get model'
+CMD_SET_MODEL = 'set model '
+CMD_CALL_API = 'call api '
 
 openai.api_key = my_config.key_openai
 
@@ -25,7 +31,7 @@ openai.api_key = my_config.key_openai
 def chat_with_gpt3(msg, user_model):
     if user_model in ['gpt-3.5-turbo']:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model='gpt-3.5-turbo',
             messages=[{'role': 'user', 'content': msg.content}],
             max_tokens=2048,
             n=1,
@@ -50,23 +56,30 @@ def chat_with_gpt3(msg, user_model):
     return message
 
 
-def set_user_model(user, model):
+def get_redis():
     r = redis.Redis(host='localhost', port=6379, decode_responses=True)
-    r.set('user_model_' + user, model)
+    return r
+
+
+def set_user_model(user, model):
+    r = get_redis()
+    if model == 'default':
+        model = DEFAULT_MODEL
+    r.set(USER_MODEL_CACHE_PREFIX + user, model)
     r.close()
 
 
 def get_user_model(user):
-    r = redis.Redis(host='localhost', port=6379, decode_responses=True)
-    user_model = r.get('user_model_' + user)
+    r = get_redis()
+    user_model = r.get(USER_MODEL_CACHE_PREFIX + user)
     r.close()
     if user_model is None:
-        user_model = 'text-davinci-003'
+        user_model = DEFAULT_MODEL
     return user_model
 
 
 def ask(msg, allow_cache=True):
-    r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+    r = get_redis()
 
     user_model = get_user_model(msg.source)
 
@@ -81,7 +94,7 @@ def ask(msg, allow_cache=True):
             time.sleep(1)
             answer_cache = r.get(key)
             if answer_cache is None:
-                reply_content = "loop result fail, try again"
+                reply_content = 'loop result fail, try again'
                 break
             elif answer_cache != THINKING:
                 print('GOT')
@@ -103,7 +116,7 @@ def ask(msg, allow_cache=True):
             r.set(key, reply_content, 28800)
         except openai.error.APIConnectionError as e:
             print(e)
-            reply_content = "call openapi fail, try again " + e.__str__()
+            reply_content = 'call openapi fail, try again ' + e.__str__()
             r.delete(key)
         reply_content += '[I]'
     return reply_content
@@ -112,48 +125,50 @@ def ask(msg, allow_cache=True):
 app = Flask(__name__)
 
 
-@app.route("/")
+@app.route('/')
 def index():
     host = request.url_root
-    return render_template("index.html", host=host)
+    return render_template('index.html', host=host)
 
 
-@app.route("/wechat", methods=["GET", "POST"])
+@app.route('/wechat', methods=['GET', 'POST'])
 def wechat():
-    signature = request.args.get("signature", "")
-    timestamp = request.args.get("timestamp", "")
-    nonce = request.args.get("nonce", "")
-    encrypt_type = request.args.get("encrypt_type", "raw")
-    msg_signature = request.args.get("msg_signature", "")
+    signature = request.args.get('signature', '')
+    timestamp = request.args.get('timestamp', '')
+    nonce = request.args.get('nonce', '')
+    encrypt_type = request.args.get('encrypt_type', 'raw')
+    msg_signature = request.args.get('msg_signature', '')
     try:
         check_signature(TOKEN, signature, timestamp, nonce)
     except InvalidSignatureException:
         abort(403)
-    if request.method == "GET":
-        echo_str = request.args.get("echostr", "")
+    if request.method == 'GET':
+        echo_str = request.args.get('echostr', '')
         return echo_str
 
     # POST request
-    if encrypt_type == "raw":
+    if encrypt_type == 'raw':
         # plaintext mode
         msg = parse_message(request.data)
         print(msg)
-        if msg.type == "text":
-            reply_content = ""
-            if msg.content == "list":
-                reply_content = ','.join([x.id for x in openai.Model.list().get('data')])
-            elif msg.content.startswith("set "):
-                user_model = msg.content[4:]
+        if msg.type == 'text':
+            reply_content = ''
+            if msg.content == CMD_LIST_MODEL:
+                reply_content = '\n'.join([x.id for x in openai.Model.list().get('data')])
+            elif msg.content.startswith(CMD_SET_MODEL):
+                user_model = msg.content[len(CMD_SET_MODEL):]
                 set_user_model(msg.source, user_model)
-                reply_content = "set user model success"
-            elif msg.content.startswith('call_api '):
-                reply_content = ask(msg.content[9:], allow_cache=False)
+                reply_content = 'set user model success'
+            elif msg.content == 'get model':
+                reply_content = get_user_model(msg.source)
+            elif msg.content.startswith(CMD_CALL_API):
+                reply_content = ask(msg.content[len(CMD_CALL_API):], allow_cache=False)
             else:
                 reply_content = ask(msg)
             print('ask {} response {}'.format(msg.content, reply_content))
             reply = create_reply(reply_content, msg)
         else:
-            reply = create_reply("Sorry, can not handle this for now", msg)
+            reply = create_reply('Sorry, can not handle this for now', msg)
         return reply.render()
     else:
         # encryption mode
@@ -166,12 +181,12 @@ def wechat():
             abort(403)
         else:
             msg = parse_message(msg)
-            if msg.type == "text":
+            if msg.type == 'text':
                 reply = create_reply(msg.content, msg)
             else:
-                reply = create_reply("Sorry, can not handle this for now", msg)
+                reply = create_reply('Sorry, can not handle this for now', msg)
             return crypto.encrypt_message(reply.render(), nonce, timestamp)
 
 
-if __name__ == "__main__":
-    app.run("127.0.0.1", 8081, debug=False)
+if __name__ == '__main__':
+    app.run('127.0.0.1', 8081, debug=False)
