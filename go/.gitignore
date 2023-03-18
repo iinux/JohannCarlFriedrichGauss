@@ -10,3 +10,5 @@ udp_server
 udp_client
 udp_client2
 go.iml
+nm_amd64
+dmb_amd64

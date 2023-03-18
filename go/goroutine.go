@@ -13,6 +13,7 @@ func say(s string) {
 }
 
 func main() {
+	fmt.Println("Go Version:", runtime.Version())
 	go say("world") //开一个新的Goroutines执行
 	say("hello") //当前Goroutines执行
 }
