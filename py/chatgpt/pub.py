@@ -3,6 +3,8 @@ import os
 import time
 import redis
 import openai
+import requests
+
 import my_config
 
 from flask import Flask, request, abort, render_template
@@ -12,23 +14,57 @@ from wechatpy.exceptions import (
     InvalidSignatureException,
     InvalidAppIdException,
 )
+# from bs4 import BeautifulSoup
 
 # set token or get from environments
 TOKEN = os.getenv('WECHAT_TOKEN', my_config.wechat_token)
 AES_KEY = os.getenv('WECHAT_AES_KEY', my_config.wechat_aes_key)
 APPID = os.getenv('WECHAT_APPID', my_config.wechat_app_id)
 THINKING = 'THINKING'
+
 DEFAULT_MODEL = 'text-davinci-003'
 USER_MODEL_CACHE_PREFIX = 'user_model_'
 CMD_LIST_MODEL = 'list model'
 CMD_GET_MODEL = 'get model'
 CMD_SET_MODEL = 'set model '
+
+DEFAULT_SYS = 'chatgpt'
+USER_SYS_CACHE_PREFIX = 'user_sys_'
+CMD_GET_SYS = 'get sys'
+CMD_SET_SYS = 'set sys '
+
 CMD_CALL_API = 'call api '
 
 openai.api_key = my_config.key_openai
 
 
-def chat_with_gpt3(msg, user_model):
+def chat(msg):
+    sys = get_user_sys(msg.source)
+    if sys == 'chatgpt':
+        return chat_with_gpt3(msg)
+    elif sys == 'writesonic':
+        return chat_with_writesonic(msg)
+    else:
+        return 'unknown sys'
+
+
+def chat_with_writesonic(msg):
+    url = 'https://api.writesonic.com/v2/business/content/chatsonic?engine=premium'
+    res = requests.post(url, json={
+        'enable_google_results': 'false',
+        'enable_memory': 'false',
+        'input_text': msg.content,
+    }, headers={
+        "X-API-KEY": my_config.writesonic_api_key,
+        'accept': 'application/json',
+        'content-type': 'application/json',
+    })
+    print(res)
+    return res.json()['message']
+
+
+def chat_with_gpt3(msg):
+    user_model = get_user_model(msg.source)
     if user_model in ['gpt-3.5-turbo']:
         response = openai.ChatCompletion.create(
             model='gpt-3.5-turbo',
@@ -78,11 +114,25 @@ def get_user_model(user):
     return user_model
 
 
+def set_user_sys(user, sys):
+    r = get_redis()
+    if sys == 'default':
+        sys = DEFAULT_SYS
+    r.set(USER_SYS_CACHE_PREFIX + user, sys)
+    r.close()
+
+
+def get_user_sys(user):
+    r = get_redis()
+    user_sys = r.get(USER_SYS_CACHE_PREFIX + user)
+    r.close()
+    if user_sys is None:
+        user_sys = DEFAULT_SYS
+    return user_sys
+
+
 def ask(msg, allow_cache=True):
     r = get_redis()
-
-    user_model = get_user_model(msg.source)
-
     key = 'chatgpt_answer_' + msg.content
     answer_cache = r.get(key)
     if answer_cache == THINKING and allow_cache:
@@ -106,11 +156,11 @@ def ask(msg, allow_cache=True):
         reply_content = answer_cache
         reply_content += '[C]'
     else:
-        print('call openapi')
+        print('call api')
         r.set(key, THINKING, 300)
         try:
             time_start = time.time()
-            reply_content = chat_with_gpt3(msg, user_model).lstrip('?？').strip()
+            reply_content = chat(msg).lstrip('?？').strip()
             time_end = time.time()
             reply_content += '\n(time cost %.3f s)' % (time_end - time_start)
             r.set(key, reply_content, 28800)
@@ -159,8 +209,14 @@ def wechat():
                 user_model = msg.content[len(CMD_SET_MODEL):]
                 set_user_model(msg.source, user_model)
                 reply_content = 'set user model success'
-            elif msg.content == 'get model':
+            elif msg.content == CMD_GET_MODEL:
                 reply_content = get_user_model(msg.source)
+            elif msg.content.startswith(CMD_SET_SYS):
+                user_sys = msg.content[len(CMD_SET_SYS):]
+                set_user_sys(msg.source, user_sys)
+                reply_content = 'set user sys success'
+            elif msg.content == CMD_GET_SYS:
+                reply_content = get_user_sys(msg.source)
             elif msg.content.startswith(CMD_CALL_API):
                 reply_content = ask(msg.content[len(CMD_CALL_API):], allow_cache=False)
             else:
@@ -190,3 +246,4 @@ def wechat():
 
 if __name__ == '__main__':
     app.run('127.0.0.1', 8081, debug=False)
+
