@@ -102,6 +102,7 @@ int listen4(int port)
         //接收客户端请求
         struct sockaddr_in clnt_addr;
         socklen_t clnt_addr_size = sizeof(clnt_addr);
+        sleep(100000);
         int clnt_sock = accept(serv_sock, (struct sockaddr *)&clnt_addr, &clnt_addr_size);
 
         n = fork();
@@ -194,6 +195,7 @@ int listen6(int port)
         //接收客户端请求
         struct sockaddr_in6 clnt_addr;
         socklen_t clnt_addr_size = sizeof(clnt_addr);
+        sleep(100000);
         int clnt_sock = accept(serv_sock, (struct sockaddr *)&clnt_addr, &clnt_addr_size);
 
         n = fork();

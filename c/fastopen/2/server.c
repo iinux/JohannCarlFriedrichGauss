@@ -40,7 +40,7 @@ int main()
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(7890);
-    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    addr.sin_addr.s_addr = inet_addr("0.0.0.0");
 
     if (bind(serverSock, (struct sockaddr *)&addr, sizeof(addr)) < 0)
     {

@@ -93,7 +93,7 @@ hook_tcpconn_functions(void)
         return 1;
     }
 
-    if (pte->pte & ~_PAGE_RW) {
+    if (!(pte->pte & _PAGE_RW)) {
         pte->pte |= _PAGE_RW;
     }
 

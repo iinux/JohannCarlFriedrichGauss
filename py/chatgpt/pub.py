@@ -22,7 +22,8 @@ AES_KEY = os.getenv('WECHAT_AES_KEY', my_config.wechat_aes_key)
 APPID = os.getenv('WECHAT_APPID', my_config.wechat_app_id)
 THINKING = 'THINKING'
 
-DEFAULT_MODEL = 'text-davinci-003'
+#DEFAULT_MODEL = 'text-davinci-003'
+DEFAULT_MODEL = 'gpt-3.5-turbo'
 USER_MODEL_CACHE_PREFIX = 'user_model_'
 CMD_LIST_MODEL = 'list model'
 CMD_GET_MODEL = 'get model'

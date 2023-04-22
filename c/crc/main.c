@@ -73,13 +73,13 @@ int main1()
 int main()
 {
     uint8_t data[] = {0xFE,0xE4,0xEF
-    //,0xA9,0x94,0xF1
+    ,0xA9,0x94,0xF1
     //,0x00,0x05
     //,0x00
     };
 
     int end = 0;
-    for (uint16_t init_value = 0x0005; init_value <= 0xffff; init_value++) {
+    for (uint16_t init_value = 0x0000; init_value <= 0xffff; init_value++) {
         for (uint16_t poly = 0x0000; poly <= 0xffff; poly++) {
             uint16_t ret = crc16_free(data, sizeof(data), init_value, poly);
             printf("%02x %02x %02x\n", init_value, poly, ret);
