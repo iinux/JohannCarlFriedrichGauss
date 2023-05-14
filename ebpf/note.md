@@ -1,4 +1,52 @@
 
+# overview
+
+## event sources
+
+* 硬件事件
+  * 性能监控计数器 PMCs
+    * 场景
+        * 追踪CPU缓存
+        * 追踪指令周期
+        * 分支预测等事关事件性能
+* 静态探针
+  * 跟踪点（tracepoints）
+    * 实现
+        * printk
+        * 内核函数
+        * 内核 trace event 等
+  * USDT 探针（User Statically-Defined Tracing）
+* 动态探针
+  * kprobes
+  * uprobes
+
+## tracing frameworks
+* ftrace
+  * 可消费事件源：tracepoints, kprobes, and uprobes;依赖debugfs;
+  * 前端工作：
+    * /sys/kernel/debug/tracing
+    * trace-cmd
+    * perf-tools，是ftrace和perf event的包装器
+* perf_event(又名perf)
+  * perf
+  * perf-tools
+* eBPF
+  * bcc
+  * bpftrace
+* SystemTap
+  * stap
+* sysdig
+
+## degree of difficulty
+* 指令集编程（难）
+* C编程（中）
+* 前端（易）
+  * BCC 难
+  * bpftrace 易
+  * ply 开发阶段
+
+# detail
+
 https://bowers.github.io/eBPF-Hello-World/
 
 more /boot/config-$(uname -r) | grep CONFIG_BPF
