@@ -3,6 +3,8 @@ import sys
 import requests
 import cf_sensitive
 
+from colorama import Fore, Style
+
 zone_id = cf_sensitive.zone_id
 token = cf_sensitive.token
 
@@ -22,9 +24,14 @@ def get_all_record():
     print_format = '{:<36s} {:<32s} {:<4s} {:<50s} {:<9s} {:<7s}'
     print(print_format.format('id', 'name', 'type', 'content', 'proxiable', 'proxied'))
     print("-" * 150)
+    domains = sorted(domains, key=lambda x: x['name'])
     for domain in domains:
+        if domain['proxied']:
+            proxied = Fore.GREEN + str(True) + Style.RESET_ALL
+        else:
+            proxied = str(False)
         print(print_format.format(domain['id'], domain['name'], domain['type'], domain['content'],
-                                  str(domain['proxiable']), str(domain['proxied'])))
+                                  str(domain['proxiable']), proxied))
     return None
 
 
@@ -71,7 +78,18 @@ if __name__ == '__main__':
     # update_record('cdf095d296853b3b884d375e46a9904f', 'love', 'A', '1.1.1.1')
     # add_record('new_love', 'A', '8.8.8.8')
     # get_all_record()
-    action = sys.argv[1]
+    argv_len = len(sys.argv)
+    action = 'list'
+    if argv_len == 1:
+        pass
+    elif argv_len == 2:
+        pass
+    elif argv_len < 5 or argv_len > 6:
+        print('argv error')
+        sys.exit(-1)
+    else:
+        action = sys.argv[1]
+
     if action == 'list':
         get_all_record()
     elif action == 'add':
