@@ -3,8 +3,10 @@ vendor
 .tags
 *.sublime-project
 *.sublime-workspace
+*.log
 .vscode
 c/1
 projectFilesBackup
 .tags
 .DS_Store
+__pycache__

@@ -7,3 +7,4 @@ nm_s_select2
 nm_s_poll
 nm_s_select
 nm_s_kqueue
+thread_test
