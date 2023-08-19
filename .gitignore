@@ -10,3 +10,5 @@ projectFilesBackup
 .tags
 .DS_Store
 __pycache__
+c/dns_sniffer
+c/dns_sniffer2
