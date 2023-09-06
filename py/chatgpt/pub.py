@@ -6,6 +6,7 @@ import openai
 import requests
 
 import my_config
+import SparkApi
 
 from flask import Flask, request, abort, render_template
 from wechatpy import parse_message, create_reply
@@ -14,6 +15,7 @@ from wechatpy.exceptions import (
     InvalidSignatureException,
     InvalidAppIdException,
 )
+
 # from bs4 import BeautifulSoup
 
 # set token or get from environments
@@ -22,14 +24,14 @@ AES_KEY = os.getenv('WECHAT_AES_KEY', my_config.wechat_aes_key)
 APPID = os.getenv('WECHAT_APPID', my_config.wechat_app_id)
 THINKING = 'THINKING'
 
-#DEFAULT_MODEL = 'text-davinci-003'
+# DEFAULT_MODEL = 'text-davinci-003'
 DEFAULT_MODEL = 'gpt-3.5-turbo'
 USER_MODEL_CACHE_PREFIX = 'user_model_'
 CMD_LIST_MODEL = 'list model'
 CMD_GET_MODEL = 'get model'
 CMD_SET_MODEL = 'set model '
 
-DEFAULT_SYS = 'chatgpt'
+DEFAULT_SYS = 'xf'
 USER_SYS_CACHE_PREFIX = 'user_sys_'
 CMD_GET_SYS = 'get sys'
 CMD_SET_SYS = 'set sys '
@@ -45,8 +47,22 @@ def chat(msg):
         return chat_with_gpt3(msg)
     elif sys == 'writesonic':
         return chat_with_writesonic(msg)
+    elif sys == 'xf':
+        return chat_with_xf(msg)
     else:
         return 'unknown sys'
+
+
+def chat_with_xf(msg):
+    # 用于配置大模型版本，默认“general/generalv2”
+    # domain = "general"   # v1.5版本
+    domain = "generalv2"  # v2.0版本
+    # 云端环境的服务地址
+    # Spark_url = "ws://spark-api.xf-yun.com/v1.1/chat"  # v1.5环境的地址
+    Spark_url = "ws://spark-api.xf-yun.com/v2.1/chat"  # v2.0环境的地址
+    SparkApi.answer = ""
+    SparkApi.main(my_config.xf_appid, my_config.xf_api_key, my_config.xf_api_secret, Spark_url, domain, msg.content)
+    return SparkApi.answer
 
 
 def chat_with_writesonic(msg):
@@ -247,4 +263,3 @@ def wechat():
 
 if __name__ == '__main__':
     app.run('127.0.0.1', 8081, debug=False)
-
