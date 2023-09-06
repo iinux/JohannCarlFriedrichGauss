@@ -61,7 +61,12 @@ def chat_with_xf(msg):
     # Spark_url = "ws://spark-api.xf-yun.com/v1.1/chat"  # v1.5环境的地址
     Spark_url = "ws://spark-api.xf-yun.com/v2.1/chat"  # v2.0环境的地址
     SparkApi.answer = ""
-    SparkApi.main(my_config.xf_appid, my_config.xf_api_key, my_config.xf_api_secret, Spark_url, domain, msg.content)
+    text = []
+    jsoncon = {}
+    jsoncon["role"] = "user"
+    jsoncon["content"] = msg.content
+    text.append(jsoncon)
+    SparkApi.main(my_config.xf_appid, my_config.xf_api_key, my_config.xf_api_secret, Spark_url, domain, text)
     return SparkApi.answer
 
 
