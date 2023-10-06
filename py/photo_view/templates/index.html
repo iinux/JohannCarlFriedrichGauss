@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>图片列表</title>
+</head>
+<body>
+    <h1>图片列表</h1>
+    <ul>
+        {% for image in images %}
+            <li>
+                <a href="/image/{{ image }}">{{ image }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
+
