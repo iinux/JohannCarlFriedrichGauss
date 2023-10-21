@@ -3,9 +3,9 @@ import base64
 import requests
 from flask import Flask, render_template, request
 
-app = Flask(__name__)
-
 img_dir = "."
+app = Flask(__name__, static_folder=img_dir, static_url_path='')
+
 
 def get_images():
     """获取当前目录下的所有图片"""
@@ -16,11 +16,20 @@ def get_images():
     return images
 
 
+def get_mp4s():
+    mp4s = []
+    for filename in os.listdir(img_dir):
+        if filename.endswith(".mp4"):
+            mp4s.append(filename)
+    return mp4s
+
+
 @app.route("/")
 def index():
     """主页"""
     images = get_images()
-    return render_template("index.html", images=images)
+    mp4s = get_mp4s()
+    return render_template("index.html", images=images, mp4s=mp4s)
 
 
 @app.route("/image/<filename>")
@@ -33,4 +42,3 @@ def image(filename):
 
 if __name__ == "__main__":
     app.run(debug=True)
-

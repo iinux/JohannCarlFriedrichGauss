@@ -54,6 +54,7 @@ def chat(msg):
 
 
 def chat_with_xf(msg):
+    # https://www.xfyun.cn/doc/spark/Web.html#_1-%E6%8E%A5%E5%8F%A3%E8%AF%B4%E6%98%8E
     # 用于配置大模型版本，默认“general/generalv2”
     # domain = "general"   # v1.5版本
     domain = "generalv2"  # v2.0版本
