@@ -29,10 +29,8 @@ def request_index():
         ds = re.findall(r"(\d{4}-\d{2}-\d{2})", str(dates[i]))
         file_name = "upload-%s-free-%s-code-%s-title-%s.mp4" % (ds[0], ds[1], codes[i].text, title.text)
         print(file_name)
-        i += 1
-
         request_j_index(file_name, codes[i].text)
-        break
+        i += 1
 
 
 def request_j_index(file_name, code):
