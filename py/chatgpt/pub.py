@@ -51,9 +51,24 @@ def chat(msg):
     elif sys == 'xf':
         return chat_with_xf(msg)
     elif sys == 'sensenova':
-        return sensenova_service.ask(msg)
+        user_model = get_user_model(msg.source)
+        return sensenova_service.ask_from_wechat(msg, user_model)
     else:
         return 'unknown sys'
+
+
+def get_default_model(sys):
+    if sys == 'sensenova':
+        return sensenova_service.get_default_model()
+    else:
+        return DEFAULT_MODEL
+
+
+def get_model_list(sys):
+    if sys == 'sensenova':
+        return sensenova_service.get_model_list()
+    else:
+        return [x.id for x in openai.Model.list().get('data')]
 
 
 def chat_with_xf(msg):
@@ -126,7 +141,7 @@ def get_redis():
 def set_user_model(user, model):
     r = get_redis()
     if model == 'default':
-        model = DEFAULT_MODEL
+        model = get_default_model(get_user_sys(user))
     r.set(USER_MODEL_CACHE_PREFIX + user, model)
     r.close()
 
@@ -135,8 +150,11 @@ def get_user_model(user):
     r = get_redis()
     user_model = r.get(USER_MODEL_CACHE_PREFIX + user)
     r.close()
+    user_sys = get_user_sys(user)
     if user_model is None:
-        user_model = DEFAULT_MODEL
+        user_model = get_default_model(user_sys)
+    if user_model not in get_model_list(user_sys):
+        user_model = get_default_model(user_sys)
     return user_model
 
 
@@ -230,7 +248,8 @@ def wechat():
         if msg.type == 'text':
             reply_content = ''
             if msg.content == CMD_LIST_MODEL:
-                reply_content = '\n'.join([x.id for x in openai.Model.list().get('data')])
+                user_sys = get_user_sys(msg.source)
+                reply_content = '\n'.join(get_model_list(user_sys))
             elif msg.content.startswith(CMD_SET_MODEL):
                 user_model = msg.content[len(CMD_SET_MODEL):]
                 set_user_model(msg.source, user_model)
