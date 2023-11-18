@@ -7,6 +7,7 @@ import requests
 
 import my_config
 import SparkApi
+import sensenova_service
 
 from flask import Flask, request, abort, render_template
 from wechatpy import parse_message, create_reply
@@ -49,6 +50,8 @@ def chat(msg):
         return chat_with_writesonic(msg)
     elif sys == 'xf':
         return chat_with_xf(msg)
+    elif sys == 'sensenova':
+        return sensenova_service.ask(msg)
     else:
         return 'unknown sys'
 
