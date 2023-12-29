@@ -4,6 +4,8 @@ import os
 import sf_data
 from bs4 import BeautifulSoup
 
+# pip install beautifulsoup4
+
 index = "/?ch=smov&op=free_movie&class_name=%E5%85%8D%E8%B4%B9%E4%B8%93%E5%8C%BA"
 ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) ' \
      'Chrome/118.0.0.0 Safari/537.36'
@@ -72,8 +74,9 @@ def download_mpd(mpd, file_name):
         cmd = "ffmpeg -i '%s' -c copy %s" % (mpd, file_name)
         print(cmd)
         os.system(cmd)
-        with open(tag_file, 'w') as file:
-            pass
+        if os.path.exists(file_name):
+            with open(tag_file, 'w') as file:
+                pass
 
 
 request_index()
