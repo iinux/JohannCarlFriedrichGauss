@@ -67,10 +67,13 @@ def request_mpd(video_url, file_name):
 
 
 def download_mpd(mpd, file_name):
-    if not os.path.exists(file_name):
+    tag_file = file_name + '.downloaded'
+    if not os.path.exists(file_name) and not os.path.exists(tag_file):
         cmd = "ffmpeg -i '%s' -c copy %s" % (mpd, file_name)
         print(cmd)
         os.system(cmd)
+        with open(tag_file, 'w') as file:
+            pass
 
 
 request_index()
