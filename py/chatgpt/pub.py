@@ -8,6 +8,7 @@ import requests
 import my_config
 import SparkApi
 import sensenova_service
+import minimax_service
 
 from flask import Flask, request, abort, render_template
 from wechatpy import parse_message, create_reply
@@ -53,6 +54,9 @@ def chat(msg):
     elif sys == 'sensenova':
         user_model = get_user_model(msg.source)
         return sensenova_service.ask_from_wechat(msg, user_model)
+    elif sys == 'minimax':
+        user_model = get_user_model(msg.source)
+        return minimax_service.ask_from_wechat(msg, user_model)
     else:
         return 'unknown sys'
 
@@ -60,6 +64,8 @@ def chat(msg):
 def get_default_model(sys):
     if sys == 'sensenova':
         return sensenova_service.get_default_model()
+    elif sys == 'minimax':
+        return minimax_service.get_default_model()
     else:
         return DEFAULT_MODEL
 
@@ -67,6 +73,8 @@ def get_default_model(sys):
 def get_model_list(sys):
     if sys == 'sensenova':
         return sensenova_service.get_model_list()
+    elif sys == 'minimax':
+        return minimax_service.get_model_list()
     else:
         return [x.id for x in openai.Model.list().get('data')]
 
