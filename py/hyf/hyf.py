@@ -57,14 +57,14 @@ if __name__ == '__main__':
     status = req(sn, port)
     if status == 1:
         print_x('已经完成')
-        send('已经完成')
+        hyf_data.notify('已经完成')
     elif status == 2:
         while True:
             time.sleep(300)
             status = req(sn, port)
             if status == 1:
                 print_x('完成')
-                send('完成')
+                hyf_data.notify('完成')
                 break
 
     pass
