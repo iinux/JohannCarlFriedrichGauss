@@ -58,5 +58,8 @@ def request():
 
 if __name__ == '__main__':
     while True:
-        request()
+        try:
+            request()
+        except Exception as e:
+            print(e)
         time.sleep(30)
