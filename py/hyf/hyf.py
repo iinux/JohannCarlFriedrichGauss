@@ -6,8 +6,10 @@ import time
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 
-user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/536.36 (KHTML, like Gecko) Chrome/105.0.0.0 ' \
-             'Safari/536.36 '
+user_agent = 'Mozilla/5.0 (Linux; Android 12; Redmi 5 Plus Build/SQ3A.220705.004; wv) ' \
+             'AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.99 XWEB/4433 MMWEBSDK/20230504 ' \
+             'Mobile Safari/537.36 MMWEBID/1289 MicroMessenger/8.0.37.2368(0x28002548) WeChat/arm64 Weixin ' \
+             'GPVersion/1 NetType/WIFI Language/en ABI/arm64 MiniProgramEnv/android'
 
 
 def print_x(text):
