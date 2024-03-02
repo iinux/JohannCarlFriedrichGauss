@@ -40,6 +40,8 @@ CMD_SET_SYS = 'set sys '
 
 CMD_CALL_API = 'call api '
 
+cache_time = 28800
+
 openai.api_key = my_config.key_openai
 
 
@@ -185,6 +187,13 @@ def get_user_sys(user):
 
 def ask(msg, allow_cache=True):
     r = get_redis()
+
+    pq_key = 'pq_' + msg.source
+    previous_question = r.get(pq_key)
+    if previous_question is not None and msg.content.startswith('ap '):
+        msg.content = msg.content.replace('ap ', previous_question) + ' '
+    r.set(pq_key, msg.content, cache_time)
+
     key = 'chatgpt_answer_' + msg.content
     answer_cache = r.get(key)
     if answer_cache == THINKING and allow_cache:
@@ -215,7 +224,7 @@ def ask(msg, allow_cache=True):
             reply_content = chat(msg).lstrip('?？').strip()
             time_end = time.time()
             reply_content += '\n(time cost %.3f s)' % (time_end - time_start)
-            r.set(key, reply_content, 28800)
+            r.set(key, reply_content, cache_time)
         except openai.error.APIConnectionError as e:
             print(e)
             reply_content = 'call openapi fail, try again ' + e.__str__()
@@ -271,7 +280,8 @@ def wechat():
             elif msg.content == CMD_GET_SYS:
                 reply_content = get_user_sys(msg.source)
             elif msg.content.startswith(CMD_CALL_API):
-                reply_content = ask(msg.content[len(CMD_CALL_API):], allow_cache=False)
+                msg.content = msg.content[len(CMD_CALL_API):]
+                reply_content = ask(msg, allow_cache=False)
             else:
                 reply_content = ask(msg)
             print('ask {} response {}'.format(msg.content, reply_content))
