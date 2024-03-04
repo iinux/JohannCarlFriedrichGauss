@@ -52,7 +52,7 @@ if __name__ == '__main__':
     port = 5
     sn = '1090527'
     if len(sys.argv) > 1:
-        port = sys.argv[1]
+        port = int(sys.argv[1])
     if len(sys.argv) > 2:
         sn = sys.argv[2]
     print_x('sn=%s, port=%d' % (sn, port))
