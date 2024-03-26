@@ -20,7 +20,7 @@ def req(number):
     print('number: ' + number)
     print('usage: %s G / %s G' % (res_data['remainAmount'] / 1024, res_data['totalAmount'] / 1024))
     print('packageName: ' + res_data['packageName'])
-    print('expiretime: ' + res_data['expiretime'])
+    print('expiretime: ' + res_data['expiretime'] if res_data['expiretime'] is not None else '')
     print('status: ' + res_data['status'])
     print('-' * 40)
 
