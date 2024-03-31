@@ -16,8 +16,18 @@ def resize_image(input_path, output_path, target_size=(512, 512)):
 
 
 def main():
-    input_image_path = sys.argv[1]
+    if len(sys.argv) > 1:
+        input_image_path = sys.argv[1]
+    else:
+        input_image_path = 'input.png'
+
     resize_image_path = "resize_image.png"
+
+    if len(sys.argv) > 2:
+        output_image_path = sys.argv[2]
+    else:
+        output_image_path = 'output.png'
+
     resize_image(input_image_path, resize_image_path)
 
     # Read input image
@@ -26,7 +36,7 @@ def main():
     watermark = process(dress)
 
     # Write output image
-    cv2.imwrite(sys.argv[2], watermark)
+    cv2.imwrite(output_image_path, watermark)
 
     # Exit
     sys.exit()
@@ -34,3 +44,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    # https://undressher.app/images/demo/10a.webp

@@ -12,7 +12,7 @@ from opencv_transform.nude_to_watermark import create_watermark
 """
 run.py
 
-This script manage the entire transormation.
+This script manage the entire transformation.
 
 Transformation happens in 6 phases:
 0: dress -> correct [opencv] dress_to_correct
@@ -62,7 +62,7 @@ class Options:
         self.checkpoints_dir = ""
         self.dataroot = ""
 
-    # Changes options accordlying to actual phase
+    # Changes options according to actual phase
     def update_options(self, phase):
 
         if phase == "correct_to_mask":

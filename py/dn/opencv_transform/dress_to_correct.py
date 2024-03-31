@@ -24,7 +24,7 @@ def correct_color(img, percent):
     out_channels = []
     for channel in channels:
         assert len(channel.shape) == 2
-        # find the low and high precentile values (based on the input percentile)
+        # find the low and high percentile values (based on the input percentile)
         height, width = channel.shape
         vec_size = width * height
         flat = channel.reshape(vec_size)

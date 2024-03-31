@@ -113,7 +113,7 @@ def extract_annotations(maskdet):
     # Detect a missing problem:
     missing_problem = detect_tit_aur_missing_problem(tits_list, aur_list)  # return a Number (code of the problem)
 
-    # Check if problem is SOLVEABLE:
+    # Check if problem is SOLVABLE:
     if missing_problem in [3, 6, 7, 8]:
         resolve_tit_aur_missing_problems(tits_list, aur_list, missing_problem)
 
@@ -419,8 +419,8 @@ def resolve_tit_aur_missing_problems(tits_list, aur_list, problem_code):
 def detect_tit_aur_position_problem(tits_list, aur_list):
     diff_tits_x = abs(tits_list[0].x - tits_list[1].x)
     if diff_tits_x < 40:
-        print("diffTits_x")
-        # Tits too narrow (orizontally)
+        print("diff_tits_x")
+        # Tits too narrow (horizontally)
         return True
 
     diff_tits_y = abs(tits_list[0].y - tits_list[1].y)
@@ -465,12 +465,12 @@ def infer_nip(aur_list):
         y = aur.y
 
         # Calculate Bounding Box:
-        xmin = int(x - (nip_dim / 2))
-        xmax = int(x + (nip_dim / 2))
-        ymin = int(y - (nip_dim / 2))
-        ymax = int(y + (nip_dim / 2))
+        x_min = int(x - (nip_dim / 2))
+        x_max = int(x + (nip_dim / 2))
+        y_min = int(y - (nip_dim / 2))
+        y_max = int(y + (nip_dim / 2))
 
-        nip_list.append(BodyPart("nip", xmin, ymin, xmax, ymax, x, y, nip_dim, nip_dim))
+        nip_list.append(BodyPart("nip", x_min, y_min, x_max, y_max, x, y, nip_dim, nip_dim))
 
     return nip_list
 
@@ -482,7 +482,7 @@ def infer_nip(aur_list):
 def infer_hair(vag_list):
     hair_list = []
 
-    # 70% of chanche to add hair
+    # 70% of chance to add hair
     if random.uniform(0.0, 1.0) > 0.3:
 
         for vag in vag_list:
@@ -495,11 +495,11 @@ def infer_hair(vag_list):
             y = vag.y - (hair_h / 2) - (vag.h / 2)
 
             # Calculate Bounding Box:
-            xmin = int(x - (hair_w / 2))
-            xmax = int(x + (hair_w / 2))
-            ymin = int(y - (hair_h / 2))
-            ymax = int(y + (hair_h / 2))
+            x_min = int(x - (hair_w / 2))
+            x_max = int(x + (hair_w / 2))
+            y_min = int(y - (hair_h / 2))
+            y_max = int(y + (hair_h / 2))
 
-            hair_list.append(BodyPart("hair", xmin, ymin, xmax, ymax, x, y, hair_w, hair_h))
+            hair_list.append(BodyPart("hair", x_min, y_min, x_max, y_max, x, y, hair_w, hair_h))
 
     return hair_list
