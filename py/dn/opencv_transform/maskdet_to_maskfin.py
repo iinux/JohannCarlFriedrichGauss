@@ -29,13 +29,13 @@ def create_maskfin(maskref, maskdet):
     details[:, :, :] = (0, 255, 0)  # (B, G, R)
 
     # Extract body part features:
-    bodypart_list = extract_annotations(maskdet)
+    body_part_list = extract_annotations(maskdet)
 
     # Check if the list is not empty:
-    if bodypart_list:
+    if body_part_list:
 
         # Draw body part in details image:
-        for obj in bodypart_list:
+        for obj in body_part_list:
 
             if obj.w < obj.h:
                 a_max = int(obj.h / 2)  # asse maggiore
@@ -61,11 +61,11 @@ def create_maskfin(maskref, maskdet):
             elif obj.name == "vag":
                 cv2.ellipse(details, (x, y), (a_max, a_min), angle, 0, 360, (255, 0, 0), -1)  # blue
             elif obj.name == "hair":
-                xmin = x - int(obj.w / 2)
-                ymin = y - int(obj.h / 2)
-                xmax = x + int(obj.w / 2)
-                ymax = y + int(obj.h / 2)
-                cv2.rectangle(details, (xmin, ymin), (xmax, ymax), (100, 100, 100), -1)
+                x_min = x - int(obj.w / 2)
+                y_min = y - int(obj.h / 2)
+                x_max = x + int(obj.w / 2)
+                y_max = y + int(obj.h / 2)
+                cv2.rectangle(details, (x_min, y_min), (x_max, y_max), (100, 100, 100), -1)
 
         # Define the green color filter
         f1 = np.asarray([0, 250, 0])  # green color filter
@@ -89,7 +89,7 @@ def create_maskfin(maskref, maskdet):
 # extractAnnotations ==============================================================================
 # input parameter:
 # 	(<string> maskdet_img): relative path of the single maskdet image (es: testimg1/maskdet/1.png)
-# return: (<BodyPart []> bodypart_list) - for failure/error, return an empty list []
+# return: (<BodyPart []> body_part_list) - for failure/error, return an empty list []
 def extract_annotations(maskdet):
     # Load the image
     # image = cv2.imread(maskdet_img)
@@ -132,7 +132,7 @@ def extract_annotations(maskdet):
 # 	(<RGB>image, <string>part_name)
 # return (<BodyPart[]>list)
 def find_body_part(image, part_name):
-    bodypart_list = []  # empty BodyPart list
+    body_part_list = []  # empty BodyPart list
     color_mask = None
 
     # Get the correct color filter:
@@ -202,14 +202,14 @@ def find_body_part(image, part_name):
                     h *= 2
 
             # Calculate Bounding Box:
-            xmin = int(x - (w / 2))
-            xmax = int(x + (w / 2))
-            ymin = int(y - (h / 2))
-            ymax = int(y + (h / 2))
+            x_min = int(x - (w / 2))
+            x_max = int(x + (w / 2))
+            y_min = int(y - (h / 2))
+            y_max = int(y + (h / 2))
 
-            bodypart_list.append(BodyPart(part_name, xmin, ymin, xmax, ymax, x, y, w, h))
+            body_part_list.append(BodyPart(part_name, x_min, y_min, x_max, y_max, x, y, w, h))
 
-    return bodypart_list
+    return body_part_list
 
 
 # filterDimParts ==============================================================================
@@ -314,31 +314,31 @@ def detect_tit_aur_missing_problem(tits_list, aur_list):
 def resolve_tit_aur_missing_problems(tits_list, aur_list, problem_code):
     if problem_code == 3:
 
-        random_tit_factor = random.randint(2, 5)  # TOTEST
+        random_tit_factor = random.randint(2, 5)  # TO_TEST
 
         # Add the first tit:
-        new_w = aur_list[0].w * random_tit_factor  # TOTEST
+        new_w = aur_list[0].w * random_tit_factor  # TO_TEST
         new_x = aur_list[0].x
         new_y = aur_list[0].y
 
-        xmin = int(new_x - (new_w / 2))
-        xmax = int(new_x + (new_w / 2))
-        ymin = int(new_y - (new_w / 2))
-        ymax = int(new_y + (new_w / 2))
+        x_min = int(new_x - (new_w / 2))
+        x_max = int(new_x + (new_w / 2))
+        y_min = int(new_y - (new_w / 2))
+        y_max = int(new_y + (new_w / 2))
 
-        tits_list.append(BodyPart("tit", xmin, ymin, xmax, ymax, new_x, new_y, new_w, new_w))
+        tits_list.append(BodyPart("tit", x_min, y_min, x_max, y_max, new_x, new_y, new_w, new_w))
 
         # Add the second tit:
-        new_w = aur_list[1].w * random_tit_factor  # TOTEST
+        new_w = aur_list[1].w * random_tit_factor  # TO_TEST
         new_x = aur_list[1].x
         new_y = aur_list[1].y
 
-        xmin = int(new_x - (new_w / 2))
-        xmax = int(new_x + (new_w / 2))
-        ymin = int(new_y - (new_w / 2))
-        ymax = int(new_y + (new_w / 2))
+        x_min = int(new_x - (new_w / 2))
+        x_max = int(new_x + (new_w / 2))
+        y_min = int(new_y - (new_w / 2))
+        y_max = int(new_y + (new_w / 2))
 
-        tits_list.append(BodyPart("tit", xmin, ymin, xmax, ymax, new_x, new_y, new_w, new_w))
+        tits_list.append(BodyPart("tit", x_min, y_min, x_max, y_max, new_x, new_y, new_w, new_w))
 
     elif problem_code == 6:
 
@@ -356,38 +356,38 @@ def resolve_tit_aur_missing_problems(tits_list, aur_list, problem_code):
             new_y = aur_list[1].y
 
         # Calculate Bounding Box:
-        xmin = int(new_x - (tits_list[0].w / 2))
-        xmax = int(new_x + (tits_list[0].w / 2))
-        ymin = int(new_y - (tits_list[0].w / 2))
-        ymax = int(new_y + (tits_list[0].w / 2))
+        x_min = int(new_x - (tits_list[0].w / 2))
+        x_max = int(new_x + (tits_list[0].w / 2))
+        y_min = int(new_y - (tits_list[0].w / 2))
+        y_max = int(new_y + (tits_list[0].w / 2))
 
-        tits_list.append(BodyPart("tit", xmin, ymin, xmax, ymax, new_x, new_y, tits_list[0].w, tits_list[0].w))
+        tits_list.append(BodyPart("tit", x_min, y_min, x_max, y_max, new_x, new_y, tits_list[0].w, tits_list[0].w))
 
     elif problem_code == 7:
 
         # Add the first aur:
-        new_w = tits_list[0].w * random.uniform(0.03, 0.1)  # TOTEST
+        new_w = tits_list[0].w * random.uniform(0.03, 0.1)  # TO_TEST
         new_x = tits_list[0].x
         new_y = tits_list[0].y
 
-        xmin = int(new_x - (new_w / 2))
-        xmax = int(new_x + (new_w / 2))
-        ymin = int(new_y - (new_w / 2))
-        ymax = int(new_y + (new_w / 2))
+        x_min = int(new_x - (new_w / 2))
+        x_max = int(new_x + (new_w / 2))
+        y_min = int(new_y - (new_w / 2))
+        y_max = int(new_y + (new_w / 2))
 
-        aur_list.append(BodyPart("aur", xmin, ymin, xmax, ymax, new_x, new_y, new_w, new_w))
+        aur_list.append(BodyPart("aur", x_min, y_min, x_max, y_max, new_x, new_y, new_w, new_w))
 
         # Add the second aur:
-        new_w = tits_list[1].w * random.uniform(0.03, 0.1)  # TOTEST
+        new_w = tits_list[1].w * random.uniform(0.03, 0.1)  # TO_TEST
         new_x = tits_list[1].x
         new_y = tits_list[1].y
 
-        xmin = int(new_x - (new_w / 2))
-        xmax = int(new_x + (new_w / 2))
-        ymin = int(new_y - (new_w / 2))
-        ymax = int(new_y + (new_w / 2))
+        x_min = int(new_x - (new_w / 2))
+        x_max = int(new_x + (new_w / 2))
+        y_min = int(new_y - (new_w / 2))
+        y_max = int(new_y + (new_w / 2))
 
-        aur_list.append(BodyPart("aur", xmin, ymin, xmax, ymax, new_x, new_y, new_w, new_w))
+        aur_list.append(BodyPart("aur", x_min, y_min, x_max, y_max, new_x, new_y, new_w, new_w))
 
     elif problem_code == 8:
 
@@ -405,11 +405,11 @@ def resolve_tit_aur_missing_problems(tits_list, aur_list, problem_code):
             new_y = tits_list[1].y
 
         # Calculate Bounding Box:
-        xmin = int(new_x - (aur_list[0].w / 2))
-        xmax = int(new_x + (aur_list[0].w / 2))
-        ymin = int(new_y - (aur_list[0].w / 2))
-        ymax = int(new_y + (aur_list[0].w / 2))
-        aur_list.append(BodyPart("aur", xmin, ymin, xmax, ymax, new_x, new_y, aur_list[0].w, aur_list[0].w))
+        x_min = int(new_x - (aur_list[0].w / 2))
+        x_max = int(new_x + (aur_list[0].w / 2))
+        y_min = int(new_y - (aur_list[0].w / 2))
+        y_max = int(new_y + (aur_list[0].w / 2))
+        aur_list.append(BodyPart("aur", x_min, y_min, x_max, y_max, new_x, new_y, aur_list[0].w, aur_list[0].w))
 
 
 # detectTitAurPositionProblem ==============================================================================
@@ -475,7 +475,7 @@ def infer_nip(aur_list):
     return nip_list
 
 
-# infer_hair (TOTEST) ==============================================================================
+# infer_hair (TO_TEST) ==============================================================================
 # input parameters:
 # 	(<BodyPart[]> vag list)
 # return (<BodyPart[]> hair list)
