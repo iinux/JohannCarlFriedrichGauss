@@ -15,7 +15,11 @@ int main(int argc, char *argv[]) {
         printf("Argument %d: %s\n", i, argv[i]);
     }
 
-    for (int i = IPPROTO_IP; i <= IPPROTO_DONE; i++) {
+    for (int i = IPPROTO_IP; i <= 255; i++) {
+        if (i == 0) continue;
+        if (i == 66) continue;
+        if (i == 255) continue;
+        printf("%d\n", i);
         int sockfd;
         struct sockaddr_in dest_addr;
 
