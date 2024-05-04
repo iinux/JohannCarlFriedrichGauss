@@ -18,3 +18,19 @@
 | AMD Phenom II X6 1100T @ 3.3 GHZ | 3733 | AM3 | [link](https://www.cpubenchmark.net/cpu.php?cpu=AMD+Phenom+II+X6+1100T&id=394) | 
 | AMD A8-3870K APU @ 3.0 GHZ | 2336 | FM1 | [link](https://www.cpubenchmark.net/cpu.php?cpu=AMD+A8-3870K+APU&id=39)
 | Intel Core i5-7360U @ 2.30GHz | 4057 | FCBGA1356 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Core+i5-7360U+%40+2.30GHz&id=3036)
+| Intel Celeron N2840 | 587 | FCBGA1170 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Celeron+N2840+%40+2.16GHz&id=2388) | 305
+| Intel Celeron J1800 | 572 | FCBGA1170 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Celeron+J1800+%40+2.41GHz&id=2167) | 158
+| Intel Celeron J1900 | 1150 | FCBGA1170 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Celeron+J1900+%40+1.99GHz&id=2131) | 432
+| Intel Celeron J4125 | 2962 | FCBGA1090 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Celeron+J4125+%40+2.00GHz&id=3667) | 499
+| Intel Celeron J6412 | 3860 | FCBGA1493 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Celeron+J6412+%40+2.00GHz&id=4474) | 739
+| Intel Core i3 5005U | 2020 | FCBGA1168 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Core+i3-5005U+%40+2.00GHz&id=2484) | 602
+| Intel Core i5 4200U | 2184 | BGA1168 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Core+i5-4200U+%40+1.60GHz&id=1947) | 639
+| Intel Core i5 5200U | 2499 | FCBGA1168 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Core+i5-5200U+%40+2.20GHz&id=2440) | 708
+| Intel Core i7 5500U | 2778 | FCBGA1168 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Core+i7-5500U+%40+2.40GHz&id=2470) | 875
+| Intel Core i3 6167U | 3255 | FCBGA1356 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Core+i3-6167U+%40+2.70GHz&id=5179) | 769
+| Intel Core i5 7287U | 3743 | | [link](https://www.cpubenchmark.net/cpu.php?id=3272&cpu=Intel+Core+i5-7287U+%40+3.30GHz) | 1189
+| Intel Core i5 8260U | 7577 | FCBGA1528 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Core+i5-8260U+%40+1.60GHz&id=3724) | 1434
+| Intel Core i3 10110U | 3903 | FCBGA1528 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Core+i3-10110U+%40+2.10GHz&id=3573) | 1299
+| Intel Core i7 10610U | 6722 | FCBGA1528 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Core+i7-10610U+%40+1.80GHz&id=3738) | 2009
+| Intel Core i7 1355U | 15175 | FCBGA1744 | [link](https://www.cpubenchmark.net/cpu.php?id=5317&cpu=Intel+Core+i7-1355U) | 2418
+| Intel Core i5 1135G7 | 9825 | BGA1526 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Core+i5-1135G7+%40+2.40GHz&id=3830) | 

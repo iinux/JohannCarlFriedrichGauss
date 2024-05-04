@@ -5,8 +5,6 @@
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 
-#define DEST_IP "198.46.152.123"
-
 int main(int argc, char *argv[]) {
     printf("Number of command line arguments: %d\n", argc);
 
