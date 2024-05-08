@@ -192,6 +192,8 @@ def ask(msg, allow_cache=True):
     previous_question = r.get(pq_key)
     if previous_question is not None and msg.content.startswith('ap '):
         msg.content = msg.content.replace('ap ', previous_question) + ' '
+    if previous_question is not None and msg.content == 'pq':
+        msg.content = previous_question
     r.set(pq_key, msg.content, cache_time)
 
     key = 'chatgpt_answer_' + msg.content
