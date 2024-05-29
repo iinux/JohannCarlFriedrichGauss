@@ -9,3 +9,6 @@ nm_s_select
 nm_s_kqueue
 thread_test
 alloc_gb
+i2
+ip_raw
+*.cap
