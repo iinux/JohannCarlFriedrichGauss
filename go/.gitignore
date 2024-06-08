@@ -13,3 +13,4 @@ go.iml
 nm_amd64
 dmb_amd64
 go_proxy_try_i.go
+thrift_packet

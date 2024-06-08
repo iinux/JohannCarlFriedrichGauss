@@ -15,7 +15,7 @@ stream = True  # 流式输出或非流式输出
 
 
 def get_default_model():
-    return model_id_4
+    return model_id_1
 
 
 def get_model_list():
