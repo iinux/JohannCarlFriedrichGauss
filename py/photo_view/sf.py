@@ -29,7 +29,7 @@ def request_index():
         print(str(dates[i]))
         print(codes[i].text)
         ds = re.findall(r"(\d{4}-\d{2}-\d{2})", str(dates[i]))
-        file_name = "upload-%s-free-%s-code-%s-title-%s.mp4" % (ds[0], ds[1], codes[i].text, title.text)
+        file_name = "upload-%s-free-%s-code-%s-title-%s.mp4" % (ds[0], ds[1], codes[i].text, title.text.replace(" ", ""))
         print(file_name)
         request_j_index(file_name, codes[i].text)
         i += 1
@@ -69,9 +69,10 @@ def request_mpd(video_url, file_name):
 
 
 def download_mpd(mpd, file_name):
-    tag_file = file_name + '.downloaded'
+    tag_file = 'download_tag/' + file_name + '.downloaded'
     if not os.path.exists(file_name) and not os.path.exists(tag_file):
-        cmd = "ffmpeg -i '%s' -c copy %s" % (mpd, file_name)
+        #cmd = "ffmpeg -i '%s' -c copy %s" % (mpd, file_name)
+        cmd = "/home/qzhang/git/JohannCarlFriedrichGauss/py/photo_view/ffmpeg-6.1-amd64-static/ffmpeg -i '%s' -c copy %s" % (mpd, file_name)
         print(cmd)
         os.system(cmd)
         if os.path.exists(file_name):
