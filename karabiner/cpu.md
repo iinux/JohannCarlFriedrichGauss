@@ -1,3 +1,8 @@
+# note
+* score double are single thread rating and multithread rating
+
+# table
+
 | cpu | score | socket | link | price |
 |-|-|-|-|-|
 | AMD Athlon II P340 Dual-Core | 673  | S1g4b|  [link](https://www.cpubenchmark.net/cpu.php?cpu=AMD+Athlon+II+P340+Dual-Core&id=126) |
@@ -34,3 +39,4 @@
 | Intel Core i7 10610U | 6722 | FCBGA1528 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Core+i7-10610U+%40+1.80GHz&id=3738) | 2009
 | Intel Core i7 1355U | 15175 | FCBGA1744 | [link](https://www.cpubenchmark.net/cpu.php?id=5317&cpu=Intel+Core+i7-1355U) | 2418
 | Intel Core i5 1135G7 | 9825 | BGA1526 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Core+i5-1135G7+%40+2.40GHz&id=3830) | 
+| Intel Celeron N5095A @ 2.00GHz | 1513/4113 | FCBGA1338 | [link](https://www.cpubenchmark.net/cpu.php?cpu=Intel+Celeron+N5095A+%40+2.00GHz&id=4777) |
