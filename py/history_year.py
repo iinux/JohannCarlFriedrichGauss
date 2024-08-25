@@ -56,24 +56,24 @@ def print_all():
         print(k, v)
 
 
-def aa():
-    while True:
-        k = random.choice(list(data.keys()))
-        answer = data[k]
-        if len(answer) > 2:
-            continue
-        else:
-            break
+def aa(k):
+    answer = data[k]
+    iss = None
 
     while True:
         i = input(k + '\n')
         if i == 'all':
             print_all()
             continue
+        elif i == 'exit':
+            exit(0)
         else:
-            break
+            iss = i.split(' ')
+            if len(iss) != 2:
+                continue
+            else:
+                break
 
-    iss = i.split(' ')
     if int(iss[0]) == answer[0] and int(iss[1]) == answer[1]:
         print('you are correct')
     else:
@@ -81,5 +81,8 @@ def aa():
 
 
 if __name__ == '__main__':
-    while True:
-        aa()
+    shuffle_keys = list(data.keys())
+    random.shuffle(shuffle_keys)
+    for i in shuffle_keys:
+        aa(i)
+    print('a loop end')
