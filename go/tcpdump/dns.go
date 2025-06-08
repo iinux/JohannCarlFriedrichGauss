@@ -8,9 +8,41 @@ import (
 	"github.com/google/gopacket/pcap"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"time"
 )
+
+// 获取按日期生成的文件名
+func getFileNameByDate() string {
+	currentDate := time.Now().Format("2006-01-02") // 格式化为 YYYY-MM-DD
+	return fmt.Sprintf("%s.log", currentDate)
+}
+
+// 打开或创建按日期命名的文件
+func openLogFile() (*os.File, error) {
+	fileName := getFileNameByDate()
+	return os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+}
+
+// 写入日志，带时间戳
+func writeLog(message string) error {
+	logFile, err := openLogFile()
+	if err != nil {
+		fmt.Printf("无法打开日志文件: %v\n", err)
+		return err
+	}
+	defer logFile.Close()
+
+	timestamp := time.Now().Format("2006-01-02 15:04:05") // 时间戳格式
+	logMessage := fmt.Sprintf("[%s] %s\n", timestamp, message)
+	_, err = logFile.WriteString(logMessage)
+	if err != nil {
+		fmt.Printf("无法写入日志文件: %v\n", err)
+		return err
+	}
+	return nil
+}
 
 func main() {
 	iface := flag.String("i", "", "interface name")
@@ -50,6 +82,9 @@ func main() {
 				if len(dns.Answers) > 0 {
 					for _, answer := range dns.Answers {
 						name := string(answer.Name)
+
+						writeLog(name)
+
 						if name == "www.jetbrains.com" || name == "account.jetbrains.com" {
 							cfr := checkFile(answer.IP.String(), *filePath)
 							if cfr {
