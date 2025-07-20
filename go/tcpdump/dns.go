@@ -85,7 +85,7 @@ func main() {
 
 						writeLog(name)
 
-						if name == "www.jetbrains.com" || name == "account.jetbrains.com" {
+						if name == "www.jetbrains.com" || name == "account.jetbrains.com" || name == "www.jetbrains.com.cn" || name == "account.jetbrains.com.cn" {
 							cfr := checkFile(answer.IP.String(), *filePath)
 							if cfr {
 								fmt.Printf("block drop from any to %s\n", answer.IP)
