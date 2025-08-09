@@ -20,7 +20,8 @@ func main() {
 	// 配置抓包参数
 	device := "en0" // 网卡名称，根据实际情况修改
 	//filter := "tcp port 443" // 过滤443端口的TCP流量
-	snapshotLen := int32(1600)
+	//filter := "tcp"
+	snapshotLen := int32(65536)
 	promiscuous := false
 	timeout := 30 * time.Second
 
@@ -53,12 +54,23 @@ func main() {
 }
 
 func processPacket(packet gopacket.Packet) {
+	networkLayer := packet.NetworkLayer()
+	if networkLayer == nil {
+		return
+	}
+
 	// 获取IP层
 	ipLayer := packet.Layer(layers.LayerTypeIPv4)
-	if ipLayer == nil {
+	ip6Layer := packet.Layer(layers.LayerTypeIPv6)
+	if ipLayer == nil && ip6Layer == nil {
 		return
 	}
 	ip, _ := ipLayer.(*layers.IPv4)
+	ip6, _ := ip6Layer.(*layers.IPv6)
+
+	if ip != nil && ip.FragOffset > 0 {
+		fmt.Printf("%s\n", ip.DstIP)
+	}
 
 	// 获取TCP层
 	tcpLayer := packet.Layer(layers.LayerTypeTCP)
@@ -83,14 +95,39 @@ func processPacket(packet gopacket.Packet) {
 		return
 	}
 
+	if tcp.DstPort == 80 {
+		return
+	}
+
 	// 提取SNI
 	sni := extractSNI(tcp.Payload)
 	if sni == "" {
+		if ip != nil {
+			fmt.Printf("[-] %d %s %d %d %s %s %s %s\n",
+				ip.Id,
+				ip.Flags.String(),
+				ip.FragOffset,
+				ip.Length,
+				ip.SrcIP,
+				ip.DstIP,
+				tcp.SrcPort,
+				tcp.DstPort)
+		} else if ip6 != nil {
+			fmt.Printf("[-] %s %s %s %s\n",
+				ip6.SrcIP,
+				ip6.DstIP,
+				tcp.SrcPort,
+				tcp.DstPort)
+		}
 		return
 	}
 
 	// 打印结果
-	fmt.Printf("[+] Client Hello 检测到 - 去向 IP: %s, SNI: %s\n", ip.DstIP, sni)
+	if ip != nil {
+		fmt.Printf("[+] Client Hello 检测到 - 去向 IP: %s, SNI: %s\n", ip.DstIP, sni)
+	} else {
+		fmt.Printf("[+] Client Hello 检测到 - 去向 IP: %s, SNI: %s\n", ip6.DstIP, sni)
+	}
 }
 
 func extractSNI(payload []byte) string {
@@ -100,9 +137,10 @@ func extractSNI(payload []byte) string {
 	}
 	recordLength := (int(payload[3])<<8 | int(payload[4]))
 	if len(payload) < 5+recordLength {
-		return ""
+		// return ""
 	}
-	handshake := payload[5 : 5+recordLength]
+	// handshake := payload[5 : 5+recordLength]
+	handshake := payload[5:]
 
 	// 握手消息：跳过4字节头(HandshakeType[1], Length[3])
 	if len(handshake) < 4 {
@@ -110,9 +148,10 @@ func extractSNI(payload []byte) string {
 	}
 	handshakeLength := int(handshake[1])<<16 | int(handshake[2])<<8 | int(handshake[3])
 	if len(handshake) < 4+handshakeLength {
-		return ""
+		// return ""
 	}
-	clientHello := handshake[4 : 4+handshakeLength]
+	// clientHello := handshake[4 : 4+handshakeLength]
+	clientHello := handshake[4:]
 
 	// 跳过随机数(32字节)和会话ID
 	if len(clientHello) < 38 {
@@ -139,8 +178,9 @@ func extractSNI(payload []byte) string {
 	if len(extensions) < 2 {
 		return ""
 	}
-	extensionsLength := int(extensions[0])<<8 | int(extensions[1])
-	extensions = extensions[2 : 2+extensionsLength]
+	// extensionsLength := int(extensions[0])<<8 | int(extensions[1])
+	// extensions = extensions[2 : 2+extensionsLength]
+	extensions = extensions[2:]
 
 	// 查找SNI扩展(类型0x0000)
 	for len(extensions) >= 4 {
