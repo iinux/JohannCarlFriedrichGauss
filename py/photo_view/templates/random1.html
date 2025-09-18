@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mp4</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #2c3e50;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #3498db;
+        }
+        
+        /* 基础链接样式 */
+        a {
+            color: #2980b9;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        a:hover, a:focus {
+            color: #e74c3c;
+            text-decoration: underline;
+        }
+        
+        /* 方法1：使用固定大小 */
+        .fixed-size a {
+            font-size: 20px;
+            display: block;
+            margin: 10px 0;
+            padding: 12px;
+            background-color: #f1f8ff;
+            border-radius: 8px;
+        }
+        
+        /* 方法2：使用相对大小（EM） */
+        .relative-size {
+            font-size: 18px;
+        }
+        
+        .relative-size a {
+            font-size: 1.2em;
+            display: block;
+            margin: 10px 0;
+            padding: 12px;
+            background-color: #f0f7ff;
+            border-radius: 8px;
+        }
+        
+        /* 方法3：使用响应式单位（REM） */
+        html {
+            font-size: 16px;
+        }
+        
+        @media (max-width: 480px) {
+            html {
+                font-size: 18px;
+            }
+        }
+        
+        .responsive-size a {
+            font-size: 1.2rem;
+            display: block;
+            margin: 10px 0;
+            padding: 12px;
+            background-color: #e8f4ff;
+            border-radius: 8px;
+        }
+        
+        /* 方法4：使用视口单位（VW） */
+        .viewport-size a {
+            font-size: 5vw;
+            display: block;
+            margin: 10px 0;
+            padding: 12px;
+            background-color: #e1f1ff;
+            border-radius: 8px;
+        }
+        
+        /* 方法5：媒体查询 */
+        .media-query a {
+            font-size: 16px;
+            display: block;
+            margin: 10px 0;
+            padding: 12px;
+            background-color: #d9ecff;
+            border-radius: 8px;
+        }
+        
+        @media (min-width: 480px) {
+            .media-query a {
+                font-size: 18px;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .media-query a {
+                font-size: 20px;
+            }
+        }
+        
+        .note {
+            background-color: #fff4e6;
+            padding: 12px;
+            border-left: 4px solid #ffa94d;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .code {
+            background-color: #f5f5f5;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="viewport-size">
+    <img src="/download/y/{{ screenshot }}">
+    <br />
+    <a href="/download/y/{{ mp4 }}">{{ mp4 }}</a>
+    </div>
+    <!--
+    <video width="720" height="480" controls preload="none">
+        <source src="/{{ mp4 }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    -->
+    <div class="container">
+        <h1>移动端链接字体大小调整方法</h1>
+        
+        <div class="section">
+            <h2>方法1：固定像素大小 (px)</h2>
+            <div class="fixed-size">
+                <a href="#">固定大小链接 (20px)</a>
+                <a href="#">另一个固定大小链接</a>
+            </div>
+            <div class="note">
+                注意：固定大小在不同设备上显示效果一致，但可能无法适应所有屏幕尺寸。
+            </div>
+            <div class="code">
+                a { font-size: 20px; }
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>方法2：相对单位 (em)</h2>
+            <div class="relative-size">
+                <a href="#">相对大小链接 (1.2em)</a>
+                <a href="#">另一个相对大小链接</a>
+            </div>
+            <div class="note">
+                注意：em单位相对于父元素的字体大小，适合需要相对于上下文调整大小的场景。
+            </div>
+            <div class="code">
+                .parent { font-size: 18px; }<br>
+                a { font-size: 1.2em; } /* 计算后为21.6px */
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>方法3：响应式单位 (rem)</h2>
+            <div class="responsive-size">
+                <a href="#">响应式链接 (1.2rem)</a>
+                <a href="#">另一个响应式链接</a>
+            </div>
+            <div class="note">
+                注意：rem单位相对于根元素(html)的字体大小，适合创建整体可缩放的界面。
+            </div>
+            <div class="code">
+                html { font-size: 16px; }<br>
+                a { font-size: 1.2rem; } /* 计算后为19.2px */<br>
+                @media (max-width: 480px) {<br>
+                &nbsp;&nbsp;html { font-size: 18px; }<br>
+                }
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>方法4：视口单位 (vw)</h2>
+            <div class="viewport-size">
+                <a href="#">视口单位链接 (5vw)</a>
+                <a href="#">另一个视口单位链接</a>
+            </div>
+            <div class="note">
+                注意：vw单位相对于视口宽度，字体大小会随屏幕宽度变化，适合需要完全响应式的设计。
+            </div>
+            <div class="code">
+                a { font-size: 5vw; } /* 视口宽度的5% */
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>方法5：媒体查询</h2>
+            <div class="media-query">
+                <a href="#">媒体查询链接</a>
+                <a href="#">另一个媒体查询链接</a>
+            </div>
+            <div class="note">
+                注意：媒体查询允许在不同屏幕尺寸上应用不同的样式，提供最精确的控制。
+            </div>
+            <div class="code">
+                a { font-size: 16px; }<br>
+                @media (min-width: 480px) {<br>
+                &nbsp;&nbsp;a { font-size: 18px; }<br>
+                }<br>
+                @media (min-width: 768px) {<br>
+                &nbsp;&nbsp;a { font-size: 20px; }<br>
+                }
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

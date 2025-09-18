@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>移动端图片与链接排版方案</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .layout-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin-bottom: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .layout-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f4f8;
+        }
+        
+        .section-title i {
+            font-size: 1.8rem;
+            color: #3498db;
+            margin-right: 15px;
+        }
+        
+        .section-title h2 {
+            font-size: 1.6rem;
+            color: #2c3e50;
+        }
+        
+        .layout-example {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .img-container {
+            position: relative;
+            overflow: hidden;
+            height: 200px;
+        }
+        
+        .img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .card:hover .img-container img {
+            transform: scale(1.05);
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .content h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .content p {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+        
+        .link-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+        
+        .link-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .link-btn i {
+            margin-right: 8px;
+        }
+        
+        /* 水平布局 */
+        .horizontal {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .horizontal .img-container {
+            flex: 1;
+            height: 150px;
+            border-radius: 10px;
+        }
+        
+        .horizontal .content {
+            flex: 2;
+            padding: 0;
+        }
+        
+        /* 卡片重叠布局 */
+        .overlap {
+            position: relative;
+        }
+        
+        .overlap .img-container {
+            height: 180px;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .overlap .content {
+            position: relative;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.95);
+            margin-top: -30px;
+            border-radius: 15px 15px 12px 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        /* 图标布局 */
+        .icon-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .icon-link .img-container {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            overflow: hidden;
+            border: 3px solid white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 600px) {
+            .horizontal {
+                flex-direction: column;
+            }
+            
+            .horizontal .img-container {
+                width: 100%;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .section-title h2 {
+                font-size: 1.4rem;
+            }
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>移动端图片与链接排版方案</h1>
+            <p class="subtitle">探索多种优雅的图片与链接组合方式，提升移动端用户体验</p>
+        </header>
+        
+        <!-- 垂直布局 -->
+        <section class="layout-section">
+            <div class="section-title">
+                <i class="fas fa-align-justify"></i>
+                <h2>垂直布局 - 经典清晰</h2>
+            </div>
+            <div class="layout-example">
+                <div class="card">
+                    <div class="img-container">
+                        <img src="https://images.unsplash.com/photo-1501854140801-50d01698950b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="自然风景">
+                    </div>
+                    <div class="content">
+                        <h3>探索自然之美</h3>
+                        <p>沉浸在大自然的怀抱中，感受森林的宁静与山脉的壮丽，让心灵得到彻底的放松。</p>
+                        <a href="#" class="link-btn"><i class="fas fa-tree"></i> 了解更多</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 水平布局 -->
+        <section class="layout-section">
+            <div class="section-title">
+                <i class="fas fa-align-left"></i>
+                <h2>水平布局 - 空间高效</h2>
+            </div>
+            <div class="layout-example">
+                <div class="card horizontal">
+                    <div class="img-container">
+                        <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="山脉风光">
+                    </div>
+                    <div class="content">
+                        <h3>山脉探险之旅</h3>
+                        <p>挑战自我，征服高峰，体验站在世界之巅的壮丽感受。</p>
+                        <a href="#" class="link-btn"><i class="fas fa-mountain"></i> 立即预订</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 卡片重叠布局 -->
+        <section class="layout-section">
+            <div class="section-title">
+                <i class="fas fa-layer-group"></i>
+                <h2>卡片重叠 - 现代设计</h2>
+            </div>
+            <div class="layout-example">
+                <div class="card overlap">
+                    <div class="img-container">
+                        <img src="https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D3D&auto=format&fit=crop&w=800&q=80" alt="海滩日落">
+                    </div>
+                    <div class="content">
+                        <h3>海滩日落体验</h3>
+                        <p>在金色沙滩上漫步，欣赏壮丽的日落景色，感受海浪轻抚脚边的惬意。</p>
+                        <a href="#" class="link-btn"><i class="fas fa-umbrella-beach"></i> 查看行程</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 图标式布局 -->
+        <section class="layout-section">
+            <div class="section-title">
+                <i class="fas fa-icons"></i>
+                <h2>图标式布局 - 简洁优雅</h2>
+            </div>
+            <div class="layout-example">
+                <div class="card icon-link">
+                    <div class="img-container">
+                        <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="湖泊风光">
+                    </div>
+                    <div class="content">
+                        <h3>湖泊度假套餐</h3>
+                        <p>在宁静的湖畔小屋中放松身心，享受远离喧嚣的宁静时光。</p>
+                        <a href="#" class="link-btn"><i class="fas fa-water"></i> 立即预订</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <footer>
+            <p>移动端图片与链接排版最佳实践 | 设计响应式、触摸友好的界面</p>
+        </footer>
+    </div>
+</body>
+</html>
