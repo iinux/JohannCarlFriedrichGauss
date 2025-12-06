@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letter Typing Practice Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: linear-gradient(145deg, #f0f0f0, #ffffff);
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            min-width: 120px;
+            transition: transform 0.2s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .game-area {
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .letter-display {
+            font-size: 6rem;
+            font-weight: bold;
+            color: #667eea;
+            text-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+            margin-bottom: 30px;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .letter-display.success {
+            color: #4CAF50;
+            transform: scale(1.2);
+            animation: success-pulse 0.5s ease;
+        }
+
+        .letter-display.error {
+            color: #ff6b6b;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes success-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1.2); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .menu {
+            text-align: center;
+        }
+
+        .difficulty-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+
+        .btn:hover:before {
+            transform: translateX(100%);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-easy {
+            background: linear-gradient(145deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-medium {
+            background: linear-gradient(145deg, #ffa726, #fb8c00);
+            color: white;
+        }
+
+        .btn-hard {
+            background: linear-gradient(145deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+
+        .btn-start {
+            background: linear-gradient(145deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-pause {
+            background: linear-gradient(145deg, #9c27b0, #7b1fa2);
+            color: white;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #ecf0f1;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+            border-radius: 5px;
+        }
+
+        .instructions {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .countdown {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #667eea;
+            animation: countdown-pulse 1s ease infinite;
+        }
+
+        @keyframes countdown-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .game-over {
+            text-align: center;
+        }
+
+        .game-over h2 {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .final-stats {
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .final-stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .final-stat-label {
+            color: #7f8c8d;
+        }
+
+        .final-stat-value {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .keyboard-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            z-index: 1000;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: float 3s ease-out forwards;
+        }
+
+        .flower-particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: flowerFloat 4s ease-out forwards;
+            font-size: 20px;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(0);
+                opacity: 0;
+            }
+        }
+
+        @keyframes flowerFloat {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(-150px) rotate(180deg) scale(1.5);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-300px) rotate(360deg) scale(0);
+                opacity: 0;
+            }
+        }
+
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sound-toggle:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 1);
+        }
+
+        @media (max-width: 600px) {
+            .title {
+                font-size: 2rem;
+            }
+
+            .letter-display {
+                font-size: 4rem;
+            }
+
+            .btn {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+
+            .stats {
+                gap: 10px;
+            }
+
+            .stat-item {
+                min-width: 100px;
+                padding: 10px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+
+    <div class="game-container">
+        <div class="header">
+            <h1 class="title">⌨️ TYPING MASTER ⌨️</h1>
+        </div>
+
+        <div class="stats hidden" id="stats">
+            <div class="stat-item">
+                <div class="stat-label">Score</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Accuracy</div>
+                <div class="stat-value" id="accuracy">100%</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Time</div>
+                <div class="stat-value" id="timer">60s</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Speed</div>
+                <div class="stat-value" id="speed">0</div>
+            </div>
+        </div>
+
+        <div class="progress-bar hidden" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="game-area">
+            <div class="menu" id="menu">
+                <div class="instructions">
+                    <p>Practice your typing skills! Type the letters as they appear.</p>
+                    <p>Choose your difficulty and get ready to type!</p>
+                </div>
+                <div class="difficulty-buttons">
+                    <button class="btn btn-easy" onclick="setDifficulty('easy')">Easy</button>
+                    <button class="btn btn-medium" onclick="setDifficulty('medium')">Medium</button>
+                    <button class="btn btn-hard" onclick="setDifficulty('hard')">Hard</button>
+                </div>
+                <button class="btn btn-start" onclick="startGame()">Start Game</button>
+            </div>
+
+            <div class="countdown hidden" id="countdown"></div>
+
+            <div class="letter-display hidden" id="letterDisplay"></div>
+
+            <div class="game-over hidden" id="gameOver">
+                <h2>🎉 Game Complete! 🎉</h2>
+                <div class="final-stats">
+                    <div class="final-stat">
+                        <span class="final-stat-label">Final Score:</span>
+                        <span class="final-stat-value" id="finalScore">0</span>
+                    </div>
+                    <div class="final-stat">
+                        <span class="final-stat-label">Accuracy:</span>
+                        <span class="final-stat-value" id="finalAccuracy">0%</span>
+                    </div>
+                    <div class="final-stat">
+                        <span class="final-stat-label">Letters Typed:</span>
+                        <span class="final-stat-value" id="finalLetters">0</span>
+                    </div>
+                    <div class="final-stat">
+                        <span class="final-stat-label">Speed (LPM):</span>
+                        <span class="final-stat-value" id="finalSpeed">0</span>
+                    </div>
+                </div>
+                <button class="btn btn-start" onclick="resetGame()">Play Again</button>
+            </div>
+        </div>
+
+        <div class="hidden" id="pauseArea">
+            <button class="btn btn-pause" onclick="togglePause()">Pause</button>
+        </div>
+    </div>
+
+    <button class="sound-toggle" id="soundToggle" onclick="toggleSound()">🔊</button>
+    <div class="keyboard-hint" id="keyboardHint">Press any key to start typing!</div>
+
+    <script>
+        let gameState = 'menu'; // menu, countdown, playing, paused, gameover
+        let difficulty = 'medium';
+        let score = 0;
+        let correctLetters = 0;
+        let totalLetters = 0;
+        let currentLetter = '';
+        let timeLeft = 60;
+        let gameTimer = null;
+        let speedTimer = null;
+        let startTime = null;
+        let isPaused = false;
+        let soundEnabled = true;
+        let letterSpeech = null;
+
+        // Initialize speech synthesis
+        const synth = window.speechSynthesis;
+
+        // Audio context for sound effects
+        let audioContext = null;
+
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundToggle').textContent = soundEnabled ? '🔊' : '🔇';
+
+            if (soundEnabled) {
+                playSuccessSound();
+            }
+        }
+
+        function speakLetter(letter) {
+            if (!soundEnabled) return;
+
+            // Cancel any ongoing speech
+            synth.cancel();
+
+            // Create speech utterance
+            letterSpeech = new SpeechSynthesisUtterance(letter);
+            letterSpeech.lang = 'en-US';
+            letterSpeech.rate = 0.6;
+            letterSpeech.pitch = 1.0;
+            letterSpeech.volume = 0.8;
+
+            synth.speak(letterSpeech);
+        }
+
+        function playSuccessSound() {
+            if (!soundEnabled || !audioContext) return;
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+            oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+            oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        function playErrorSound() {
+            if (!soundEnabled || !audioContext) return;
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.2);
+
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        }
+
+        function playCountdownSound() {
+            if (!soundEnabled || !audioContext) return;
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4
+
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+
+        const difficulties = {
+            easy: {
+                time: 900,
+                //letters: 'abcdefghijklmnopqrstuvwxyz',
+                //letters: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                letters: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+                speed: 2000 // milliseconds between letters
+            },
+            medium: {
+                time: 60,
+                letters: 'abcdefghijklmnopqrstuvwxyz',
+                speed: 1500
+            },
+            hard: {
+                time: 30,
+                letters: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()',
+                speed: 1000
+            }
+        };
+
+        function setDifficulty(level) {
+            difficulty = level;
+            document.querySelectorAll('.btn-easy, .btn-medium, .btn-hard').forEach(btn => {
+                btn.style.opacity = '0.6';
+            });
+            document.querySelector(`.btn-${level}`).style.opacity = '1';
+        }
+
+        function startGame() {
+            gameState = 'countdown';
+            initAudio();
+            document.getElementById('menu').classList.add('hidden');
+            document.getElementById('countdown').classList.remove('hidden');
+            document.getElementById('keyboardHint').classList.add('hidden');
+
+            let countdown = 3;
+            const countdownElement = document.getElementById('countdown');
+
+            const countdownInterval = setInterval(() => {
+                if (countdown > 0) {
+                    countdownElement.textContent = countdown;
+                    playCountdownSound();
+                    countdown--;
+                } else {
+                    countdownElement.textContent = 'GO!';
+                    playSuccessSound();
+                    setTimeout(() => {
+                        clearInterval(countdownInterval);
+                        countdownElement.classList.add('hidden');
+                        initializeGame();
+                    }, 500);
+                }
+            }, 1000);
+        }
+
+        function initializeGame() {
+            gameState = 'playing';
+            score = 0;
+            correctLetters = 0;
+            totalLetters = 0;
+            timeLeft = difficulties[difficulty].time;
+            startTime = Date.now();
+            isPaused = false;
+
+            document.getElementById('stats').classList.remove('hidden');
+            document.getElementById('letterDisplay').classList.remove('hidden');
+            document.getElementById('progressBar').classList.remove('hidden');
+            document.getElementById('pauseArea').classList.remove('hidden');
+
+            updateStats();
+            generateNewLetter();
+            startGameTimer();
+            startSpeedTimer();
+        }
+
+        function generateNewLetter() {
+            if (gameState !== 'playing') return;
+
+            const letters = difficulties[difficulty].letters;
+            currentLetter = letters[Math.floor(Math.random() * letters.length)];
+
+            const display = document.getElementById('letterDisplay');
+            display.textContent = currentLetter;
+            display.className = 'letter-display';
+
+            // Speak the letter when it appears
+            speakLetter(currentLetter);
+
+            // Auto-change letter after difficulty speed
+            /*
+            setTimeout(() => {
+                if (gameState === 'playing' && display.textContent === currentLetter) {
+                    totalLetters++;
+                    updateStats();
+                    generateNewLetter();
+                }
+            }, difficulties[difficulty].speed);
+            */
+        }
+
+        function handleKeyPress(event) {
+            if (gameState === 'playing' && !isPaused) {
+                const typedLetter = event.key;
+
+                if (typedLetter.toLowerCase() === currentLetter.toLowerCase()) {
+                    handleCorrectLetter();
+                } else if (typedLetter.length === 1) {
+                    handleIncorrectLetter();
+                }
+            } else if (gameState === 'menu') {
+                document.getElementById('keyboardHint').classList.add('hidden');
+            }
+        }
+
+        function handleCorrectLetter() {
+            const display = document.getElementById('letterDisplay');
+            display.classList.add('success');
+
+            score += difficulty === 'easy' ? 10 : difficulty === 'medium' ? 20 : 30;
+            correctLetters++;
+            totalLetters++;
+
+            playSuccessSound();
+            createFlowerParticles();
+            updateStats();
+
+            setTimeout(() => {
+                generateNewLetter();
+            }, 200);
+        }
+
+        function handleIncorrectLetter() {
+            const display = document.getElementById('letterDisplay');
+            display.classList.add('error');
+
+            score = Math.max(0, score - 5);
+            totalLetters++;
+
+            playErrorSound();
+            updateStats();
+
+            setTimeout(() => {
+                display.classList.remove('error');
+            }, 300);
+        }
+
+        function updateStats() {
+            document.getElementById('score').textContent = score;
+
+            const accuracy = totalLetters > 0 ? Math.round((correctLetters / totalLetters) * 100) : 100;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+
+            document.getElementById('timer').textContent = timeLeft + 's';
+
+            // Calculate speed (letters per minute)
+            if (startTime) {
+                const elapsedMinutes = (Date.now() - startTime) / 60000;
+                const speed = Math.round(correctLetters / elapsedMinutes);
+                document.getElementById('speed').textContent = speed;
+            }
+
+            // Update progress bar
+            const progress = ((difficulties[difficulty].time - timeLeft) / difficulties[difficulty].time) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function startGameTimer() {
+            gameTimer = setInterval(() => {
+                if (!isPaused) {
+                    timeLeft--;
+                    updateStats();
+
+                    if (timeLeft <= 0) {
+                        endGame();
+                    }
+                }
+            }, 1000);
+        }
+
+        function startSpeedTimer() {
+            speedTimer = setInterval(() => {
+                if (gameState === 'playing' && !isPaused) {
+                    updateStats();
+                }
+            }, 1000);
+        }
+
+        function togglePause() {
+            if (gameState !== 'playing') return;
+
+            isPaused = !isPaused;
+            document.querySelector('.btn-pause').textContent = isPaused ? 'Resume' : 'Pause';
+
+            if (isPaused) {
+                document.getElementById('letterDisplay').style.opacity = '0.5';
+            } else {
+                document.getElementById('letterDisplay').style.opacity = '1';
+            }
+        }
+
+        function endGame() {
+            gameState = 'gameover';
+            clearInterval(gameTimer);
+            clearInterval(speedTimer);
+
+            document.getElementById('stats').classList.add('hidden');
+            document.getElementById('letterDisplay').classList.add('hidden');
+            document.getElementById('progressBar').classList.add('hidden');
+            document.getElementById('pauseArea').classList.add('hidden');
+            document.getElementById('gameOver').classList.remove('hidden');
+
+            // Calculate final statistics
+            const elapsedMinutes = difficulties[difficulty].time / 60;
+            const finalSpeed = Math.round(correctLetters / elapsedMinutes);
+            const finalAccuracy = totalLetters > 0 ? Math.round((correctLetters / totalLetters) * 100) : 0;
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalAccuracy').textContent = finalAccuracy + '%';
+            document.getElementById('finalLetters').textContent = correctLetters;
+            document.getElementById('finalSpeed').textContent = finalSpeed;
+        }
+
+        function resetGame() {
+            gameState = 'menu';
+            document.getElementById('gameOver').classList.add('hidden');
+            document.getElementById('menu').classList.remove('hidden');
+            document.getElementById('keyboardHint').classList.remove('hidden');
+            document.getElementById('letterDisplay').className = 'letter-display hidden';
+
+            // Reset difficulty button opacity
+            document.querySelectorAll('.btn-easy, .btn-medium, .btn-hard').forEach(btn => {
+                btn.style.opacity = '1';
+            });
+        }
+
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const colors = ['#4CAF50', '#667eea', '#764ba2', '#ffa726', '#ff6b6b'];
+
+            for (let i = 0; i < 10; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * window.innerWidth + 'px';
+                particle.style.top = Math.random() * window.innerHeight + 'px';
+                particle.style.width = Math.random() * 20 + 5 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+                particlesContainer.appendChild(particle);
+
+                setTimeout(() => {
+                    particle.remove();
+                }, 3000);
+            }
+        }
+
+        function createFlowerParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const flowers = ['🌸', '🌺', '🌻', '🌷', '🌹', '🏵️', '🌼', '🌵', '🌾', '🌿', '✨', '⭐', '💫', '🌟'];
+
+            // Create flower particles
+            for (let i = 0; i < 15; i++) {
+                const flower = document.createElement('div');
+                flower.className = 'flower-particle';
+                flower.textContent = flowers[Math.floor(Math.random() * flowers.length)];
+
+                // Position around the letter display
+                const letterDisplay = document.getElementById('letterDisplay');
+                const rect = letterDisplay.getBoundingClientRect();
+
+                flower.style.left = (rect.left + rect.width / 2 + (Math.random() - 0.5) * 200) + 'px';
+                flower.style.top = (rect.top + rect.height / 2 + (Math.random() - 0.5) * 100) + 'px';
+                flower.style.transform = `rotate(${Math.random() * 360}deg)`;
+
+                particlesContainer.appendChild(flower);
+
+                setTimeout(() => {
+                    flower.remove();
+                }, 4000);
+            }
+
+            // Also create some regular colorful particles
+            createParticles();
+        }
+
+        // Event listeners
+        document.addEventListener('keydown', handleKeyPress);
+
+        // Prevent space bar from scrolling
+        window.addEventListener('keydown', function(e) {
+            if(e.key === ' ' && e.target === document.body) {
+                e.preventDefault();
+            }
+        });
+
+        // Hide keyboard hint after first interaction
+        setTimeout(() => {
+            document.getElementById('keyboardHint').classList.add('hidden');
+        }, 5000);
+    </script>
+</body>
+</html>
