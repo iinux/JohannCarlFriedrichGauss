@@ -26,3 +26,5 @@ for chunk in completion:
         print(chunk.choices[0].delta.content, end="")
 
 
+if __name__ == '__main__':
+    pass

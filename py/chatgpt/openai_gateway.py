@@ -1,0 +1,266 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+OpenAI API 代理网关
+功能：代理 OpenAI 请求，并修改 api_key 和 model
+"""
+
+import json
+import re
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError
+import ssl
+import os
+import my_config
+
+# ============ 配置 ============
+# 目标 OpenAI API 地址
+TARGET_HOST = "dashscope.aliyuncs.com"
+TARGET_URL = f"https://{TARGET_HOST}/compatible-mode/v1"
+
+# 替换配置
+REPLACEMENTS = {
+    # 替换 API Key: {原始key或正则: 新key}
+    "api_keys": {
+        # 示例：替换特定 key
+        "sk-original123": "sk-newapikey456",
+        # 示例：替换所有 sk- 开头的 key（使用正则）
+        r"sk-[a-zA-Z0-9]+": my_config.ali_key_exbus
+    },
+
+    # 替换 Model: {原始model: 新model}
+    "models": {
+        # 示例：替换特定 model
+        "gpt-4-1106-preview": "gpt-3.5-turbo-1106",
+        # 示例：替换所有 gpt-4 变体
+        r".*": "qvq-max-2025-03-25",
+    }
+}
+
+# 网关监听配置
+GATEWAY_HOST = "0.0.0.0"
+GATEWAY_PORT = 8080
+
+
+class OpenAIGatewayHandler(BaseHTTPRequestHandler):
+    """OpenAI API 网关处理器"""
+
+    def log_message(self, format, *args):
+        """自定义日志格式"""
+        print(f"[{self.log_date_time_string()}] {args[0]}")
+
+    def do_GET(self):
+        """处理 GET 请求"""
+        self._proxy_request("GET")
+
+    def do_POST(self):
+        """处理 POST 请求"""
+        self._proxy_request("POST")
+
+    def do_PUT(self):
+        """处理 PUT 请求"""
+        self._proxy_request("PUT")
+
+    def do_DELETE(self):
+        """处理 DELETE 请求"""
+        self._proxy_request("DELETE")
+
+    def do_OPTIONS(self):
+        """处理 OPTIONS 请求（CORS 预检）"""
+        self.send_response(200)
+        self._send_cors_headers()
+        self.end_headers()
+
+    def _send_cors_headers(self):
+        """发送 CORS 响应头"""
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+
+    def _modify_request_body(self, body: bytes) -> bytes:
+        """
+        修改请求体中的 api_key 和 model
+        """
+        try:
+            data = json.loads(body.decode('utf-8'))
+
+            # 替换 model
+            if 'model' in data:
+                original_model = data['model']
+                data['model'] = self._replace_value(
+                    original_model,
+                    REPLACEMENTS['models']
+                )
+                if original_model != data['model']:
+                    print(f"  [Model] {original_model} -> {data['model']}")
+
+            return json.dumps(data).encode('utf-8')
+        except:
+            return body
+
+    def _modify_request_headers(self, headers: dict) -> dict:
+        """
+        修改请求头中的 Authorization (api_key)
+        """
+        auth_header = headers.get('Authorization', '')
+
+        if auth_header.startswith('Bearer '):
+            original_key = auth_header[7:]  # 去掉 "Bearer "
+            new_key = self._replace_value(
+                original_key,
+                REPLACEMENTS['api_keys']
+            )
+            if original_key != new_key:
+                print(f"  [API Key] {original_key[:20]}... -> {new_key[:20]}...")
+                headers['Authorization'] = f'Bearer {new_key}'
+
+        return headers
+
+    def _replace_value(self, original: str, replacements: dict) -> str:
+        """
+        根据配置替换值（支持正则匹配）
+        """
+        for pattern, replacement in replacements.items():
+            # 检查是否是正则表达式
+            if pattern.startswith('r"') or pattern.startswith("r'"):
+                # 去掉 r" 和 " 包装
+                pattern = pattern[2:-1]
+
+            try:
+                # 尝试作为正则匹配
+                if re.match(pattern, original):
+                    return replacement
+            except re.error:
+                # 不是有效的正则，作为普通字符串匹配
+                if pattern == original:
+                    return replacement
+
+        return original
+
+    def _proxy_request(self, method: str):
+        """
+        代理请求到 OpenAI API
+        """
+        # 读取请求体
+        content_length = int(self.headers.get('Content-Length', 0))
+        body = self.rfile.read(content_length) if content_length > 0 else b''
+
+        # 修改请求
+        modified_body = self._modify_request_body(body)
+
+        # 准备请求头
+        headers = dict(self.headers)
+        headers = self._modify_request_headers(headers)
+
+        # 修改 Host 头
+        headers['Host'] = TARGET_HOST
+        del headers['Content-Length']
+
+        # 移除 hop-by-hop 头
+        hop_by_hop = ['connection', 'keep-alive', 'proxy-authenticate',
+                      'proxy-authorization', 'te', 'trailers',
+                      'transfer-encoding', 'upgrade']
+        for header in hop_by_hop:
+            headers.pop(header, None)
+            headers.pop(header.title(), None)
+
+        # 构建目标 URL
+        target_url = f"{TARGET_URL}{self.path}"
+
+        print(f"\n[{method}] {self.path}")
+        print(f"  -> {target_url}")
+
+        try:
+            # 创建请求
+            req = Request(
+                url=target_url,
+                data=modified_body if method in ['POST', 'PUT'] else None,
+                headers=headers,
+                method=method
+            )
+
+            # 发送请求（忽略 SSL 验证，生产环境请移除）
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+
+            with urlopen(req, context=ctx, timeout=60) as response:
+                # 发送响应状态
+                self.send_response(response.status)
+
+                # 复制响应头
+                for header, value in response.headers.items():
+                    if header.lower() not in hop_by_hop:
+                        self.send_header(header, value)
+
+                self._send_cors_headers()
+                self.end_headers()
+
+                # 复制响应体
+                self.wfile.write(response.read())
+
+        except HTTPError as e:
+            print(f"  [Error] {e.code}: {e.reason}")
+            self.send_response(e.code)
+            self._send_cors_headers()
+            self.end_headers()
+            self.wfile.write(e.read())
+
+        except Exception as e:
+            print(f"  [Error] {e}")
+            self.send_response(500)
+            self._send_cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "error": {
+                    "message": str(e),
+                    "type": "gateway_error"
+                }
+            }).encode('utf-8'))
+
+
+def run_gateway(host=GATEWAY_HOST, port=GATEWAY_PORT):
+    """
+    启动网关服务器
+    """
+    server = HTTPServer((host, port), OpenAIGatewayHandler)
+    print(f"=" * 60)
+    print(f"OpenAI API 网关已启动")
+    print(f"监听地址: http://{host}:{port}")
+    print(f"目标地址: {TARGET_URL}")
+    print(f"=" * 60)
+    print(f"\n使用方式:")
+    print(f"  将 OpenAI API 地址替换为: http://localhost:{port}")
+    print(f"\n示例:")
+    print(f"  curl http://localhost:{port}/v1/chat/completions \\")
+    print(f"    -H \"Authorization: Bearer sk-xxx\" \\")
+    print(f"    -H \"Content-Type: application/json\" \\")
+    print(f"    -d '{{\"model\": \"gpt-4\", \"messages\": [...]}}'")
+    print(f"=" * 60)
+    print()
+
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\n网关已停止")
+        server.shutdown()
+
+
+# ========== 使用示例 ==========
+
+if __name__ == "__main__":
+    import sys
+
+    # 可以通过环境变量配置
+    if os.getenv('OPENAI_TARGET_HOST'):
+        TARGET_HOST = os.getenv('OPENAI_TARGET_HOST')
+
+    if os.getenv('GATEWAY_PORT'):
+        GATEWAY_PORT = int(os.getenv('GATEWAY_PORT'))
+
+    # 或者通过命令行参数
+    if len(sys.argv) > 1:
+        GATEWAY_PORT = int(sys.argv[1])
+
+    run_gateway()
