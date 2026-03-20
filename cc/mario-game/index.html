@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>超级玛丽游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+        }
+
+        .game-container {
+            text-align: center;
+        }
+
+        h1 {
+            color: #fff;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            font-size: 2.5em;
+        }
+
+        #gameCanvas {
+            border: 4px solid #fff;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: #5c94fc;
+        }
+
+        .controls {
+            margin-top: 20px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .controls p {
+            margin: 5px 0;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            color: #fff;
+            font-size: 18px;
+            margin-bottom: 10px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .instructions {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            color: #fff;
+        }
+
+        .instructions h3 {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🍄 超级玛丽 🍄</h1>
+        
+        <div class="score-board">
+            <span id="score">得分：0</span>
+            <span id="lives">生命：3</span>
+            <span id="level">关卡：1</span>
+        </div>
+
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+        <div class="controls">
+            <p>⬅️ ➡️ 方向键移动 | ⬆️ 跳跃 | R 重新开始</p>
+        </div>
+
+        <div class="instructions">
+            <h3>游戏说明：</h3>
+            <p>• 收集金币获得分数</p>
+            <p>• 踩在敌人头上可以消灭敌人</p>
+            <p>• 碰到敌人身体会失去生命</p>
+            <p>• 到达绿色传送门进入下一关</p>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

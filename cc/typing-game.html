@@ -509,8 +509,15 @@
             // Cancel any ongoing speech
             synth.cancel();
 
+
             // Create speech utterance
             letterSpeech = new SpeechSynthesisUtterance(letter);
+            synth.getVoices().forEach(voice => {
+                console.log(voice);
+                if (voice.name === 'Google US English') {
+                    letterSpeech.voice = voice;
+                }
+            });
             letterSpeech.lang = 'en-US';
             letterSpeech.rate = 0.6;
             letterSpeech.pitch = 1.0;

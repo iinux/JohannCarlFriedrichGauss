@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>颜色合成工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .color-section {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .color-picker-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .color-label {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .color-input-wrapper {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            border: 4px solid #f0f0f0;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .color-input-wrapper:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        input[type="color"] {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .color-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            color: #666;
+            background: #f8f8f8;
+            padding: 8px 16px;
+            border-radius: 8px;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .plus-sign {
+            font-size: 3em;
+            color: #999;
+            font-weight: bold;
+        }
+
+        .blend-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .blend-mode-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .blend-mode-selector label {
+            font-size: 1.1em;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .blend-mode-selector select {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .blend-mode-selector select:hover {
+            border-color: #667eea;
+        }
+
+        .blend-button {
+            padding: 15px 60px;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .blend-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.6);
+        }
+
+        .blend-button:active {
+            transform: translateY(-1px);
+        }
+
+        .result-section {
+            background: #f8f8f8;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .result-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .result-color {
+            width: 250px;
+            height: 150px;
+            margin: 0 auto 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            border: 4px solid white;
+            transition: all 0.5s ease;
+        }
+
+        .result-values {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .result-value {
+            background: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            color: #555;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-value strong {
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .color-input-wrapper {
+                width: 120px;
+                height: 120px;
+            }
+
+            .plus-sign {
+                font-size: 2em;
+            }
+
+            .blend-button {
+                padding: 12px 40px;
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 颜色合成工具</h1>
+
+        <div class="color-section">
+            <div class="color-picker-container">
+                <span class="color-label">颜色 1</span>
+                <div class="color-input-wrapper">
+                    <input type="color" id="color1" value="#ff6b6b">
+                </div>
+                <div class="color-value" id="color1-value">#FF6B6B</div>
+            </div>
+
+            <div class="plus-sign">+</div>
+
+            <div class="color-picker-container">
+                <span class="color-label">颜色 2</span>
+                <div class="color-input-wrapper">
+                    <input type="color" id="color2" value="#4ecdc4">
+                </div>
+                <div class="color-value" id="color2-value">#4ECDC4</div>
+            </div>
+        </div>
+
+        <div class="blend-controls">
+            <div class="blend-mode-selector">
+                <label for="blend-mode">混合模式:</label>
+                <select id="blend-mode">
+                    <option value="average">平均</option>
+                    <option value="multiply">正片叠底</option>
+                    <option value="screen">滤色</option>
+                    <option value="overlay">叠加</option>
+                    <option value="normal" selected>普通 (50%)</option>
+                </select>
+            </div>
+
+            <button class="blend-button" onclick="blendColors()">合成颜色</button>
+        </div>
+
+        <div class="result-section">
+            <div class="result-title">合成结果</div>
+            <div class="result-color" id="result-color" style="background-color: #a8b8c8;"></div>
+            <div class="result-values">
+                <div class="result-value">
+                    <strong>HEX:</strong> <span id="result-hex">#A8B8C8</span>
+                </div>
+                <div class="result-value">
+                    <strong>RGB:</strong> <span id="result-rgb">rgb(168, 184, 200)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 更新颜色值显示
+        function updateColorValue(inputId, displayId) {
+            const colorInput = document.getElementById(inputId);
+            const colorDisplay = document.getElementById(displayId);
+            colorDisplay.textContent = colorInput.value.toUpperCase();
+        }
+
+        // 监听颜色变化
+        document.getElementById('color1').addEventListener('input', function() {
+            updateColorValue('color1', 'color1-value');
+        });
+
+        document.getElementById('color2').addEventListener('input', function() {
+            updateColorValue('color2', 'color2-value');
+        });
+
+        // 将十六进制转换为RGB
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        // 将RGB转换为十六进制
+        function rgbToHex(r, g, b) {
+            return "#" + [r, g, b].map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            }).join('');
+        }
+
+        // 颜色混合函数
+        function blendColors() {
+            const color1 = hexToRgb(document.getElementById('color1').value);
+            const color2 = hexToRgb(document.getElementById('color2').value);
+            const blendMode = document.getElementById('blend-mode').value;
+
+            let r, g, b;
+
+            switch (blendMode) {
+                case 'average':
+                    // 平均混合
+                    r = Math.round((color1.r + color2.r) / 2);
+                    g = Math.round((color1.g + color2.g) / 2);
+                    b = Math.round((color1.b + color2.b) / 2);
+                    break;
+
+                case 'multiply':
+                    // 正片叠底
+                    r = Math.round((color1.r * color2.r) / 255);
+                    g = Math.round((color1.g * color2.g) / 255);
+                    b = Math.round((color1.b * color2.b) / 255);
+                    break;
+
+                case 'screen':
+                    // 滤色
+                    r = Math.round(255 - ((255 - color1.r) * (255 - color2.r)) / 255);
+                    g = Math.round(255 - ((255 - color1.g) * (255 - color2.g)) / 255);
+                    b = Math.round(255 - ((255 - color1.b) * (255 - color2.b)) / 255);
+                    break;
+
+                case 'overlay':
+                    // 叠加
+                    const overlay = (base, blend) => {
+                        if (base < 128) {
+                            return Math.round(2 * base * blend / 255);
+                        } else {
+                            return Math.round(255 - 2 * (255 - base) * (255 - blend) / 255);
+                        }
+                    };
+                    r = overlay(color1.r, color2.r);
+                    g = overlay(color1.g, color2.g);
+                    b = overlay(color1.b, color2.b);
+                    break;
+
+                case 'normal':
+                default:
+                    // 普通 50% 混合
+                    r = Math.round(color1.r * 0.5 + color2.r * 0.5);
+                    g = Math.round(color1.g * 0.5 + color2.g * 0.5);
+                    b = Math.round(color1.b * 0.5 + color2.b * 0.5);
+                    break;
+            }
+
+            // 更新结果显示
+            const resultHex = rgbToHex(r, g, b).toUpperCase();
+            const resultRgb = `rgb(${r}, ${g}, ${b})`;
+
+            const resultColorDiv = document.getElementById('result-color');
+            resultColorDiv.style.backgroundColor = resultHex;
+
+            // 添加动画效果
+            resultColorDiv.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                resultColorDiv.style.transform = 'scale(1)';
+            }, 300);
+
+            document.getElementById('result-hex').textContent = resultHex;
+            document.getElementById('result-rgb').textContent = resultRgb;
+        }
+
+        // 页面加载时执行一次混合
+        window.onload = function() {
+            blendColors();
+        };
+    </script>
+</body>
+</html>
