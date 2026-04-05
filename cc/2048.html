@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>NumBlast — 数字消消乐</title>
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --card: #0f3460;
+      --accent: #e94560;
+      --accent2: #f5a623;
+      --text: #eaeaea;
+      --text-muted: #8892b0;
+      --grid-bg: #0a0a1a;
+      --cell-empty: rgba(255,255,255,0.04);
+      --radius: 12px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', 'PingFang SC', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* ── Particle canvas ── */
+    #particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Layout ── */
+    .app {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+      padding: 20px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    /* ── Header ── */
+    .header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #e94560, #f5a623);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .score-cluster {
+      display: flex;
+      gap: 10px;
+    }
+
+    .score-box {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 8px 18px;
+      text-align: center;
+      min-width: 80px;
+    }
+
+    .score-box label {
+      display: block;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .score-box span {
+      display: block;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+      transition: transform 0.15s;
+    }
+
+    .score-box span.pop {
+      animation: scorePop 0.3s ease;
+    }
+
+    @keyframes scorePop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.4); color: var(--accent2); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── Controls ── */
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 8px 18px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover { background: var(--card); border-color: var(--accent); color: var(--accent); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+    .btn.primary:hover { background: #c73652; }
+
+    /* ── Level / combo bar ── */
+    .meta-row {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .level-badge {
+      background: linear-gradient(135deg, #e94560, #f5a623);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .combo-display {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+
+    .combo-display.active {
+      color: var(--accent2);
+      font-weight: 700;
+      text-shadow: 0 0 12px rgba(245,166,35,0.6);
+    }
+
+    .progress-wrap {
+      flex: 1;
+      height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #e94560, #f5a623);
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    /* ── Grid ── */
+    .grid-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      background: var(--grid-bg);
+      border-radius: var(--radius);
+      padding: 10px;
+      box-shadow: var(--shadow), inset 0 0 0 1px rgba(255,255,255,0.05);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 10px;
+      width: 100%;
+      height: 100%;
+    }
+
+    .cell {
+      background: var(--cell-empty);
+      border-radius: 8px;
+    }
+
+    /* ── Tiles ── */
+    .tiles-layer {
+      position: absolute;
+      inset: 10px;
+      pointer-events: none;
+    }
+
+    .tile {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-weight: 900;
+      transition: top 0.12s ease, left 0.12s ease;
+      will-change: top, left;
+    }
+
+    .tile.new-tile  { animation: tileAppear 0.2s ease; }
+    .tile.merge-tile { animation: tileMerge 0.25s ease; }
+
+    @keyframes tileAppear {
+      0%   { transform: scale(0); opacity: 0; }
+      60%  { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes tileMerge {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.25); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── Tile colours ── */
+    .t2    { background: #cdc1b4; color: #776e65; }
+    .t4    { background: #eee4da; color: #776e65; }
+    .t8    { background: #f2b179; color: #fff; }
+    .t16   { background: #f59563; color: #fff; }
+    .t32   { background: #f67c5f; color: #fff; }
+    .t64   { background: #f65e3b; color: #fff; }
+    .t128  { background: linear-gradient(135deg,#edcf72,#f5a623); color: #fff; box-shadow: 0 0 20px rgba(245,166,35,0.5); }
+    .t256  { background: linear-gradient(135deg,#edcc61,#f0a818); color: #fff; box-shadow: 0 0 24px rgba(245,166,35,0.6); }
+    .t512  { background: linear-gradient(135deg,#edc850,#e9960e); color: #fff; box-shadow: 0 0 28px rgba(245,166,35,0.7); }
+    .t1024 { background: linear-gradient(135deg,#e94560,#ff6b8a); color: #fff; box-shadow: 0 0 32px rgba(233,69,96,0.7); }
+    .t2048 { background: linear-gradient(135deg,#a855f7,#e94560); color: #fff; box-shadow: 0 0 40px rgba(168,85,247,0.8); animation: rainbow 1.5s linear infinite; }
+    .thigh { background: linear-gradient(135deg,#06b6d4,#a855f7,#e94560); color: #fff; box-shadow: 0 0 48px rgba(168,85,247,0.9); animation: rainbow 1s linear infinite; }
+
+    @keyframes rainbow {
+      0%   { filter: hue-rotate(0deg); }
+      100% { filter: hue-rotate(360deg); }
+    }
+
+    /* ── Overlay ── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .overlay.show { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 40px 32px;
+      text-align: center;
+      max-width: 340px;
+      width: 90%;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+      animation: modalIn 0.3s ease;
+    }
+
+    @keyframes modalIn {
+      0%   { transform: scale(0.85) translateY(20px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    .modal-emoji { font-size: 3.5rem; margin-bottom: 12px; }
+    .modal-title { font-size: 1.8rem; font-weight: 900; margin-bottom: 8px; }
+    .modal-title.win  { background: linear-gradient(135deg,#a855f7,#f5a623); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .modal-title.lose { color: var(--accent); }
+
+    .modal-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .stat-item {
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .stat-item .val { font-size: 1.5rem; font-weight: 800; }
+    .stat-item .lbl { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+    .modal-btns { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+
+    /* ── Toast ── */
+    .toast-container {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: rgba(30,30,60,0.95);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 30px;
+      padding: 8px 22px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+      animation: toastIn 0.3s ease, toastOut 0.3s ease 1.2s forwards;
+    }
+
+    .toast.combo { background: linear-gradient(135deg,#e94560,#f5a623); color: #fff; font-size: 1rem; }
+
+    @keyframes toastIn {
+      0% { opacity: 0; transform: translateY(-10px) scale(0.9); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes toastOut {
+      0% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-10px) scale(0.9); }
+    }
+
+    /* ── Mobile arrow buttons ── */
+    .mobile-controls {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      width: 160px;
+    }
+
+    .arrow-row { display: flex; gap: 6px; }
+
+    .arrow-btn {
+      width: 48px;
+      height: 48px;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .arrow-btn:active { background: var(--card); transform: scale(0.92); }
+
+    @media (max-width: 480px) {
+      .mobile-controls { display: flex; }
+    }
+
+    @media (pointer: coarse) {
+      .mobile-controls { display: flex; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">NumBlast</div>
+    <div class="score-cluster">
+      <div class="score-box">
+        <label>得分</label>
+        <span id="score">0</span>
+      </div>
+      <div class="score-box">
+        <label>最高</label>
+        <span id="best">0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <button class="btn primary" id="newGameBtn">新游戏</button>
+    <button class="btn" id="undoBtn">↩ 撤销</button>
+    <button class="btn" id="hintBtn">💡 提示</button>
+  </div>
+
+  <!-- Meta row -->
+  <div class="meta-row">
+    <div class="level-badge" id="levelBadge">Lv.1</div>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progressBar" style="width:0%"></div>
+    </div>
+    <div class="combo-display" id="comboDisplay">连击 ×0</div>
+  </div>
+
+  <!-- Grid -->
+  <div class="grid-wrapper" id="gridWrapper">
+    <div class="grid" id="grid"></div>
+    <div class="tiles-layer" id="tilesLayer"></div>
+  </div>
+
+  <!-- Mobile controls -->
+  <div class="mobile-controls">
+    <div class="arrow-row">
+      <button class="arrow-btn" data-dir="up">↑</button>
+    </div>
+    <div class="arrow-row">
+      <button class="arrow-btn" data-dir="left">←</button>
+      <button class="arrow-btn" data-dir="down">↓</button>
+      <button class="arrow-btn" data-dir="right">→</button>
+    </div>
+  </div>
+</div>
+
+<!-- Game Over / Win Overlay -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-emoji" id="modalEmoji">🎉</div>
+    <div class="modal-title" id="modalTitle">You Win!</div>
+    <p id="modalDesc" style="color:var(--text-muted);font-size:0.9rem;margin-top:6px;"></p>
+    <div class="modal-stats">
+      <div class="stat-item">
+        <div class="val" id="modalScore">0</div>
+        <div class="lbl">本局得分</div>
+      </div>
+      <div class="stat-item">
+        <div class="val" id="modalBest">0</div>
+        <div class="lbl">历史最高</div>
+      </div>
+      <div class="stat-item">
+        <div class="val" id="modalMoves">0</div>
+        <div class="lbl">移动次数</div>
+      </div>
+      <div class="stat-item">
+        <div class="val" id="modalMaxTile">0</div>
+        <div class="lbl">最大方块</div>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn primary" id="playAgainBtn">再来一局</button>
+      <button class="btn" id="continueBtn" style="display:none">继续挑战</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  PARTICLE SYSTEM
+// ══════════════════════════════════════════
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let particles = [];
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+class Particle {
+  constructor(x, y, color) {
+    this.x = x; this.y = y;
+    this.color = color;
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 2 + Math.random() * 6;
+    this.vx = Math.cos(angle) * speed;
+    this.vy = Math.sin(angle) * speed - 2;
+    this.life = 1;
+    this.decay = 0.025 + Math.random() * 0.03;
+    this.size = 4 + Math.random() * 6;
+    this.gravity = 0.15;
+  }
+  update() {
+    this.vy += this.gravity;
+    this.x += this.vx;
+    this.y += this.vy;
+    this.life -= this.decay;
+    this.vx *= 0.97;
+  }
+  draw() {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, this.life);
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function spawnParticles(x, y, color, count = 20) {
+  const colors = color ? [color, '#fff', color] : ['#e94560','#f5a623','#a855f7','#06b6d4'];
+  for (let i = 0; i < count; i++) {
+    particles.push(new Particle(x, y, colors[Math.floor(Math.random() * colors.length)]));
+  }
+}
+
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => { p.update(); p.draw(); });
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// ══════════════════════════════════════════
+//  GAME CORE
+// ══════════════════════════════════════════
+const SIZE = 4;
+let board = [];
+let prevBoard = null;
+let prevScore = 0;
+let score = 0;
+let best = parseInt(localStorage.getItem('numblast_best') || '0');
+let moves = 0;
+let combo = 0;
+let comboTimer = null;
+let level = 1;
+let hasWon = false;
+let keepPlaying = false;
+
+const scoreEl    = document.getElementById('score');
+const bestEl     = document.getElementById('best');
+const tilesLayer = document.getElementById('tilesLayer');
+const levelBadge = document.getElementById('levelBadge');
+const progressBar= document.getElementById('progressBar');
+const comboEl    = document.getElementById('comboDisplay');
+const overlay    = document.getElementById('overlay');
+
+// Level thresholds
+const LEVELS = [0, 500, 1500, 4000, 10000, 25000, 60000, 150000, 400000, Infinity];
+
+function getLevel(s) {
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (s >= LEVELS[i]) return i;
+  }
+  return 1;
+}
+
+// ── Board helpers ──
+function emptyBoard() {
+  return Array.from({length: SIZE}, () => Array(SIZE).fill(0));
+}
+
+function emptyCell(b) {
+  const empties = [];
+  for (let r = 0; r < SIZE; r++)
+    for (let c = 0; c < SIZE; c++)
+      if (b[r][c] === 0) empties.push([r, c]);
+  return empties;
+}
+
+function addRandom(b) {
+  const empties = emptyCell(b);
+  if (!empties.length) return null;
+  const [r, c] = empties[Math.floor(Math.random() * empties.length)];
+  b[r][c] = Math.random() < 0.85 ? 2 : 4;
+  return [r, c];
+}
+
+function canMove(b) {
+  for (let r = 0; r < SIZE; r++)
+    for (let c = 0; c < SIZE; c++) {
+      if (b[r][c] === 0) return true;
+      if (c < SIZE-1 && b[r][c] === b[r][c+1]) return true;
+      if (r < SIZE-1 && b[r][c] === b[r+1][c]) return true;
+    }
+  return false;
+}
+
+function cloneBoard(b) { return b.map(r => [...r]); }
+
+// ── Slide logic ──
+function slideRow(row) {
+  let arr = row.filter(v => v !== 0);
+  let gained = 0;
+  let merged = [];
+  for (let i = 0; i < arr.length - 1; i++) {
+    if (!merged[i] && arr[i] === arr[i+1]) {
+      arr[i] *= 2;
+      gained += arr[i];
+      arr.splice(i+1, 1);
+      merged[i] = true;
+    }
+  }
+  while (arr.length < SIZE) arr.push(0);
+  return { row: arr, gained };
+}
+
+function move(b, dir) {
+  let gained = 0;
+  let changed = false;
+  const orig = cloneBoard(b);
+
+  function processRow(row) {
+    const r = slideRow(row);
+    gained += r.gained;
+    return r.row;
+  }
+
+  if (dir === 'left') {
+    for (let r = 0; r < SIZE; r++) {
+      b[r] = processRow(b[r]);
+    }
+  } else if (dir === 'right') {
+    for (let r = 0; r < SIZE; r++) {
+      b[r] = processRow([...b[r]].reverse()).reverse();
+    }
+  } else if (dir === 'up') {
+    for (let c = 0; c < SIZE; c++) {
+      const col = b.map(r => r[c]);
+      const nc = processRow(col);
+      nc.forEach((v, r) => b[r][c] = v);
+    }
+  } else if (dir === 'down') {
+    for (let c = 0; c < SIZE; c++) {
+      const col = b.map(r => r[c]).reverse();
+      const nc = processRow(col).reverse();
+      nc.forEach((v, r) => b[r][c] = v);
+    }
+  }
+
+  for (let r = 0; r < SIZE; r++)
+    for (let c = 0; c < SIZE; c++)
+      if (b[r][c] !== orig[r][c]) { changed = true; break; }
+
+  return { changed, gained };
+}
+
+// ══════════════════════════════════════════
+//  RENDERING
+// ══════════════════════════════════════════
+function tileClass(v) {
+  if (v >= 4096) return 'thigh';
+  if (v === 2048) return 't2048';
+  if (v === 1024) return 't1024';
+  return 't' + v;
+}
+
+function tileFontSize(v) {
+  if (v >= 1000) return '1.4rem';
+  if (v >= 100)  return '1.8rem';
+  return '2.2rem';
+}
+
+let cellPositions = [];
+
+function getCellPos(r, c) {
+  if (cellPositions.length) return cellPositions[r][c];
+  const grid = document.getElementById('grid');
+  const cells = grid.querySelectorAll('.cell');
+  cellPositions = Array.from({length: SIZE}, (_, ri) =>
+    Array.from({length: SIZE}, (_, ci) => {
+      const cell = cells[ri * SIZE + ci];
+      const gr = grid.getBoundingClientRect();
+      const cr = cell.getBoundingClientRect();
+      return { top: cr.top - gr.top, left: cr.left - gr.left, width: cr.width };
+    })
+  );
+  return cellPositions[r][c];
+}
+
+window.addEventListener('resize', () => { cellPositions = []; renderBoard(); });
+
+function renderBoard(newPos = null, mergePositions = []) {
+  tilesLayer.innerHTML = '';
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const v = board[r][c];
+      if (!v) continue;
+      const pos = getCellPos(r, c);
+      const tile = document.createElement('div');
+      tile.className = `tile ${tileClass(v)}`;
+      tile.textContent = v;
+      tile.style.cssText = `
+        top: ${pos.top}px;
+        left: ${pos.left}px;
+        width: ${pos.width}px;
+        height: ${pos.width}px;
+        font-size: ${tileFontSize(v)};
+      `;
+      const key = `${r},${c}`;
+      if (newPos && newPos[0] === r && newPos[1] === c) tile.classList.add('new-tile');
+      if (mergePositions.find(([mr,mc]) => mr===r && mc===c)) tile.classList.add('merge-tile');
+      tilesLayer.appendChild(tile);
+    }
+  }
+}
+
+// ══════════════════════════════════════════
+//  SCORE & UI UPDATE
+// ══════════════════════════════════════════
+function updateScore(gained) {
+  const mult = combo > 0 ? Math.min(combo, 5) : 1;
+  const actualGain = gained * mult;
+  score += actualGain;
+  if (score > best) {
+    best = score;
+    localStorage.setItem('numblast_best', best);
+  }
+  animateScore(scoreEl, score);
+  animateScore(bestEl, best);
+
+  // Level
+  const newLevel = getLevel(score);
+  if (newLevel > level) {
+    level = newLevel;
+    showToast(`🎊 升级！到达 Lv.${level}`, 'combo');
+    spawnLevelParticles();
+  }
+  levelBadge.textContent = `Lv.${level}`;
+  const lo = LEVELS[level-1] || 0;
+  const hi = LEVELS[level] || LEVELS[level-1] * 4;
+  const pct = Math.min(100, ((score - lo) / (hi - lo)) * 100);
+  progressBar.style.width = pct + '%';
+}
+
+function animateScore(el, val) {
+  el.textContent = val;
+  el.classList.remove('pop');
+  void el.offsetWidth;
+  el.classList.add('pop');
+}
+
+function updateCombo(merged) {
+  clearTimeout(comboTimer);
+  if (merged) {
+    combo++;
+    comboEl.textContent = `连击 ×${combo}`;
+    comboEl.classList.add('active');
+    if (combo >= 2) showToast(`🔥 ${combo} 连击！`, 'combo');
+    comboTimer = setTimeout(() => {
+      combo = 0;
+      comboEl.textContent = '连击 ×0';
+      comboEl.classList.remove('active');
+    }, 2500);
+  } else {
+    combo = 0;
+    comboEl.textContent = '连击 ×0';
+    comboEl.classList.remove('active');
+  }
+}
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+function showToast(msg, type='') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 1600);
+}
+
+// ══════════════════════════════════════════
+//  PARTICLES for special events
+// ══════════════════════════════════════════
+function getMergeCenterXY(r, c) {
+  const pos = getCellPos(r, c);
+  const wrap = document.getElementById('gridWrapper').getBoundingClientRect();
+  return {
+    x: wrap.left + pos.left + pos.width / 2,
+    y: wrap.top + pos.top + pos.width / 2
+  };
+}
+
+function spawnMergeParticles(r, c, value) {
+  const {x, y} = getMergeCenterXY(r, c);
+  const colors = {
+    128:  '#f5a623', 256:  '#f5a623', 512: '#f5a623',
+    1024: '#e94560', 2048: '#a855f7', 4096: '#06b6d4'
+  };
+  const color = colors[value] || null;
+  const count = value >= 1024 ? 40 : value >= 128 ? 25 : 12;
+  spawnParticles(x, y, color, count);
+}
+
+function spawnLevelParticles() {
+  for (let i = 0; i < 5; i++) {
+    setTimeout(() => {
+      spawnParticles(
+        Math.random() * window.innerWidth,
+        Math.random() * window.innerHeight * 0.5,
+        null, 15
+      );
+    }, i * 120);
+  }
+}
+
+// ══════════════════════════════════════════
+//  GAME ACTIONS
+// ══════════════════════════════════════════
+function initGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < SIZE * SIZE; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    grid.appendChild(cell);
+  }
+  cellPositions = [];
+}
+
+function newGame() {
+  board = emptyBoard();
+  score = 0; moves = 0; combo = 0; level = 1;
+  hasWon = false; keepPlaying = false; prevBoard = null;
+  animateScore(scoreEl, 0);
+  animateScore(bestEl, best);
+  levelBadge.textContent = 'Lv.1';
+  progressBar.style.width = '0%';
+  comboEl.textContent = '连击 ×0';
+  comboEl.classList.remove('active');
+  overlay.classList.remove('show');
+  document.getElementById('continueBtn').style.display = 'none';
+
+  addRandom(board);
+  addRandom(board);
+  requestAnimationFrame(() => renderBoard());
+}
+
+function doMove(dir) {
+  prevBoard = cloneBoard(board);
+  prevScore = score;
+
+  const before = cloneBoard(board);
+  const {changed, gained} = move(board, dir);
+
+  if (!changed) return;
+  moves++;
+
+  // Find merged positions
+  const mergedAt = [];
+  for (let r = 0; r < SIZE; r++)
+    for (let c = 0; c < SIZE; c++)
+      if (board[r][c] > 0 && board[r][c] !== before[r][c])
+        mergedAt.push([r, c]);
+
+  const hasMerge = gained > 0;
+  updateCombo(hasMerge);
+  if (hasMerge) updateScore(gained);
+
+  // Spawn particles for big merges
+  if (hasMerge) {
+    mergedAt.forEach(([r,c]) => {
+      if (board[r][c] >= 128) spawnMergeParticles(r, c, board[r][c]);
+    });
+  }
+
+  const newPos = addRandom(board);
+  renderBoard(newPos, mergedAt);
+
+  // Win check
+  if (!hasWon && !keepPlaying) {
+    const maxTile = board.flat().reduce((a,b) => Math.max(a,b), 0);
+    if (maxTile >= 2048) {
+      hasWon = true;
+      setTimeout(() => showEndModal('win'), 400);
+      return;
+    }
+  }
+
+  // Lose check
+  if (!canMove(board)) {
+    setTimeout(() => showEndModal('lose'), 400);
+  }
+}
+
+function undo() {
+  if (!prevBoard) { showToast('没有可撤销的操作'); return; }
+  board = cloneBoard(prevBoard);
+  score = prevScore;
+  prevBoard = null;
+  animateScore(scoreEl, score);
+  renderBoard();
+  showToast('↩ 已撤销');
+}
+
+// ── Hint ──
+function getHint() {
+  const dirs = ['up','down','left','right'];
+  let bestDir = null, bestScore = -1;
+  dirs.forEach(dir => {
+    const test = cloneBoard(board);
+    const {changed, gained} = move(test, dir);
+    if (changed && gained >= bestScore) { bestScore = gained; bestDir = dir; }
+  });
+  if (!bestDir) { showToast('无可用移动'); return; }
+  const labels = { up:'↑ 上', down:'↓ 下', left:'← 左', right:'→ 右' };
+  showToast(`💡 建议: ${labels[bestDir]}`);
+  // Flash hint direction
+  highlightDir(bestDir);
+}
+
+function highlightDir(dir) {
+  const arrows = { up:'↑',down:'↓',left:'←',right:'→' };
+  const btns = document.querySelectorAll('.arrow-btn');
+  btns.forEach(b => {
+    if (b.textContent === arrows[dir]) {
+      b.style.background = 'var(--accent)';
+      setTimeout(() => b.style.background = '', 600);
+    }
+  });
+}
+
+// ── End modal ──
+function showEndModal(type) {
+  const maxTile = board.flat().reduce((a,b) => Math.max(a,b), 0);
+  document.getElementById('modalScore').textContent = score;
+  document.getElementById('modalBest').textContent = best;
+  document.getElementById('modalMoves').textContent = moves;
+  document.getElementById('modalMaxTile').textContent = maxTile;
+
+  if (type === 'win') {
+    document.getElementById('modalEmoji').textContent = '🏆';
+    document.getElementById('modalTitle').className = 'modal-title win';
+    document.getElementById('modalTitle').textContent = '达成 2048！';
+    document.getElementById('modalDesc').textContent = '太棒了！你已经到达了 2048。继续挑战更高吧！';
+    document.getElementById('continueBtn').style.display = 'inline-block';
+    spawnLevelParticles();
+  } else {
+    document.getElementById('modalEmoji').textContent = '💀';
+    document.getElementById('modalTitle').className = 'modal-title lose';
+    document.getElementById('modalTitle').textContent = '游戏结束';
+    document.getElementById('modalDesc').textContent = `共移动 ${moves} 步，得分 ${score} 分。`;
+    document.getElementById('continueBtn').style.display = 'none';
+  }
+  overlay.classList.add('show');
+}
+
+// ══════════════════════════════════════════
+//  EVENTS
+// ══════════════════════════════════════════
+document.getElementById('newGameBtn').addEventListener('click', newGame);
+document.getElementById('undoBtn').addEventListener('click', undo);
+document.getElementById('hintBtn').addEventListener('click', getHint);
+document.getElementById('playAgainBtn').addEventListener('click', newGame);
+document.getElementById('continueBtn').addEventListener('click', () => {
+  keepPlaying = true;
+  overlay.classList.remove('show');
+});
+
+// Keyboard
+window.addEventListener('keydown', e => {
+  const map = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right',
+                w:'up', s:'down', a:'left', d:'right' };
+  if (map[e.key]) { e.preventDefault(); doMove(map[e.key]); }
+});
+
+// Mobile arrows
+document.querySelectorAll('.arrow-btn').forEach(btn => {
+  btn.addEventListener('click', () => doMove(btn.dataset.dir));
+});
+
+// Touch swipe
+let touchStart = null;
+const gridWrap = document.getElementById('gridWrapper');
+gridWrap.addEventListener('touchstart', e => {
+  touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+}, { passive: true });
+gridWrap.addEventListener('touchend', e => {
+  if (!touchStart) return;
+  const dx = e.changedTouches[0].clientX - touchStart.x;
+  const dy = e.changedTouches[0].clientY - touchStart.y;
+  const minSwipe = 30;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    if (Math.abs(dx) > minSwipe) doMove(dx > 0 ? 'right' : 'left');
+  } else {
+    if (Math.abs(dy) > minSwipe) doMove(dy > 0 ? 'down' : 'up');
+  }
+  touchStart = null;
+}, { passive: true });
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+initGrid();
+bestEl.textContent = best;
+newGame();
+</script>
+</body>
+</html>
