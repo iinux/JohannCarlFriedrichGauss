@@ -405,20 +405,20 @@ func (s *HTTPSProxyServer) socks5Connect(conn net.Conn, targetHost string) error
 
 // relay 双向转发数据
 func (s *HTTPSProxyServer) relay(conn1, conn2 net.Conn) {
-	done := make(chan bool, 2)
+	var wg sync.WaitGroup
+    wg.Add(2)
 
 	go func() {
+        defer wg.Done()
 		io.Copy(conn1, conn2)
-		done <- true
 	}()
 
 	go func() {
+        defer wg.Done()
 		io.Copy(conn2, conn1)
-		done <- true
 	}()
 
-	// 等待任意一个方向完成
-	<-done
+    wg.Wait()
 }
 
 // DNSServer DNS服务器

@@ -103,7 +103,12 @@ class OpenAIGatewayHandler(BaseHTTPRequestHandler):
         """
         修改请求头中的 Authorization (api_key)
         """
-        auth_header = headers.get('Authorization', '')
+        key = 'authorization'
+        auth_header = headers.get(key, '')
+        if auth_header == '':
+            key = 'Authorization'
+            auth_header = headers.get(key, '')
+
 
         if auth_header.startswith('Bearer '):
             original_key = auth_header[7:]  # 去掉 "Bearer "
@@ -113,7 +118,7 @@ class OpenAIGatewayHandler(BaseHTTPRequestHandler):
             )
             if original_key != new_key:
                 print(f"  [API Key] {original_key[:20]}... -> {new_key[:20]}...")
-                headers['Authorization'] = f'Bearer {new_key}'
+                headers[key] = f'Bearer {new_key}'
 
         return headers
 
@@ -143,7 +148,11 @@ class OpenAIGatewayHandler(BaseHTTPRequestHandler):
         代理请求到 OpenAI API
         """
         # 读取请求体
-        content_length = int(self.headers.get('Content-Length', 0))
+        key = 'content-length'
+        content_length = int(self.headers.get(key, 0))
+        if content_length == 0:
+            key = 'Content-Length'
+            content_length = int(self.headers.get(key, 0))
         body = self.rfile.read(content_length) if content_length > 0 else b''
 
         # 修改请求
@@ -155,7 +164,7 @@ class OpenAIGatewayHandler(BaseHTTPRequestHandler):
 
         # 修改 Host 头
         headers['Host'] = TARGET_HOST
-        del headers['Content-Length']
+        del headers[key]
 
         # 移除 hop-by-hop 头
         hop_by_hop = ['connection', 'keep-alive', 'proxy-authenticate',
@@ -220,23 +229,15 @@ class OpenAIGatewayHandler(BaseHTTPRequestHandler):
             }).encode('utf-8'))
 
 
-def run_gateway(host=GATEWAY_HOST, port=GATEWAY_PORT):
+def run_gateway(host_info):
     """
     启动网关服务器
     """
-    server = HTTPServer((host, port), OpenAIGatewayHandler)
+    server = HTTPServer(host_info, OpenAIGatewayHandler)
     print(f"=" * 60)
     print(f"OpenAI API 网关已启动")
-    print(f"监听地址: http://{host}:{port}")
+    print(f"监听地址: {host_info}")
     print(f"目标地址: {TARGET_URL}")
-    print(f"=" * 60)
-    print(f"\n使用方式:")
-    print(f"  将 OpenAI API 地址替换为: http://localhost:{port}")
-    print(f"\n示例:")
-    print(f"  curl http://localhost:{port}/v1/chat/completions \\")
-    print(f"    -H \"Authorization: Bearer sk-xxx\" \\")
-    print(f"    -H \"Content-Type: application/json\" \\")
-    print(f"    -d '{{\"model\": \"gpt-4\", \"messages\": [...]}}'")
     print(f"=" * 60)
     print()
 
@@ -263,4 +264,4 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         GATEWAY_PORT = int(sys.argv[1])
 
-    run_gateway()
+    run_gateway((GATEWAY_HOST,GATEWAY_PORT))
