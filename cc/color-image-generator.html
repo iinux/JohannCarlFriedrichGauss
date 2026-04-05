@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>纯色图片生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 50px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .size-inputs {
+            display: flex;
+            gap: 15px;
+        }
+
+        .size-inputs > div {
+            flex: 1;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-generate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            display: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .preview {
+            margin-top: 25px;
+            text-align: center;
+            display: none;
+        }
+
+        .preview-title {
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .preview img {
+            max-width: 100%;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .info {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #666;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>纯色图片生成器</h1>
+
+        <div class="form-group">
+            <label for="color">选择颜色</label>
+            <input type="color" id="color" value="#667eea">
+        </div>
+
+        <div class="form-group">
+            <label>图片尺寸（像素）</label>
+            <div class="size-inputs">
+                <div>
+                    <input type="number" id="width" placeholder="宽度" value="800" min="1" max="10000">
+                </div>
+                <div>
+                    <input type="number" id="height" placeholder="高度" value="600" min="1" max="10000">
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-generate" onclick="generateImage()">生成图片</button>
+        <button class="btn btn-download" id="downloadBtn" onclick="downloadImage()">下载图片</button>
+
+        <div class="preview" id="preview">
+            <div class="preview-title">预览效果</div>
+            <img id="previewImg" alt="生成的图片">
+            <div class="info" id="info"></div>
+        </div>
+    </div>
+
+    <script>
+        let generatedDataUrl = null;
+
+        function generateImage() {
+            const color = document.getElementById('color').value;
+            const width = parseInt(document.getElementById('width').value);
+            const height = parseInt(document.getElementById('height').value);
+
+            if (!width || !height || width < 1 || height < 1) {
+                alert('请输入有效的宽度和高度！');
+                return;
+            }
+
+            // 创建 canvas
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+
+            // 填充颜色
+            ctx.fillStyle = color;
+            ctx.fillRect(0, 0, width, height);
+
+            // 转换为 data URL
+            generatedDataUrl = canvas.toDataURL('image/png');
+
+            // 显示预览
+            const previewImg = document.getElementById('previewImg');
+            previewImg.src = generatedDataUrl;
+            document.getElementById('preview').style.display = 'block';
+
+            // 显示下载按钮
+            document.getElementById('downloadBtn').style.display = 'block';
+
+            // 显示图片信息
+            const info = document.getElementById('info');
+            info.textContent = `尺寸: ${width} x ${height} 像素 | 颜色: ${color}`;
+            info.style.display = 'block';
+        }
+
+        function downloadImage() {
+            if (!generatedDataUrl) {
+                alert('请先生成图片！');
+                return;
+            }
+
+            const color = document.getElementById('color').value.replace('#', '');
+            const width = document.getElementById('width').value;
+            const height = document.getElementById('height').value;
+
+            // 创建下载链接
+            const link = document.createElement('a');
+            link.href = generatedDataUrl;
+            link.download = `solid_${color}_${width}x${height}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 支持回车键生成
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateImage();
+            }
+        });
+    </script>
+</body>
+</html>
