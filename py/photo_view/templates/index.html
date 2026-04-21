@@ -1,46 +1,210 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>图片列表</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>媒体列表</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1.page-title {
+            text-align: center;
+            color: #fff;
+            font-size: 2.2rem;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        details {
+            background: #fff;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        details:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        summary {
+            padding: 16px 20px;
+            cursor: pointer;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+            background: #fafbfc;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        summary:hover {
+            background: #f0f2f5;
+        }
+
+        details[open] summary {
+            border-bottom-color: #e8eaed;
+        }
+
+        summary::-webkit-details-marker {
+            display: none;
+        }
+
+        summary::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-right: 2px solid #667eea;
+            border-bottom: 2px solid #667eea;
+            transform: rotate(45deg);
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        details[open] summary::after {
+            transform: rotate(-135deg);
+        }
+
+        .title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            font-size: 0.75rem;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        ul {
+            list-style: none;
+            padding: 8px 0;
+        }
+
+        li {
+            padding: 0;
+        }
+
+        li a {
+            display: block;
+            padding: 12px 20px;
+            color: #555;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.15s ease;
+            border-left: 3px solid transparent;
+        }
+
+        li a:hover {
+            background: #f5f7ff;
+            color: #667eea;
+            border-left-color: #667eea;
+        }
+
+        li + li {
+            border-top: 1px solid #f0f0f0;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            h1.page-title {
+                font-size: 1.6rem;
+            }
+
+            summary {
+                padding: 14px 16px;
+                font-size: 1.1rem;
+            }
+
+            li a {
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <details open>
-        <summary><h1>图片列表</h1></summary>
-        <ul>
-            {% for image in images %}
+    <div class="container">
+        <h1 class="page-title">媒体列表</h1>
+
+        <details open>
+            <summary>
+                <span class="title-wrapper">图片列表 <span class="badge">{{ images|length }}</span></span>
+            </summary>
+            <ul>
+                {% for image in images %}
+                    <li>
+                        <a href="/index/image/{{ image }}">{{ image }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </details>
+
+        <details open>
+            <summary>
+                <span class="title-wrapper">mp4列表 <span class="badge">{{ mp4s|length }}</span></span>
+            </summary>
+            <ul>
+                {% for mp4 in mp4s %}
                 <li>
-                    <a href="/index/image/{{ image }}">{{ image }}</a>
+                    <a href="/download/y/{{ mp4.real_name }}">{{ mp4.show_name }}</a>
+                    <!--
+                    <video width="720" height="480" controls preload="none">
+                        <source src="/{{ mp4 }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    -->
                 </li>
-            {% endfor %}
-        </ul>
-    </details>
-    <details open>
-        <summary><h1>mp4列表</h1></summary>
-        <ul>
-            {% for mp4 in mp4s %}
-            <li>
-                <a href="/download/y/{{ mp4.real_name }}">{{ mp4.show_name }}</a>
-                <!--
-                <video width="720" height="480" controls preload="none">
-                    <source src="/{{ mp4 }}" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
-                -->
-            </li>
-            {% endfor %}
-        </ul>
-    </details>
-    <details open>
-        <summary><h1>flv列表</h1></summary>
-        <ul>
-            {% for flv in flvs %}
-            <li>
-                <a href="/download/y/templates/flv.html?link=/download/y/flv/{{ flv.real_name }}">{{ flv.show_name }}</a>
-            </li>
-            {% endfor %}
-        </ul>
-    </details>
+                {% endfor %}
+            </ul>
+        </details>
+
+        <details open>
+            <summary>
+                <span class="title-wrapper">flv列表 <span class="badge">{{ flvs|length }}</span></span>
+            </summary>
+            <ul>
+                {% for flv in flvs %}
+                <li>
+                    <a href="/download/y/templates/flv.html?link=/download/y/flv/{{ flv.real_name }}">{{ flv.show_name }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </details>
+    </div>
 </body>
 </html>
 
