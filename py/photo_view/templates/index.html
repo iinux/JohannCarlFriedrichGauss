@@ -5,26 +5,42 @@
     <title>图片列表</title>
 </head>
 <body>
-    <h1>图片列表</h1>
-    <ul>
-        {% for image in images %}
+    <details open>
+        <summary><h1>图片列表</h1></summary>
+        <ul>
+            {% for image in images %}
+                <li>
+                    <a href="/index/image/{{ image }}">{{ image }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </details>
+    <details open>
+        <summary><h1>mp4列表</h1></summary>
+        <ul>
+            {% for mp4 in mp4s %}
             <li>
-                <a href="/image/{{ image }}">{{ image }}</a>
+                <a href="/download/y/{{ mp4.real_name }}">{{ mp4.show_name }}</a>
+                <!--
+                <video width="720" height="480" controls preload="none">
+                    <source src="/{{ mp4 }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                -->
             </li>
-        {% endfor %}
-    </ul>
-    <h1>mp4列表</h1>
-    <ul>
-        {% for mp4 in mp4s %}
-        <li>
-            <p>{{ mp4 }}</p>
-            <video width="720" height="480" controls preload="none">
-                <source src="/{{ mp4 }}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        </li>
-        {% endfor %}
-    </ul>
+            {% endfor %}
+        </ul>
+    </details>
+    <details open>
+        <summary><h1>flv列表</h1></summary>
+        <ul>
+            {% for flv in flvs %}
+            <li>
+                <a href="/download/y/templates/flv.html?link=/download/y/flv/{{ flv.real_name }}">{{ flv.show_name }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </details>
 </body>
 </html>
 

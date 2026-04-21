@@ -18,6 +18,8 @@ import my_config
 # 目标 OpenAI API 地址
 TARGET_HOST = "dashscope.aliyuncs.com"
 TARGET_URL = f"https://{TARGET_HOST}/compatible-mode/v1"
+#TARGET_HOST = "open.bigmodel.cn"
+#TARGET_URL = f"https://{TARGET_HOST}/api/paas/v4"
 
 # 替换配置
 REPLACEMENTS = {
@@ -26,7 +28,8 @@ REPLACEMENTS = {
         # 示例：替换特定 key
         "sk-original123": "sk-newapikey456",
         # 示例：替换所有 sk- 开头的 key（使用正则）
-        r"sk-[a-zA-Z0-9]+": my_config.ali_key_exbus
+        r"sk-[a-zA-Z0-9]+": my_config.ali_key,
+        #r"sk-[a-zA-Z0-9]+": my_config.glm_key,
     },
 
     # 替换 Model: {原始model: 新model}
@@ -34,13 +37,16 @@ REPLACEMENTS = {
         # 示例：替换特定 model
         "gpt-4-1106-preview": "gpt-3.5-turbo-1106",
         # 示例：替换所有 gpt-4 变体
-        r".*": "qvq-max-2025-03-25",
+        #r".*": "qvq-max-2025-03-25",
+        #r".*": "qwen3.5-122b-a10b",
+        #r".*": "glm-4.7-flash",
+        r".*": "qwen3.5-plus-2026-02-15",
     }
 }
 
 # 网关监听配置
 GATEWAY_HOST = "0.0.0.0"
-GATEWAY_PORT = 8080
+GATEWAY_PORT = 8081
 
 
 class OpenAIGatewayHandler(BaseHTTPRequestHandler):
@@ -164,7 +170,11 @@ class OpenAIGatewayHandler(BaseHTTPRequestHandler):
 
         # 修改 Host 头
         headers['Host'] = TARGET_HOST
-        del headers[key]
+
+        if 'content-length' in headers:
+            del headers['content-length']
+        if 'Content-Length' in headers:
+            del headers['Content-Length']
 
         # 移除 hop-by-hop 头
         hop_by_hop = ['connection', 'keep-alive', 'proxy-authenticate',
@@ -207,14 +217,20 @@ class OpenAIGatewayHandler(BaseHTTPRequestHandler):
                 self.end_headers()
 
                 # 复制响应体
-                self.wfile.write(response.read())
+                rr = response.read()
+                #print('响应：')
+                #print(rr)
+                self.wfile.write(rr)
 
         except HTTPError as e:
             print(f"  [Error] {e.code}: {e.reason}")
             self.send_response(e.code)
             self._send_cors_headers()
             self.end_headers()
-            self.wfile.write(e.read())
+            er = e.read()
+            print('错误响应：')
+            print(er)
+            self.wfile.write(er)
 
         except Exception as e:
             print(f"  [Error] {e}")

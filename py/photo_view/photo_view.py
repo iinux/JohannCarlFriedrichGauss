@@ -6,8 +6,10 @@ import subprocess
 import json
 from flask import Flask, render_template, request
 
-img_dir = "."
-app = Flask(__name__, static_folder=img_dir, static_url_path='')
+work_dir = "."
+mp4_dir = work_dir + '/mp4'
+img_dir = work_dir + '/img'
+app = Flask(__name__, static_folder=work_dir, static_url_path='')
 
 
 def get_video_duration(video_path):
@@ -45,7 +47,7 @@ def generate_random_time(duration):
 @app.route("/index/random")
 def random_page():
     # 1. 列出当前目录下所有 mp4 文件
-    mp4_files = [f for f in os.listdir(img_dir) if f.endswith('.mp4')]
+    mp4_files = [f for f in os.listdir(mp4_dir) if f.endswith('.mp4')]
     
     if not mp4_files:
         print("当前目录下没有找到任何 mp4 文件")
@@ -53,6 +55,7 @@ def random_page():
     
     # 2. 随机选择一个 mp4 文件
     selected_file = random.choice(mp4_files)
+    selected_file_url = mp4_dir + '/' + selected_file
     print(f"随机选择的文件: {selected_file}")
     
     # 3. 构建对应的截图路径
@@ -69,7 +72,7 @@ def random_page():
             print(f"已创建目录: {screenshot_dir}")
         
         # 5. 获取视频时长并生成随机时间点
-        duration = get_video_duration(selected_file)
+        duration = get_video_duration(selected_file_url)
         random_time = generate_random_time(duration)
         print(f"视频时长: {duration:.2f}秒, 随机时间点: {random_time}")
         
@@ -78,7 +81,7 @@ def random_page():
             command = [
                 'ffmpeg',
                 '-ss', random_time,         # 随机时间点
-                '-i', selected_file,        # 输入文件
+                '-i', selected_file_url,        # 输入文件
                 '-vframes', '1',            # 只取一帧
                 '-q:v', '2',                # 高质量截图
                 '-y',                       # 覆盖已存在文件
@@ -100,19 +103,19 @@ def random_page():
     else:
         print(f"截图已存在: {screenshot_path}")
 
-    return render_template("random.html", screenshot=screenshot_path, mp4=selected_file)
+    return render_template("random.html", screenshot=screenshot_path, mp4=selected_file_url)
 
 def get_images():
     images = []
     for filename in os.listdir(img_dir):
-        if filename.endswith(".jpg") or filename.endswith(".png"):
+        if filename.endswith(".jpg") or filename.endswith(".png") or filename.endswith(".webp"):
             images.append(filename)
     return images
 
 
 def get_mp4s():
     mp4s = []
-    path = img_dir
+    path = mp4_dir
     files_and_dirs = os.listdir(path)
 
     # 过滤掉目录，只对文件进行排序
@@ -131,7 +134,7 @@ def get_mp4s():
                 fn['show_name'] = filename[39:]
             else:
                 fn['show_name'] = filename
-            fn['real_name'] = filename
+            fn['real_name'] = mp4_dir + '/' + filename
             mp4s.append(fn)
     return mp4s
 
@@ -157,7 +160,7 @@ def index():
     flvs = get_flvs()
     return render_template("index.html", images=images, mp4s=mp4s, flvs=flvs)
 
-@app.route("/image/<filename>")
+@app.route("/index/image/<filename>")
 def image(filename):
     """图片详情页"""
     image_data = open(img_dir + '/' + filename, "rb").read()
