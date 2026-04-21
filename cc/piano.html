@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>HTML 钢琴</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        h1 {
+            color: #e94560;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+            font-size: clamp(24px, 5vw, 48px);
+        }
+
+        .hint {
+            color: #a0a0a0;
+            margin-bottom: 30px;
+            font-size: clamp(12px, 2.5vw, 16px);
+            text-align: center;
+        }
+
+        .piano-container {
+            background: linear-gradient(180deg, #2d2d2d 0%, #1a1a1a 100%);
+            padding: 20px 15px 15px;
+            border-radius: 15px;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .piano {
+            display: flex;
+            position: relative;
+        }
+
+        .key {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.05s ease;
+        }
+
+        .key.white {
+            width: clamp(40px, 8vw, 70px);
+            height: clamp(150px, 30vw, 250px);
+            background: linear-gradient(180deg, #f8f8f8 0%, #fff 20%, #fff 100%);
+            border: 1px solid #ccc;
+            border-radius: 0 0 8px 8px;
+            margin-right: 2px;
+            z-index: 1;
+            box-shadow: 
+                0 5px 10px rgba(0, 0, 0, 0.3),
+                inset 0 -3px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .key.white:last-child {
+            margin-right: 0;
+        }
+
+        .key.white:active,
+        .key.white.active {
+            background: linear-gradient(180deg, #e8e8e8 0%, #f0f0f0 100%);
+            box-shadow: 
+                0 2px 5px rgba(0, 0, 0, 0.3),
+                inset 0 -1px 3px rgba(0, 0, 0, 0.2);
+            transform: translateY(2px);
+        }
+
+        .key.black {
+            width: clamp(28px, 5.5vw, 45px);
+            height: clamp(100px, 20vw, 160px);
+            background: linear-gradient(180deg, #333 0%, #111 100%);
+            border-radius: 0 0 6px 6px;
+            position: absolute;
+            z-index: 2;
+            box-shadow: 
+                0 5px 10px rgba(0, 0, 0, 0.5),
+                inset 0 -3px 5px rgba(255, 255, 255, 0.05);
+        }
+
+        .key.black:active,
+        .key.black.active {
+            background: linear-gradient(180deg, #444 0%, #222 100%);
+            box-shadow: 
+                0 2px 5px rgba(0, 0, 0, 0.5),
+                inset 0 -1px 3px rgba(255, 255, 255, 0.1);
+            transform: translateY(2px);
+        }
+
+        .key .key-label {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: clamp(12px, 2vw, 18px);
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        .key.white .key-label {
+            color: #666;
+        }
+
+        .key.black .key-label {
+            color: #888;
+            bottom: 10px;
+            font-size: clamp(10px, 1.5vw, 14px);
+        }
+
+        .key .note-label {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: clamp(10px, 1.5vw, 14px);
+            pointer-events: none;
+        }
+
+        .key.white .note-label {
+            color: #999;
+        }
+
+        .key.black .note-label {
+            color: #666;
+            bottom: 30px;
+        }
+
+        .playing-indicator {
+            margin-top: 20px;
+            color: #e94560;
+            font-size: 18px;
+            height: 24px;
+            text-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .piano-container {
+                padding: 15px 10px 10px;
+                width: 100vw;
+                border-radius: 0;
+            }
+
+            .piano {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🎹 HTML 钢琴</h1>
+    <p class="hint">PC端：按键盘上的数字 1-8 弹奏 | 手机端：点击琴键</p>
+    
+    <div class="piano-container">
+        <div class="piano" id="piano">
+            <!-- C4 -->
+            <div class="key white" data-note="C4" data-key="1" data-freq="261.63">
+                <span class="note-label">C</span>
+                <span class="key-label">1</span>
+            </div>
+            <!-- C#4 -->
+            <div class="key black" data-note="Cs4" data-freq="277.18" style="left: calc(clamp(40px, 8vw, 70px) - clamp(14px, 2.75vw, 22.5px));">
+                <span class="note-label">C#</span>
+                <span class="key-label"></span>
+            </div>
+            <!-- D4 -->
+            <div class="key white" data-note="D4" data-key="2" data-freq="293.66">
+                <span class="note-label">D</span>
+                <span class="key-label">2</span>
+            </div>
+            <!-- D#4 -->
+            <div class="key black" data-note="Ds4" data-freq="311.13" style="left: calc(2 * clamp(40px, 8vw, 70px) + 2px - clamp(14px, 2.75vw, 22.5px));">
+                <span class="note-label">D#</span>
+                <span class="key-label"></span>
+            </div>
+            <!-- E4 -->
+            <div class="key white" data-note="E4" data-key="3" data-freq="329.63">
+                <span class="note-label">E</span>
+                <span class="key-label">3</span>
+            </div>
+            <!-- F4 -->
+            <div class="key white" data-note="F4" data-key="4" data-freq="349.23">
+                <span class="note-label">F</span>
+                <span class="key-label">4</span>
+            </div>
+            <!-- F#4 -->
+            <div class="key black" data-note="Fs4" data-freq="369.99" style="left: calc(4 * clamp(40px, 8vw, 70px) + 6px - clamp(14px, 2.75vw, 22.5px));">
+                <span class="note-label">F#</span>
+                <span class="key-label"></span>
+            </div>
+            <!-- G4 -->
+            <div class="key white" data-note="G4" data-key="5" data-freq="392.00">
+                <span class="note-label">G</span>
+                <span class="key-label">5</span>
+            </div>
+            <!-- G#4 -->
+            <div class="key black" data-note="Gs4" data-freq="415.30" style="left: calc(5 * clamp(40px, 8vw, 70px) + 8px - clamp(14px, 2.75vw, 22.5px));">
+                <span class="note-label">G#</span>
+                <span class="key-label"></span>
+            </div>
+            <!-- A4 -->
+            <div class="key white" data-note="A4" data-key="6" data-freq="440.00">
+                <span class="note-label">A</span>
+                <span class="key-label">6</span>
+            </div>
+            <!-- A#4 -->
+            <div class="key black" data-note="As4" data-freq="466.16" style="left: calc(6 * clamp(40px, 8vw, 70px) + 10px - clamp(14px, 2.75vw, 22.5px));">
+                <span class="note-label">A#</span>
+                <span class="key-label"></span>
+            </div>
+            <!-- B4 -->
+            <div class="key white" data-note="B4" data-key="7" data-freq="493.88">
+                <span class="note-label">B</span>
+                <span class="key-label">7</span>
+            </div>
+            <!-- C5 -->
+            <div class="key white" data-note="C5" data-key="8" data-freq="523.25">
+                <span class="note-label">C</span>
+                <span class="key-label">8</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="playing-indicator" id="playingIndicator"></div>
+
+    <script>
+        // Audio Context
+        let audioContext = null;
+
+        function getAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioContext;
+        }
+
+        // 播放音符
+        function playNote(freq, duration = 0.5) {
+            const ctx = getAudioContext();
+            
+            // 创建振荡器（主音）
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            // 使用三角波获得更柔和的钢琴音色
+            oscillator.type = 'triangle';
+            oscillator.frequency.setValueAtTime(freq, ctx.currentTime);
+            
+            // 创建包络
+            gainNode.gain.setValueAtTime(0, ctx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.1);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + duration);
+        }
+
+        // 琴键映射
+        const keyMap = {};
+        document.querySelectorAll('.key').forEach(key => {
+            const dataKey = key.dataset.key;
+            if (dataKey) {
+                keyMap[dataKey] = key;
+            }
+        });
+
+        // 激活琴键
+        function activateKey(key) {
+            if (!key) return;
+            const freq = parseFloat(key.dataset.freq);
+            const note = key.dataset.note;
+            
+            key.classList.add('active');
+            playNote(freq);
+            
+            document.getElementById('playingIndicator').textContent = note.replace('s', '#');
+            
+            setTimeout(() => {
+                key.classList.remove('active');
+            }, 200);
+        }
+
+        // 键盘事件
+        document.addEventListener('keydown', (e) => {
+            const key = keyMap[e.key];
+            if (key) {
+                activateKey(key);
+            }
+        });
+
+        // 触屏/鼠标事件
+        document.querySelectorAll('.key').forEach(key => {
+            // 鼠标点击
+            key.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                activateKey(key);
+            });
+
+            // 触屏
+            key.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                activateKey(key);
+            });
+        });
+
+        // 防止移动端缩放
+        document.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+</html>

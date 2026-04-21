@@ -82,11 +82,12 @@ def request_mpd(video_url, file_name):
 def download_mpd(mpd, file_name):
     tag_file = 'download_tag/' + file_name + '.downloaded'
     if not os.path.exists(file_name) and not os.path.exists(tag_file):
-        cmd = "ffmpeg -i '%s' -c copy %s" % (mpd, file_name)
+        file_url = 'mp4/' + file_name
+        cmd = "ffmpeg -i '%s' -c copy %s" % (mpd, file_url)
         #cmd = "/home/qzhang/git/JohannCarlFriedrichGauss/py/photo_view/ffmpeg-6.1-amd64-static/ffmpeg -i '%s' -c copy %s" % (mpd, file_name)
         print(cmd)
         os.system(cmd)
-        if os.path.exists(file_name):
+        if os.path.exists(file_url):
             with open(tag_file, 'w') as file:
                 pass
 

@@ -135,6 +135,27 @@
             border-top: 1px solid #f0f0f0;
         }
 
+        .download-link {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .download-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .download-link a:hover {
+            color: #764ba2;
+        }
+
         @media (max-width: 600px) {
             body {
                 padding: 20px 12px;
@@ -159,6 +180,10 @@
 <body>
     <div class="container">
         <h1 class="page-title">媒体列表</h1>
+
+        <div style="text-align: center; margin-bottom: 20px;">
+            <a href="/upload" style="display: inline-block; padding: 10px 24px; background: #fff; color: #667eea; text-decoration: none; border-radius: 8px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">上传文件</a>
+        </div>
 
         <details open>
             <summary>
@@ -204,6 +229,16 @@
                 {% endfor %}
             </ul>
         </details>
+
+        <div class="download-link">
+            <a href="/download/data2/git/JohannCarlFriedrichGauss/py/photo_view/mp4/">mp4</a>
+        </div>
+        <div class="download-link">
+            <a href="/download/cc/">cc</a>
+        </div>
+        <div class="download-link">
+            <a href="/download/y/upload/">upload</a>
+        </div>
     </div>
 </body>
 </html>

@@ -4,12 +4,22 @@ import requests
 import random
 import subprocess
 import json
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for, flash
+from werkzeug.utils import secure_filename
 
 work_dir = "."
 mp4_dir = work_dir + '/mp4'
 img_dir = work_dir + '/img'
+upload_dir = work_dir + '/upload'
 app = Flask(__name__, static_folder=work_dir, static_url_path='')
+app.config['UPLOAD_FOLDER'] = upload_dir
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max file size
+app.secret_key = 'upload-secret-key-for-flash-messages'
+
+ALLOWED_EXTENSIONS = {'mp4', 'jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def get_video_duration(video_path):
@@ -166,6 +176,72 @@ def image(filename):
     image_data = open(img_dir + '/' + filename, "rb").read()
     base64_data = base64.b64encode(image_data).decode()
     return render_template("image.html", filename=filename, base64_data=base64_data)
+
+
+@app.route("/upload", methods=['GET', 'POST'])
+def upload():
+    """上传页面及处理"""
+    if request.method == 'POST':
+        # 检查是否有文件
+        if 'file' not in request.files:
+            flash('没有选择文件')
+            return redirect(request.url)
+        
+        file = request.files['file']
+        if file.filename == '':
+            flash('没有选择文件')
+            return redirect(request.url)
+        
+        if file and allowed_file(file.filename):
+            # 确保上传目录存在
+            if not os.path.exists(upload_dir):
+                os.makedirs(upload_dir)
+            
+            filename = secure_filename(file.filename)
+            # 添加时间戳避免文件名冲突
+            import time
+            timestamp = str(int(time.time()))
+            name, ext = os.path.splitext(filename)
+            unique_filename = f"upload_{timestamp}_{filename}"
+            
+            filepath = os.path.join(upload_dir, unique_filename)
+            file.save(filepath)
+            flash(f'文件 {filename} 上传成功！')
+            return redirect(url_for('upload'))
+        else:
+            flash(f'不支持的文件类型，允许的格式: {", ".join(ALLOWED_EXTENSIONS)}')
+            return redirect(request.url)
+    
+    # 列出已上传的文件
+    uploaded_files = []
+    if os.path.exists(upload_dir):
+        for f in sorted(os.listdir(upload_dir), key=lambda x: os.path.getmtime(os.path.join(upload_dir, x)), reverse=True):
+            full_path = os.path.join(upload_dir, f)
+            if os.path.isfile(full_path):
+                size = os.path.getsize(full_path)
+                # 格式化文件大小
+                if size < 1024 * 1024:
+                    size_str = f"{size / 1024:.1f} KB"
+                else:
+                    size_str = f"{size / (1024 * 1024):.1f} MB"
+                uploaded_files.append({'name': f, 'size': size_str})
+    
+    return render_template("upload.html", uploaded_files=uploaded_files)
+
+
+@app.route("/upload/delete/<filename>", methods=['POST'])
+def delete_upload(filename):
+    """删除已上传的文件"""
+    import re
+    # 安全检查：防止路径遍历攻击
+    safe_name = re.sub(r'[^a-zA-Z0-9_\-.]', '', filename)
+    filepath = os.path.join(upload_dir, safe_name)
+    
+    if os.path.exists(filepath) and os.path.isfile(filepath):
+        os.remove(filepath)
+        flash(f'文件 {filename} 已删除')
+    
+    return redirect(url_for('upload'))
 
 
 if __name__ == "__main__":
