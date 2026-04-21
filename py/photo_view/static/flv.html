@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>flv列表</title>
+    <script src="https://cdn.bootcss.com/flv.js/1.5.0/flv.min.js"></script>
+</head>
+<body>
+    <h1>flv列表</h1>
+    <video  id="videoElement" controls="controls"></video>
+    <script>
+        function getQueryParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+        if (flvjs.isSupported()) {//检查flvjs能否正常使用
+            var videoElement = document.getElementById('videoElement');//使用id选择器找到第二步设置的dom元素
+            var flvPlayer = flvjs.createPlayer({//创建一个新的flv播放器对象
+                type: 'flv',//类型flv
+                url: getQueryParameter('link')//flv文件地址
+            });
+            flvPlayer.attachMediaElement(videoElement);//将flv视频装载进video元素内
+            flvPlayer.load();//载入视频
+            flvPlayer.play();//播放视频，如果不想要自动播放，去掉本行
+        }
+    </script>
+</body>
+</html>
+

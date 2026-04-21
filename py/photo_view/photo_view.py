@@ -11,7 +11,7 @@ work_dir = "."
 mp4_dir = work_dir + '/mp4'
 img_dir = work_dir + '/img'
 upload_dir = work_dir + '/upload'
-app = Flask(__name__, static_folder=work_dir, static_url_path='')
+app = Flask(__name__, static_folder=work_dir + '/static', static_url_path='')
 app.config['UPLOAD_FOLDER'] = upload_dir
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max file size
 app.secret_key = 'upload-secret-key-for-flash-messages'
@@ -144,7 +144,7 @@ def get_mp4s():
                 fn['show_name'] = filename[39:]
             else:
                 fn['show_name'] = filename
-            fn['real_name'] = mp4_dir + '/' + filename
+            fn['real_name'] = filename
             mp4s.append(fn)
     return mp4s
 

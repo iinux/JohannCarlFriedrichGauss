@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>媒体列表</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <style>
         * {
             margin: 0;
@@ -135,25 +136,29 @@
             border-top: 1px solid #f0f0f0;
         }
 
-        .download-link {
-            text-align: center;
+        .download-links {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
             margin-top: 30px;
-            padding: 20px;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
-        .download-link a {
+        .download-btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: #fff;
             color: #667eea;
             text-decoration: none;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
-            transition: color 0.2s ease;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
         }
 
-        .download-link a:hover {
+        .download-btn:hover {
             color: #764ba2;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
 
         @media (max-width: 600px) {
@@ -174,6 +179,19 @@
                 padding: 10px 16px;
                 font-size: 0.9rem;
             }
+
+            .download-links {
+                flex-direction: column;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .download-btn {
+                width: 100%;
+                max-width: 200px;
+                text-align: center;
+                padding: 12px 20px;
+            }
         }
     </style>
 </head>
@@ -185,7 +203,7 @@
             <a href="/upload" style="display: inline-block; padding: 10px 24px; background: #fff; color: #667eea; text-decoration: none; border-radius: 8px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">上传文件</a>
         </div>
 
-        <details open>
+        <details>
             <summary>
                 <span class="title-wrapper">图片列表 <span class="badge">{{ images|length }}</span></span>
             </summary>
@@ -198,14 +216,14 @@
             </ul>
         </details>
 
-        <details open>
+        <details>
             <summary>
                 <span class="title-wrapper">mp4列表 <span class="badge">{{ mp4s|length }}</span></span>
             </summary>
             <ul>
                 {% for mp4 in mp4s %}
                 <li>
-                    <a href="/download/y/{{ mp4.real_name }}">{{ mp4.show_name }}</a>
+                    <a href="/download/y/mp4/{{ mp4.real_name }}">{{ mp4.show_name }}</a>
                     <!--
                     <video width="720" height="480" controls preload="none">
                         <source src="/{{ mp4 }}" type="video/mp4">
@@ -217,27 +235,23 @@
             </ul>
         </details>
 
-        <details open>
+        <details>
             <summary>
                 <span class="title-wrapper">flv列表 <span class="badge">{{ flvs|length }}</span></span>
             </summary>
             <ul>
                 {% for flv in flvs %}
                 <li>
-                    <a href="/download/y/templates/flv.html?link=/download/y/flv/{{ flv.real_name }}">{{ flv.show_name }}</a>
+                    <a href="/flv.html?link=/download/y/flv/{{ flv.real_name }}">{{ flv.show_name }}</a>
                 </li>
                 {% endfor %}
             </ul>
         </details>
 
-        <div class="download-link">
-            <a href="/download/data2/git/JohannCarlFriedrichGauss/py/photo_view/mp4/">mp4</a>
-        </div>
-        <div class="download-link">
-            <a href="/download/cc/">cc</a>
-        </div>
-        <div class="download-link">
-            <a href="/download/y/upload/">upload</a>
+        <div class="download-links">
+            <a href="/download/data2/git/JohannCarlFriedrichGauss/py/photo_view/mp42/" class="download-btn">mp4</a>
+            <a href="/download/cc/" class="download-btn">cc</a>
+            <a href="/download/data2/git/JohannCarlFriedrichGauss/py/photo_view/upload/" class="download-btn">upload</a>
         </div>
     </div>
 </body>
