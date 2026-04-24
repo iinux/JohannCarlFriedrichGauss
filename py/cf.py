@@ -21,9 +21,9 @@ def get_all_record():
     if not json.loads(resp.text)['success']:
         return None
     domains = json.loads(resp.text)['result']
-    print_format = '{:<36s} {:<32s} {:<4s} {:<50s} {:<9s} {:<7s}'
+    print_format = '{:<36s} {:<49s} {:<4s} {:<50s} {:<9s} {:<7s}'
     print(print_format.format('id', 'name', 'type', 'content', 'proxiable', 'proxied'))
-    print("-" * 150)
+    print("-" * 160)
     domains = sorted(domains, key=lambda x: x['name'])
     for domain in domains:
         if domain['proxied']:

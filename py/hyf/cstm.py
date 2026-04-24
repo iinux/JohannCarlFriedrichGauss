@@ -43,8 +43,8 @@ if __name__ == '__main__':
     print_x('date=%s, hall_id=%d' % (date, hall_id))
     while True:
         num = req(date, hall_id)
-        if num >= 3:
-            print_x('完成', True)
+        if num >= 10:
+            print_x('have %d' % num, True)
             break
         elif num == -1:
             print_x('error', True)

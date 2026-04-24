@@ -41,6 +41,7 @@ switch ($action) {
     case 'list_record':
         $data['domain_id'] = $domain_id;
         $res = postData("https://dnsapi.cn/Record.List", $data);
+        var_dump($res);
         $cols = [
             'id' => "%s\t",
             //'ttl' => "%s\t",
