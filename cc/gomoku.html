@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gomoku - Five in a Row</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .current-player {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .player-indicator {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 3px solid #333;
+        }
+
+        .player-indicator.black {
+            background: radial-gradient(circle at 30% 30%, #555, #000);
+        }
+
+        .player-indicator.white {
+            background: radial-gradient(circle at 30% 30%, #fff, #ccc);
+        }
+
+        .board-container {
+            position: relative;
+            padding: 20px;
+            background: #dcb35c;
+            border-radius: 10px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(15, 30px);
+            grid-template-rows: repeat(15, 30px);
+            gap: 0;
+            position: relative;
+        }
+
+        .cell {
+            width: 30px;
+            height: 30px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .cell::before,
+        .cell::after {
+            content: '';
+            position: absolute;
+            background: #8b6914;
+        }
+
+        .cell::before {
+            width: 100%;
+            height: 1px;
+            top: 50%;
+            left: 0;
+        }
+
+        .cell::after {
+            width: 1px;
+            height: 100%;
+            left: 50%;
+            top: 0;
+        }
+
+        .cell:first-child::before,
+        .cell:nth-child(-n + 15)::before {
+            top: 50%;
+        }
+
+        .piece {
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            transition: transform 0.1s ease;
+        }
+
+        .piece.black {
+            background: radial-gradient(circle at 30% 30%, #555, #000);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .piece.white {
+            background: radial-gradient(circle at 30% 30%, #fff, #ccc);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .piece.last-move {
+            box-shadow: 0 0 10px 3px #ff6b6b;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .mode-select {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+
+        .mode-btn {
+            padding: 8px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+        }
+
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .winner-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+        }
+
+        .winner-icon.black {
+            background: radial-gradient(circle at 30% 30%, #555, #000);
+        }
+
+        .winner-icon.white {
+            background: radial-gradient(circle at 30% 30%, #fff, #ccc);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎮 Gomoku (Five in a Row)</h1>
+        
+        <div class="mode-select">
+            <button class="mode-btn active" id="pvp-btn">2 Players</button>
+            <button class="mode-btn" id="pvc-btn">vs Computer</button>
+        </div>
+
+        <div class="game-info">
+            <div class="current-player">
+                <span>Current Turn:</span>
+                <div class="player-indicator black" id="player-indicator"></div>
+                <span id="player-text">Black</span>
+            </div>
+            <div>
+                <span>Black: <span id="black-score">0</span></span>
+                <span style="margin-left: 15px;">White: <span id="white-score">0</span></span>
+            </div>
+        </div>
+
+        <div class="board-container">
+            <div id="board"></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-primary" id="new-game-btn">New Game</button>
+            <button class="btn-secondary" id="undo-btn">Undo</button>
+        </div>
+    </div>
+
+    <div class="modal" id="winner-modal">
+        <div class="modal-content">
+            <div class="winner-icon" id="winner-icon"></div>
+            <h2 id="winner-text"></h2>
+            <button class="btn-primary" id="play-again-btn">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const BOARD_SIZE = 15;
+        const EMPTY = 0;
+        const BLACK = 1;
+        const WHITE = 2;
+
+        let board = [];
+        let currentPlayer = BLACK;
+        let gameActive = true;
+        let moveHistory = [];
+        let scores = { black: 0, white: 0 };
+        let vsComputer = false;
+        let computerColor = WHITE;
+
+        const boardElement = document.getElementById('board');
+        const playerIndicator = document.getElementById('player-indicator');
+        const playerText = document.getElementById('player-text');
+        const blackScoreEl = document.getElementById('black-score');
+        const whiteScoreEl = document.getElementById('white-score');
+        const winnerModal = document.getElementById('winner-modal');
+        const winnerText = document.getElementById('winner-text');
+        const winnerIcon = document.getElementById('winner-icon');
+        const pvpBtn = document.getElementById('pvp-btn');
+        const pvcBtn = document.getElementById('pvc-btn');
+
+        function initBoard() {
+            board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(EMPTY));
+            boardElement.innerHTML = '';
+            
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.addEventListener('click', () => handleCellClick(row, col));
+                    boardElement.appendChild(cell);
+                }
+            }
+        }
+
+        function handleCellClick(row, col) {
+            if (!gameActive || board[row][col] !== EMPTY) return;
+            if (vsComputer && currentPlayer === computerColor) return;
+
+            makeMove(row, col);
+
+            if (vsComputer && gameActive) {
+                setTimeout(computerMove, 500);
+            }
+        }
+
+        function makeMove(row, col) {
+            board[row][col] = currentPlayer;
+            moveHistory.push({ row, col, player: currentPlayer });
+
+            const cell = boardElement.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            const piece = document.createElement('div');
+            piece.className = `piece ${currentPlayer === BLACK ? 'black' : 'white'}`;
+            
+            const lastMove = cell.querySelector('.piece');
+            if (lastMove) lastMove.classList.remove('last-move');
+            piece.classList.add('last-move');
+            
+            cell.appendChild(piece);
+
+            if (checkWin(row, col, currentPlayer)) {
+                endGame(currentPlayer);
+            } else if (moveHistory.length === BOARD_SIZE * BOARD_SIZE) {
+                endGame(DRAW);
+            } else {
+                currentPlayer = currentPlayer === BLACK ? WHITE : BLACK;
+                updateUI();
+            }
+        }
+
+        function computerMove() {
+            if (!gameActive) return;
+
+            const move = findBestMove();
+            if (move) {
+                makeMove(move.row, move.col);
+            }
+        }
+
+        function findBestMove() {
+            let bestScore = -Infinity;
+            let bestMoves = [];
+
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    if (board[row][col] === EMPTY) {
+                        const score = evaluatePosition(row, col);
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMoves = [{ row, col }];
+                        } else if (score === bestScore) {
+                            bestMoves.push({ row, col });
+                        }
+                    }
+                }
+            }
+
+            if (bestMoves.length === 0) {
+                const center = Math.floor(BOARD_SIZE / 2);
+                if (board[center][center] === EMPTY) {
+                    return { row: center, col: center };
+                }
+            }
+
+            return bestMoves.length > 0 
+                ? bestMoves[Math.floor(Math.random() * bestMoves.length)] 
+                : null;
+        }
+
+        function evaluatePosition(row, col) {
+            let score = 0;
+            
+            board[row][col] = computerColor;
+            score += evaluateForColor(computerColor) * 1.1;
+            board[row][col] = EMPTY;
+
+            const opponent = computerColor === BLACK ? WHITE : BLACK;
+            board[row][col] = opponent;
+            score += evaluateForColor(opponent);
+            board[row][col] = EMPTY;
+
+            const center = Math.floor(BOARD_SIZE / 2);
+            score -= Math.abs(row - center) + Math.abs(col - center);
+
+            return score;
+        }
+
+        function evaluateForColor(color) {
+            let score = 0;
+            const directions = [[1,0], [0,1], [1,1], [1,-1]];
+
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    if (board[row][col] === color) {
+                        for (const [dr, dc] of directions) {
+                            const line = countLine(row, col, dr, dc, color);
+                            score += scoreLine(line);
+                        }
+                    }
+                }
+            }
+            return score;
+        }
+
+        function countLine(row, col, dr, dc, color) {
+            let count = 1;
+            let openEnds = 0;
+
+            let r = row + dr, c = col + dc;
+            while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === color) {
+                count++;
+                r += dr;
+                c += dc;
+            }
+            if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === EMPTY) {
+                openEnds++;
+            }
+
+            r = row - dr;
+            c = col - dc;
+            while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === color) {
+                count++;
+                r -= dr;
+                c -= dc;
+            }
+            if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === EMPTY) {
+                openEnds++;
+            }
+
+            return { count, openEnds };
+        }
+
+        function scoreLine(line) {
+            const { count, openEnds } = line;
+            if (count >= 5) return 100000;
+            if (count === 4) {
+                if (openEnds === 2) return 10000;
+                if (openEnds === 1) return 1000;
+            }
+            if (count === 3) {
+                if (openEnds === 2) return 1000;
+                if (openEnds === 1) return 100;
+            }
+            if (count === 2) {
+                if (openEnds === 2) return 100;
+                if (openEnds === 1) return 10;
+            }
+            return count;
+        }
+
+        function checkWin(row, col, player) {
+            const directions = [[1,0], [0,1], [1,1], [1,-1]];
+            
+            for (const [dr, dc] of directions) {
+                let count = 1;
+                
+                let r = row + dr, c = col + dc;
+                while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
+                    count++;
+                    r += dr;
+                    c += dc;
+                }
+                
+                r = row - dr;
+                c = col - dc;
+                while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
+                    count++;
+                    r -= dr;
+                    c -= dc;
+                }
+                
+                if (count >= 5) return true;
+            }
+            return false;
+        }
+
+        function endGame(winner) {
+            gameActive = false;
+            
+            if (winner === DRAW) {
+                winnerText.textContent = "It's a Draw!";
+                winnerIcon.className = 'winner-icon';
+                winnerIcon.style.background = '#ccc';
+            } else {
+                const winnerName = winner === BLACK ? 'Black' : 'White';
+                winnerText.textContent = `${winnerName} Wins!`;
+                winnerIcon.className = `winner-icon ${winner === BLACK ? 'black' : 'white'}`;
+                
+                if (winner === BLACK) scores.black++;
+                else scores.white++;
+                updateScoreboard();
+            }
+            
+            winnerModal.classList.add('show');
+        }
+
+        function updateUI() {
+            playerIndicator.className = `player-indicator ${currentPlayer === BLACK ? 'black' : 'white'}`;
+            playerText.textContent = currentPlayer === BLACK ? 'Black' : 'White';
+        }
+
+        function updateScoreboard() {
+            blackScoreEl.textContent = scores.black;
+            whiteScoreEl.textContent = scores.white;
+        }
+
+        function newGame() {
+            board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(EMPTY));
+            currentPlayer = BLACK;
+            gameActive = true;
+            moveHistory = [];
+            boardElement.innerHTML = '';
+            
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.addEventListener('click', () => handleCellClick(row, col));
+                    boardElement.appendChild(cell);
+                }
+            }
+            
+            updateUI();
+            winnerModal.classList.remove('show');
+        }
+
+        function undoMove() {
+            if (moveHistory.length === 0 || !gameActive && moveHistory.length <= 1) return;
+            
+            if (vsComputer && moveHistory.length >= 2) {
+                const lastMove = moveHistory.pop();
+                const prevMove = moveHistory.pop();
+                
+                const lastCell = boardElement.querySelector(`[data-row="${lastMove.row}"][data-col="${lastMove.col}"]`);
+                lastCell.innerHTML = '';
+                const prevCell = boardElement.querySelector(`[data-row="${prevMove.row}"][data-col="${prevMove.col}"]`);
+                prevCell.innerHTML = '';
+                
+                board[lastMove.row][lastMove.col] = EMPTY;
+                board[prevMove.row][prevMove.col] = EMPTY;
+                
+                if (moveHistory.length > 0) {
+                    const prev = moveHistory[moveHistory.length - 1];
+                    const cell = boardElement.querySelector(`[data-row="${prev.row}"][data-col="${prev.col}"]`);
+                    const piece = cell.querySelector('.piece');
+                    if (piece) piece.classList.add('last-move');
+                }
+            } else if (!vsComputer && moveHistory.length > 0) {
+                const lastMove = moveHistory.pop();
+                const cell = boardElement.querySelector(`[data-row="${lastMove.row}"][data-col="${lastMove.col}"]`);
+                cell.innerHTML = '';
+                board[lastMove.row][lastMove.col] = EMPTY;
+                
+                if (moveHistory.length > 0) {
+                    const prev = moveHistory[moveHistory.length - 1];
+                    const prevCell = boardElement.querySelector(`[data-row="${prev.row}"][data-col="${prev.col}"]`);
+                    const piece = prevCell.querySelector('.piece');
+                    if (piece) piece.classList.add('last-move');
+                }
+                currentPlayer = lastMove.player;
+                updateUI();
+            }
+        }
+
+        document.getElementById('new-game-btn').addEventListener('click', newGame);
+        document.getElementById('undo-btn').addEventListener('click', undoMove);
+        document.getElementById('play-again-btn').addEventListener('click', newGame);
+
+        pvpBtn.addEventListener('click', () => {
+            vsComputer = false;
+            pvpBtn.classList.add('active');
+            pvcBtn.classList.remove('active');
+            scores.black = 0;
+            scores.white = 0;
+            updateScoreboard();
+            newGame();
+        });
+
+        pvcBtn.addEventListener('click', () => {
+            vsComputer = true;
+            pvcBtn.classList.add('active');
+            pvpBtn.classList.remove('active');
+            scores.black = 0;
+            scores.white = 0;
+            updateScoreboard();
+            newGame();
+        });
+
+        initBoard();
+        updateUI();
+    </script>
+</body>
+</html>

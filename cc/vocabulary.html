@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语单词学习 - 5000常用词</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .word-card {
+            text-align: center;
+            padding: 40px 20px;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .word {
+            font-size: 48px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .word:hover {
+            transform: scale(1.05);
+        }
+        
+        .word[hidden] {
+            display: none;
+        }
+        
+        .translation {
+            font-size: 28px;
+            color: #667eea;
+            min-height: 40px;
+            margin-bottom: 30px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .translation.visible {
+            opacity: 1;
+        }
+        
+        .hint {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 20px;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .btn-show {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-show:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        .btn-learned {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .btn-learned:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .btn-next {
+            background: #ff9800;
+            color: white;
+        }
+        
+        .btn-next:hover {
+            background: #f57c00;
+            transform: translateY(-2px);
+        }
+        
+        .btn-reset {
+            background: #f44336;
+            color: white;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+        
+        .btn-reset:hover {
+            background: #da190b;
+        }
+        
+        .completed {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .completed h2 {
+            color: #4caf50;
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+        
+        .completed p {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        
+        .celebration {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+        
+        .progress-text {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 英语单词学习</h1>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">进度: 0 / 1045</div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="totalWords">1045</div>
+                <div class="stat-label">总单词数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="remainingWords">1045</div>
+                <div class="stat-label">剩余</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="learnedWords">0</div>
+                <div class="stat-label">已学会</div>
+            </div>
+        </div>
+        
+        <div class="word-card" id="wordCard">
+            <div class="word" id="word" onclick="showTranslation()">点击开始</div>
+            <div class="translation" id="translation"></div>
+            <div class="hint" id="hint">点击单词显示中文翻译</div>
+        </div>
+        
+        <div class="buttons" id="buttons">
+            <button class="btn btn-show" onclick="showTranslation()">显示翻译</button>
+            <button class="btn btn-learned" onclick="markLearned()">学会了 ✓</button>
+            <button class="btn btn-next" onclick="nextWord()">下一个</button>
+        </div>
+        
+        <div style="text-align: center;">
+            <button class="btn btn-reset" onclick="resetProgress()">重置学习进度</button>
+        </div>
+    </div>
+
+    <script>
+const words = [
+  {english: "abandon", chinese: "放弃"},
+  {english: "ability", chinese: "能力"},
+  {english: "able", chinese: "有能力的"},
+  {english: "abortion", chinese: "流产"},
+  {english: "about", chinese: "关于"},
+  {english: "above", chinese: "多于"},
+  {english: "abroad", chinese: "国外"},
+  {english: "absence", chinese: "缺席"},
+  {english: "absolute", chinese: "绝对"},
+  {english: "absolutely", chinese: "绝对地"},
+  {english: "absorb", chinese: "吸收"},
+  {english: "abuse", chinese: "虐待"},
+  {english: "academic", chinese: "学术的"},
+  {english: "accept", chinese: "接受"},
+  {english: "access", chinese: "使用权"},
+  {english: "accident", chinese: "事故"},
+  {english: "accompany", chinese: "陪伴"},
+  {english: "accomplish", chinese: "完成"},
+  {english: "according", chinese: "根据"},
+  {english: "account", chinese: "帐户"},
+  {english: "accurate", chinese: "准确的"},
+  {english: "accuse", chinese: "告"},
+  {english: "achieve", chinese: "达到"},
+  {english: "achievement", chinese: "成就"},
+  {english: "acid", chinese: "酸"},
+  {english: "acknowledge", chinese: "承认"},
+  {english: "acquire", chinese: "获得"},
+  {english: "across", chinese: "穿过"},
+  {english: "act", chinese: "行为"},
+  {english: "action", chinese: "行动"},
+  {english: "active", chinese: "积极的"},
+  {english: "activist", chinese: "活动家"},
+  {english: "activity", chinese: "活动"},
+  {english: "actor", chinese: "演员"},
+  {english: "actress", chinese: "演员"},
+  {english: "actual", chinese: "实际的"},
+  {english: "actually", chinese: "实际上"},
+  {english: "adapt", chinese: "适应"},
+  {english: "add", chinese: "添加"},
+  {english: "addition", chinese: "添加"},
+  {english: "additional", chinese: "额外的"},
+  {english: "address", chinese: "地址"},
+  {english: "adequate", chinese: "足够的"},
+  {english: "adjust", chinese: "调整"},
+  {english: "adjustment", chinese: "调整"},
+  {english: "administration", chinese: "行政"},
+  {english: "administrator", chinese: "行政人员"},
+  {english: "admire", chinese: "钦佩"},
+  {english: "admission", chinese: "入场"},
+  {english: "admit", chinese: "承认"},
+  {english: "adolescent", chinese: "青少年"},
+  {english: "adopt", chinese: "采纳"},
+  {english: "adult", chinese: "成人"},
+  {english: "advance", chinese: "进步"},
+  {english: "advanced", chinese: "先进的"},
+  {english: "advantage", chinese: "优势"},
+  {english: "adventure", chinese: "冒险"},
+  {english: "advertising", chinese: "广告"},
+  {english: "advice", chinese: "建议"},
+  {english: "advise", chinese: "建议"},
+  {english: "adviser", chinese: "顾问"},
+  {english: "advocate", chinese: "提倡"},
+  {english: "affair", chinese: "事务"},
+  {english: "affect", chinese: "影响"},
+  {english: "afford", chinese: "买得起"},
+  {english: "afraid", chinese: "害怕的"},
+  {english: "African", chinese: "非洲人"},
+  {english: "African-American", chinese: "非裔美国人"},
+  {english: "after", chinese: "后"},
+  {english: "afternoon", chinese: "下午"},
+  {english: "again", chinese: "再次"},
+  {english: "against", chinese: "反对"},
+  {english: "age", chinese: "年龄"},
+  {english: "agency", chinese: "机构"},
+  {english: "agenda", chinese: "议程"},
+  {english: "agent", chinese: "代理人"},
+  {english: "aggressive", chinese: "挑衅的"},
+  {english: "ago", chinese: "前"},
+  {english: "agree", chinese: "同意"},
+  {english: "agreement", chinese: "协议"},
+  {english: "agricultural", chinese: "农业"},
+  {english: "ahead", chinese: "先"},
+  {english: "aid", chinese: "援助"},
+  {english: "aide", chinese: "助手"},
+  {english: "AIDS", chinese: "艾滋病"},
+  {english: "aim", chinese: "目的"},
+  {english: "air", chinese: "空气"},
+  {english: "aircraft", chinese: "飞机"},
+  {english: "airline", chinese: "航空公司"},
+  {english: "airport", chinese: "飞机场"},
+  {english: "album", chinese: "专辑"},
+  {english: "alcohol", chinese: "酒精"},
+  {english: "alive", chinese: "活"},
+  {english: "all", chinese: "全部"},
+  {english: "alliance", chinese: "联盟"},
+  {english: "allow", chinese: "允许"},
+  {english: "ally", chinese: "盟友"},
+  {english: "almost", chinese: "几乎"},
+  {english: "alone", chinese: "独自的"},
+  {english: "along", chinese: "沿着"},
+  {english: "already", chinese: "已经"},
+  {english: "also", chinese: "还"},
+  {english: "alter", chinese: "改变"},
+  {english: "alternative", chinese: "选择"},
+  {english: "although", chinese: "虽然"},
+  {english: "always", chinese: "总是"},
+  {english: "amazing", chinese: "惊人的"},
+  {english: "American", chinese: "美国人"},
+  {english: "among", chinese: "之中"},
+  {english: "amount", chinese: "数量"},
+  {english: "analysis", chinese: "分析"},
+  {english: "analyst", chinese: "分析师"},
+  {english: "analyze", chinese: "分析"},
+  {english: "ancient", chinese: "古老的"},
+  {english: "and", chinese: "和"},
+  {english: "anger", chinese: "愤怒"},
+  {english: "angle", chinese: "角度"},
+  {english: "angry", chinese: "生气的"},
+  {english: "animal", chinese: "动物"},
+  {english: "anniversary", chinese: "周年纪念日"},
+  {english: "announce", chinese: "宣布"},
+  {english: "annual", chinese: "年度的"},
+  {english: "another", chinese: "其他"},
+  {english: "answer", chinese: "回答"},
+  {english: "anticipate", chinese: "预料"},
+  {english: "anxiety", chinese: "焦虑"},
+  {english: "any", chinese: "任何"},
+  {english: "anybody", chinese: "任何人"},
+  {english: "anymore", chinese: "再过了"},
+  {english: "anyone", chinese: "任何人"},
+  {english: "anything", chinese: "任何事物"},
+  {english: "anyway", chinese: "反正"},
+  {english: "anywhere", chinese: "任何地方"},
+  {english: "apart", chinese: "除外"},
+  {english: "apartment", chinese: "公寓"},
+  {english: "apparent", chinese: "显而易见"},
+  {english: "apparently", chinese: "显然"},
+  {english: "appeal", chinese: "上诉"},
+  {english: "appear", chinese: "出现"},
+  {english: "appearance", chinese: "外貌"},
+  {english: "apple", chinese: "苹果"},
+  {english: "application", chinese: "应用"},
+  {english: "apply", chinese: "申请"},
+  {english: "appoint", chinese: "委"},
+  {english: "appointment", chinese: "预约"},
+  {english: "appreciate", chinese: "欣赏"},
+  {english: "approach", chinese: "方法"},
+  {english: "appropriate", chinese: "合适的"},
+  {english: "approval", chinese: "赞同"},
+  {english: "approve", chinese: "批准"},
+  {english: "approximately", chinese: "大约"},
+  {english: "Arab", chinese: "阿拉伯"},
+  {english: "architect", chinese: "建筑师"},
+  {english: "area", chinese: "区域"},
+  {english: "argue", chinese: "争论"},
+  {english: "argument", chinese: "争论"},
+  {english: "arise", chinese: "出现"},
+  {english: "arm", chinese: "手臂"},
+  {english: "armed", chinese: "武装"},
+  {english: "army", chinese: "军队"},
+  {english: "around", chinese: "大约"},
+  {english: "arrange", chinese: "安排"},
+  {english: "arrangement", chinese: "安排"},
+  {english: "arrest", chinese: "逮捕"},
+  {english: "arrival", chinese: "到达"},
+  {english: "arrive", chinese: "到达"},
+  {english: "art", chinese: "艺术"},
+  {english: "article", chinese: "文章"},
+  {english: "artist", chinese: "艺术家"},
+  {english: "artistic", chinese: "艺术的"},
+  {english: "Asian", chinese: "亚洲"},
+  {english: "aside", chinese: "在旁边"},
+  {english: "ask", chinese: "问"},
+  {english: "asleep", chinese: "睡着了"},
+  {english: "aspect", chinese: "方面"},
+  {english: "assault", chinese: "突击"},
+  {english: "assert", chinese: "断言"},
+  {english: "assess", chinese: "评估"},
+  {english: "assessment", chinese: "评估"},
+  {english: "asset", chinese: "资产"},
+  {english: "assign", chinese: "分配"},
+  {english: "assignment", chinese: "任务"},
+  {english: "assist", chinese: "协助"},
+  {english: "assistance", chinese: "协助"},
+  {english: "assistant", chinese: "助手"},
+  {english: "associate", chinese: "联系"},
+  {english: "association", chinese: "协会"},
+  {english: "assume", chinese: "认为"},
+  {english: "assumption", chinese: "假设"},
+  {english: "assure", chinese: "保证"},
+  {english: "athlete", chinese: "运动员"},
+  {english: "athletic", chinese: "运动"},
+  {english: "atmosphere", chinese: "气氛"},
+  {english: "attach", chinese: "附"},
+  {english: "attack", chinese: "攻击"},
+  {english: "attempt", chinese: "试图"},
+  {english: "attend", chinese: "出席"},
+  {english: "attention", chinese: "注意力"},
+  {english: "attitude", chinese: "态度"},
+  {english: "attorney", chinese: "律师"},
+  {english: "attract", chinese: "吸引"},
+  {english: "attractive", chinese: "吸引人的"},
+  {english: "attribute", chinese: "属性"},
+  {english: "audience", chinese: "观众"},
+  {english: "author", chinese: "作者"},
+  {english: "authority", chinese: "权威"},
+  {english: "auto", chinese: "汽车"},
+  {english: "available", chinese: "可用的"},
+  {english: "average", chinese: "平均的"},
+  {english: "avoid", chinese: "避免"},
+  {english: "award", chinese: "奖"},
+  {english: "aware", chinese: "意识到的"},
+  {english: "awareness", chinese: "意识"},
+  {english: "away", chinese: "离开"},
+  {english: "awful", chinese: "可怕"},
+  {english: "baby", chinese: "婴儿"},
+  {english: "back", chinese: "后退"},
+  {english: "background", chinese: "背景"},
+  {english: "bad", chinese: "坏的"},
+  {english: "badly", chinese: "糟糕"},
+  {english: "bag", chinese: "包"},
+  {english: "bake", chinese: "烤"},
+  {english: "balance", chinese: "平衡"},
+  {english: "ball", chinese: "球"},
+  {english: "ban", chinese: "禁止"},
+  {english: "band", chinese: "乐队"},
+  {english: "bank", chinese: "银行"},
+  {english: "bar", chinese: "酒吧"},
+  {english: "barely", chinese: "仅仅"},
+  {english: "barrel", chinese: "桶"},
+  {english: "barrier", chinese: "障碍"},
+  {english: "base", chinese: "根据"},
+  {english: "baseball", chinese: "棒球"},
+  {english: "basic", chinese: "基本的"},
+  {english: "basically", chinese: "基本上"},
+  {english: "basis", chinese: "基础"},
+  {english: "basket", chinese: "篮子"},
+  {english: "basketball", chinese: "篮球"},
+  {english: "bathroom", chinese: "浴室"},
+  {english: "battery", chinese: "电池"},
+  {english: "battle", chinese: "战斗"},
+  {english: "beach", chinese: "海滩"},
+  {english: "bean", chinese: "豆"},
+  {english: "bear", chinese: "熊"},
+  {english: "beat", chinese: "打"},
+  {english: "beautiful", chinese: "美丽的"},
+  {english: "beauty", chinese: "美丽"},
+  {english: "because", chinese: "因为"},
+  {english: "become", chinese: "变得"},
+  {english: "bed", chinese: "床"},
+  {english: "bedroom", chinese: "卧室"},
+  {english: "beer", chinese: "啤酒"},
+  {english: "before", chinese: "前"},
+  {english: "begin", chinese: "开始"},
+  {english: "beginning", chinese: "开始"},
+  {english: "behavior", chinese: "行为"},
+  {english: "behind", chinese: "在后面"},
+  {english: "being", chinese: "存在"},
+  {english: "belief", chinese: "信仰"},
+  {english: "believe", chinese: "相信"},
+  {english: "bell", chinese: "钟"},
+  {english: "belong", chinese: "属于"},
+  {english: "below", chinese: "以下"},
+  {english: "belt", chinese: "腰带"},
+  {english: "bench", chinese: "长椅"},
+  {english: "bend", chinese: "弯曲"},
+  {english: "beneath", chinese: "下面"},
+  {english: "benefit", chinese: "益处"},
+  {english: "beside", chinese: "旁"},
+  {english: "besides", chinese: "除了"},
+  {english: "best", chinese: "最好的"},
+  {english: "bet", chinese: "赌注"},
+  {english: "better", chinese: "更好的"},
+  {english: "between", chinese: "之间"},
+  {english: "beyond", chinese: "超过"},
+  {english: "Bible", chinese: "圣经"},
+  {english: "big", chinese: "大的"},
+  {english: "bike", chinese: "自行车"},
+  {english: "bill", chinese: "账单"},
+  {english: "billion", chinese: "十亿"},
+  {english: "bind", chinese: "绑定"},
+  {english: "biological", chinese: "生物"},
+  {english: "bird", chinese: "鸟"},
+  {english: "birth", chinese: "出生"},
+  {english: "birthday", chinese: "生日"},
+  {english: "bit", chinese: "少量"},
+  {english: "bite", chinese: "咬"},
+  {english: "black", chinese: "黑色的"},
+  {english: "blade", chinese: "刀刃"},
+  {english: "blame", chinese: "责备"},
+  {english: "blanket", chinese: "毯子"},
+  {english: "blind", chinese: "瞎的"},
+  {english: "block", chinese: "堵塞"},
+  {english: "blood", chinese: "血"},
+  {english: "blow", chinese: "吹"},
+  {english: "blue", chinese: "蓝色的"},
+  {english: "board", chinese: "木板"},
+  {english: "boat", chinese: "船"},
+  {english: "body", chinese: "身体"},
+  {english: "bomb", chinese: "炸弹"},
+  {english: "bombing", chinese: "轰炸"},
+  {english: "bond", chinese: "纽带"},
+  {english: "bone", chinese: "骨"},
+  {english: "book", chinese: "书"},
+  {english: "boom", chinese: "繁荣"},
+  {english: "boot", chinese: "引导"},
+  {english: "border", chinese: "边界"},
+  {english: "born", chinese: "出生"},
+  {english: "borrow", chinese: "借"},
+  {english: "boss", chinese: "老板"},
+  {english: "both", chinese: "两个都"},
+  {english: "bother", chinese: "打扰"},
+  {english: "bottle", chinese: "瓶子"},
+  {english: "bottom", chinese: "底部"},
+  {english: "boundary", chinese: "边界"},
+  {english: "bowl", chinese: "碗"},
+  {english: "box", chinese: "盒子"},
+  {english: "boy", chinese: "男生"},
+  {english: "boyfriend", chinese: "男朋友"},
+  {english: "brain", chinese: "脑"},
+  {english: "branch", chinese: "分支"},
+  {english: "brand", chinese: "品牌"},
+  {english: "bread", chinese: "面包"},
+  {english: "break", chinese: "休息"},
+  {english: "breakfast", chinese: "早餐"},
+  {english: "breast", chinese: "胸部"},
+  {english: "breath", chinese: "呼吸"},
+  {english: "breathe", chinese: "呼吸"},
+  {english: "brick", chinese: "砖"},
+  {english: "bridge", chinese: "桥"},
+  {english: "brief", chinese: "简短的"},
+  {english: "briefly", chinese: "简要地"},
+  {english: "bright", chinese: "明亮的"},
+  {english: "brilliant", chinese: "杰出的"},
+  {english: "bring", chinese: "带来"},
+  {english: "British", chinese: "英国"},
+  {english: "broad", chinese: "广阔"},
+  {english: "broken", chinese: "破碎的"},
+  {english: "brother", chinese: "兄弟"},
+  {english: "brown", chinese: "棕色的"},
+  {english: "brush", chinese: "刷子"},
+  {english: "buck", chinese: "巴克"},
+  {english: "budget", chinese: "预算"},
+  {english: "build", chinese: "建造"},
+  {english: "building", chinese: "建筑"},
+  {english: "bullet", chinese: "子弹"},
+  {english: "bunch", chinese: "束"},
+  {english: "burden", chinese: "负担"},
+  {english: "burn", chinese: "烧伤"},
+  {english: "bury", chinese: "埋葬"},
+  {english: "bus", chinese: "公共汽车"},
+  {english: "business", chinese: "商业"},
+  {english: "busy", chinese: "忙碌的"},
+  {english: "but", chinese: "但"},
+  {english: "butter", chinese: "黄油"},
+  {english: "button", chinese: "按钮"},
+  {english: "buy", chinese: "买"},
+  {english: "buyer", chinese: "买方"},
+  {english: "cabin", chinese: "舱"},
+  {english: "cabinet", chinese: "内阁"},
+  {english: "cable", chinese: "电缆"},
+  {english: "cake", chinese: "蛋糕"},
+  {english: "calculate", chinese: "计算"},
+  {english: "call", chinese: "称呼"},
+  {english: "camera", chinese: "相机"},
+  {english: "camp", chinese: "营"},
+  {english: "campaign", chinese: "活动"},
+  {english: "campus", chinese: "校园"},
+  {english: "can", chinese: "能"},
+  {english: "Canadian", chinese: "加拿大"},
+  {english: "cancer", chinese: "癌症"},
+  {english: "candidate", chinese: "候选人"},
+  {english: "cap", chinese: "帽"},
+  {english: "capability", chinese: "能力"},
+  {english: "capable", chinese: "有能力的"},
+  {english: "capacity", chinese: "容量"},
+  {english: "capital", chinese: "首都"},
+  {english: "captain", chinese: "队长"},
+  {english: "capture", chinese: "捕获"},
+  {english: "car", chinese: "车"},
+  {english: "carbon", chinese: "碳"},
+  {english: "card", chinese: "卡片"},
+  {english: "care", chinese: "关心"},
+  {english: "career", chinese: "职业"},
+  {english: "careful", chinese: "小心"},
+  {english: "carefully", chinese: "小心"},
+  {english: "carrier", chinese: "载体"},
+  {english: "carry", chinese: "携带"},
+  {english: "case", chinese: "案件"},
+  {english: "cash", chinese: "现金"},
+  {english: "cast", chinese: "投掷"},
+  {english: "cat", chinese: "猫"},
+  {english: "catch", chinese: "抓住"},
+  {english: "category", chinese: "类别"},
+  {english: "Catholic", chinese: "天主教徒"},
+  {english: "cause", chinese: "原因"},
+  {english: "ceiling", chinese: "天花板"},
+  {english: "celebrate", chinese: "庆祝"},
+  {english: "celebration", chinese: "庆典"},
+  {english: "celebrity", chinese: "名人"},
+  {english: "cell", chinese: "细胞"},
+  {english: "center", chinese: "中心"},
+  {english: "central", chinese: "中央"},
+  {english: "century", chinese: "世纪"},
+  {english: "ceremony", chinese: "仪式"},
+  {english: "certain", chinese: "肯定"},
+  {english: "certainly", chinese: "当然"},
+  {english: "chain", chinese: "链"},
+  {english: "chair", chinese: "椅子"},
+  {english: "chairman", chinese: "主席"},
+  {english: "challenge", chinese: "挑战"},
+  {english: "chamber", chinese: "腔室"},
+  {english: "champion", chinese: "冠军"},
+  {english: "championship", chinese: "锦标赛"},
+  {english: "chance", chinese: "机会"},
+  {english: "change", chinese: "改变"},
+  {english: "changing", chinese: "更改"},
+  {english: "channel", chinese: "渠道"},
+  {english: "chapter", chinese: "章节"},
+  {english: "character", chinese: "特点"},
+  {english: "characteristic", chinese: "特征"},
+  {english: "characterize", chinese: "特征"},
+  {english: "charge", chinese: "收费"},
+  {english: "charity", chinese: "慈善机构"},
+  {english: "chart", chinese: "图表"},
+  {english: "chase", chinese: "追赶"},
+  {english: "cheap", chinese: "便宜的"},
+  {english: "check", chinese: "查看"},
+  {english: "cheek", chinese: "脸颊"},
+  {english: "cheese", chinese: "奶酪"},
+  {english: "chef", chinese: "厨师"},
+  {english: "chemical", chinese: "化学"},
+  {english: "chest", chinese: "胸部"},
+  {english: "chicken", chinese: "鸡"},
+  {english: "chief", chinese: "首席"},
+  {english: "child", chinese: "孩子"},
+  {english: "childhood", chinese: "童年"},
+  {english: "Chinese", chinese: "中国人"},
+  {english: "chip", chinese: "芯片"},
+  {english: "chocolate", chinese: "巧克力"},
+  {english: "choice", chinese: "选择"},
+  {english: "cholesterol", chinese: "胆固醇"},
+  {english: "choose", chinese: "选择"},
+  {english: "Christian", chinese: "基督教"},
+  {english: "Christmas", chinese: "圣诞节"},
+  {english: "church", chinese: "教会"},
+  {english: "cigarette", chinese: "香烟"},
+  {english: "circle", chinese: "圆圈"},
+  {english: "circumstance", chinese: "环境"},
+  {english: "cite", chinese: "引用"},
+  {english: "citizen", chinese: "公民"},
+  {english: "city", chinese: "城市"},
+  {english: "civil", chinese: "民事"},
+  {english: "civilian", chinese: "平民"},
+  {english: "claim", chinese: "宣称"},
+  {english: "class", chinese: "班级"},
+  {english: "classic", chinese: "经典的"},
+  {english: "classroom", chinese: "课堂"},
+  {english: "clean", chinese: "干净的"},
+  {english: "clear", chinese: "清除"},
+  {english: "clearly", chinese: "清楚地"},
+  {english: "client", chinese: "客户"},
+  {english: "climate", chinese: "气候"},
+  {english: "climb", chinese: "爬"},
+  {english: "clinic", chinese: "诊所"},
+  {english: "clinical", chinese: "临床"},
+  {english: "clock", chinese: "钟"},
+  {english: "close", chinese: "关闭"},
+  {english: "closely", chinese: "密切"},
+  {english: "closer", chinese: "靠近"},
+  {english: "clothes", chinese: "衣服"},
+  {english: "clothing", chinese: "衣服"},
+  {english: "cloud", chinese: "云"},
+  {english: "club", chinese: "俱乐部"},
+  {english: "clue", chinese: "线索"},
+  {english: "cluster", chinese: "簇"},
+  {english: "coach", chinese: "教练"},
+  {english: "coal", chinese: "煤炭"},
+  {english: "coalition", chinese: "联盟"},
+  {english: "coast", chinese: "海岸"},
+  {english: "coat", chinese: "外套"},
+  {english: "code", chinese: "代码"},
+  {english: "coffee", chinese: "咖啡"},
+  {english: "cognitive", chinese: "认知的"},
+  {english: "cold", chinese: "寒冷的"},
+  {english: "collapse", chinese: "坍塌"},
+  {english: "colleague", chinese: "同事"},
+  {english: "collect", chinese: "收集"},
+  {english: "collection", chinese: "收藏"},
+  {english: "collective", chinese: "集体"},
+  {english: "college", chinese: "大学"},
+  {english: "colonial", chinese: "殖民"},
+  {english: "color", chinese: "颜色"},
+  {english: "column", chinese: "柱子"},
+  {english: "combination", chinese: "组合"},
+  {english: "combine", chinese: "结合"},
+  {english: "come", chinese: "来"},
+  {english: "comedy", chinese: "喜剧"},
+  {english: "comfort", chinese: "舒适"},
+  {english: "comfortable", chinese: "舒服的"},
+  {english: "command", chinese: "命令"},
+  {english: "commander", chinese: "指挥官"},
+  {english: "comment", chinese: "评论"},
+  {english: "commercial", chinese: "商业的"},
+  {english: "commission", chinese: "委员会"},
+  {english: "commit", chinese: "犯罪"},
+  {english: "commitment", chinese: "承诺"},
+  {english: "committee", chinese: "委员会"},
+  {english: "common", chinese: "常见的"},
+  {english: "communicate", chinese: "交流"},
+  {english: "communication", chinese: "沟通"},
+  {english: "community", chinese: "社区"},
+  {english: "company", chinese: "公司"},
+  {english: "compare", chinese: "比较"},
+  {english: "comparison", chinese: "比较"},
+  {english: "compete", chinese: "竞争"},
+  {english: "competition", chinese: "竞赛"},
+  {english: "competitive", chinese: "竞争的"},
+  {english: "competitor", chinese: "竞争者"},
+  {english: "complain", chinese: "抱怨"},
+  {english: "complaint", chinese: "抱怨"},
+  {english: "complete", chinese: "完全的"},
+  {english: "completely", chinese: "完全地"},
+  {english: "complex", chinese: "复杂的"},
+  {english: "complicated", chinese: "复杂的"},
+  {english: "component", chinese: "成分"},
+  {english: "compose", chinese: "撰写"},
+  {english: "composition", chinese: "作品"},
+  {english: "comprehensive", chinese: "综合的"},
+  {english: "computer", chinese: "电脑"},
+  {english: "concentrate", chinese: "集中"},
+  {english: "concentration", chinese: "专注"},
+  {english: "concept", chinese: "概念"},
+  {english: "concern", chinese: "忧虑"},
+  {english: "concerned", chinese: "担心的"},
+  {english: "concert", chinese: "音乐会"},
+  {english: "conclude", chinese: "得出结论"},
+  {english: "conclusion", chinese: "结论"},
+  {english: "concrete", chinese: "具体的"},
+  {english: "condition", chinese: "状况"},
+  {english: "conduct", chinese: "执行"},
+  {english: "conference", chinese: "会议"},
+  {english: "confidence", chinese: "信心"},
+  {english: "confident", chinese: "自信的"},
+  {english: "confirm", chinese: "确认"},
+  {english: "conflict", chinese: "冲突"},
+  {english: "confront", chinese: "面对"},
+  {english: "confusion", chinese: "困惑"},
+  {english: "Congress", chinese: "国会"},
+  {english: "congressional", chinese: "国会"},
+  {english: "connect", chinese: "连接"},
+  {english: "connection", chinese: "联系"},
+  {english: "consciousness", chinese: "意识"},
+  {english: "consensus", chinese: "共识"},
+  {english: "consequence", chinese: "结果"},
+  {english: "conservative", chinese: "保守的"},
+  {english: "consider", chinese: "考虑"},
+  {english: "considerable", chinese: "大量"},
+  {english: "consideration", chinese: "考虑"},
+  {english: "consist", chinese: "组成"},
+  {english: "consistent", chinese: "持续的"},
+  {english: "constant", chinese: "持续的"},
+  {english: "constantly", chinese: "不断地"},
+  {english: "constitute", chinese: "构成"},
+  {english: "constitutional", chinese: "宪法"},
+  {english: "construct", chinese: "构造"},
+  {english: "construction", chinese: "建造"},
+  {english: "consultant", chinese: "顾问"},
+  {english: "consume", chinese: "消耗"},
+  {english: "consumer", chinese: "消费者"},
+  {english: "consumption", chinese: "消耗"},
+  {english: "contact", chinese: "接触"},
+  {english: "contain", chinese: "包含"},
+  {english: "container", chinese: "容器"},
+  {english: "contemporary", chinese: "当代的"},
+  {english: "content", chinese: "内容"},
+  {english: "contest", chinese: "比赛"},
+  {english: "context", chinese: "语境"},
+  {english: "continue", chinese: "继续"},
+  {english: "continued", chinese: "继续"},
+  {english: "contract", chinese: "合同"},
+  {english: "contrast", chinese: "对比"},
+  {english: "contribute", chinese: "贡献"},
+  {english: "contribution", chinese: "贡献"},
+  {english: "control", chinese: "控制"},
+  {english: "controversial", chinese: "有争议的"},
+  {english: "controversy", chinese: "争议"},
+  {english: "convention", chinese: "习俗"},
+  {english: "conventional", chinese: "传统的"},
+  {english: "conversation", chinese: "对话"},
+  {english: "convert", chinese: "转变"},
+  {english: "conviction", chinese: "定罪"},
+  {english: "convince", chinese: "说服"},
+  {english: "cook", chinese: "厨师"},
+  {english: "cookie", chinese: "曲奇饼"},
+  {english: "cooking", chinese: "烹饪"},
+  {english: "cool", chinese: "凉爽的"},
+  {english: "cooperation", chinese: "合作"},
+  {english: "cop", chinese: "警察"},
+  {english: "cope", chinese: "应付"},
+  {english: "copy", chinese: "复制"},
+  {english: "core", chinese: "核"},
+  {english: "corn", chinese: "玉米"},
+  {english: "corner", chinese: "角落"},
+  {english: "corporate", chinese: "公司的"},
+  {english: "corporation", chinese: "公司"},
+  {english: "correct", chinese: "正确的"},
+  {english: "correspondent", chinese: "通讯员"},
+  {english: "cost", chinese: "成本"},
+  {english: "cotton", chinese: "棉布"},
+  {english: "couch", chinese: "长椅"},
+  {english: "could", chinese: "可以"},
+  {english: "council", chinese: "理事会"},
+  {english: "counselor", chinese: "顾问"},
+  {english: "count", chinese: "数数"},
+  {english: "counter", chinese: "柜台"},
+  {english: "country", chinese: "国家"},
+  {english: "county", chinese: "县"},
+  {english: "couple", chinese: "夫妻"},
+  {english: "courage", chinese: "勇气"},
+  {english: "course", chinese: "课程"},
+  {english: "court", chinese: "法庭"},
+  {english: "cousin", chinese: "表哥"},
+  {english: "cover", chinese: "覆盖"},
+  {english: "coverage", chinese: "覆盖范围"},
+  {english: "cow", chinese: "奶牛"},
+  {english: "crack", chinese: "裂缝"},
+  {english: "craft", chinese: "工艺"},
+  {english: "crash", chinese: "碰撞"},
+  {english: "crazy", chinese: "疯狂的"},
+  {english: "cream", chinese: "奶油"},
+  {english: "create", chinese: "创造"},
+  {english: "creation", chinese: "创建"},
+  {english: "creative", chinese: "有创造力的"},
+  {english: "creature", chinese: "生物"},
+  {english: "credit", chinese: "信用"},
+  {english: "crew", chinese: "全体人员"},
+  {english: "crime", chinese: "犯罪"},
+  {english: "criminal", chinese: "刑事"},
+  {english: "crisis", chinese: "危机"},
+  {english: "criteria", chinese: "标准"},
+  {english: "critic", chinese: "评论家"},
+  {english: "critical", chinese: "批判的"},
+  {english: "criticism", chinese: "批评"},
+  {english: "criticize", chinese: "批评"},
+  {english: "crop", chinese: "庄稼"},
+  {english: "cross", chinese: "叉"},
+  {english: "crowd", chinese: "人群"},
+  {english: "crucial", chinese: "至关重要的"},
+  {english: "cry", chinese: "哭"},
+  {english: "cultural", chinese: "文化"},
+  {english: "culture", chinese: "文化"},
+  {english: "cup", chinese: "杯子"},
+  {english: "curious", chinese: "好奇的"},
+  {english: "current", chinese: "当前的"},
+  {english: "currently", chinese: "现在"},
+  {english: "curriculum", chinese: "课程"},
+  {english: "custom", chinese: "风俗"},
+  {english: "customer", chinese: "顾客"},
+  {english: "cut", chinese: "切"},
+  {english: "cycle", chinese: "循环"},
+  {english: "dad", chinese: "爸爸"},
+  {english: "daily", chinese: "日常的"},
+  {english: "damage", chinese: "损害"},
+  {english: "dance", chinese: "舞蹈"},
+  {english: "danger", chinese: "危险"},
+  {english: "dangerous", chinese: "危险的"},
+  {english: "dare", chinese: "敢"},
+  {english: "dark", chinese: "黑暗的"},
+  {english: "darkness", chinese: "黑暗"},
+  {english: "data", chinese: "数据"},
+  {english: "date", chinese: "日期"},
+  {english: "daughter", chinese: "女儿"},
+  {english: "day", chinese: "天"},
+  {english: "dead", chinese: "死的"},
+  {english: "deal", chinese: "交易"},
+  {english: "dealer", chinese: "经销商"},
+  {english: "dear", chinese: "亲爱的"},
+  {english: "death", chinese: "死亡"},
+  {english: "debate", chinese: "辩论"},
+  {english: "debt", chinese: "债务"},
+  {english: "decade", chinese: "十年"},
+  {english: "decide", chinese: "决定"},
+  {english: "decision", chinese: "决定"},
+  {english: "deck", chinese: "甲板"},
+  {english: "declare", chinese: "宣布"},
+  {english: "decline", chinese: "衰退"},
+  {english: "decrease", chinese: "减少"},
+  {english: "deep", chinese: "深的"},
+  {english: "deeply", chinese: "深"},
+  {english: "deer", chinese: "鹿"},
+  {english: "defeat", chinese: "打败"},
+  {english: "defend", chinese: "保卫"},
+  {english: "defendant", chinese: "被告"},
+  {english: "defense", chinese: "防御"},
+  {english: "defensive", chinese: "防御性"},
+  {english: "deficit", chinese: "赤字"},
+  {english: "define", chinese: "定义"},
+  {english: "definitely", chinese: "确实"},
+  {english: "definition", chinese: "定义"},
+  {english: "degree", chinese: "程度"},
+  {english: "delay", chinese: "延迟"},
+  {english: "deliver", chinese: "递送"},
+  {english: "delivery", chinese: "送货"},
+  {english: "demand", chinese: "要求"},
+  {english: "democracy", chinese: "民主"},
+  {english: "Democrat", chinese: "民主党人"},
+  {english: "democratic", chinese: "民主"},
+  {english: "demonstrate", chinese: "证明"},
+  {english: "demonstration", chinese: "示范"},
+  {english: "deny", chinese: "否定"},
+  {english: "department", chinese: "部门"},
+  {english: "depend", chinese: "依靠"},
+  {english: "dependent", chinese: "依赖"},
+  {english: "depending", chinese: "取决于"},
+  {english: "depict", chinese: "描绘"},
+  {english: "depression", chinese: "沮丧"},
+  {english: "depth", chinese: "深度"},
+  {english: "deputy", chinese: "副"},
+  {english: "derive", chinese: "派生"},
+  {english: "describe", chinese: "描述"},
+  {english: "description", chinese: "描述"},
+  {english: "desert", chinese: "沙漠"},
+  {english: "deserve", chinese: "应得"},
+  {english: "design", chinese: "设计"},
+  {english: "designer", chinese: "设计师"},
+  {english: "desire", chinese: "欲望"},
+  {english: "desk", chinese: "桌子"},
+  {english: "desperate", chinese: "绝望的"},
+  {english: "despite", chinese: "尽管"},
+  {english: "destroy", chinese: "破坏"},
+  {english: "destruction", chinese: "破坏"},
+  {english: "detail", chinese: "细节"},
+  {english: "detailed", chinese: "详细的"},
+  {english: "detect", chinese: "探测"},
+  {english: "determine", chinese: "决定"},
+  {english: "develop", chinese: "发展"},
+  {english: "developing", chinese: "发展"},
+  {english: "development", chinese: "发展"},
+  {english: "device", chinese: "设备"},
+  {english: "devote", chinese: "奉献"},
+  {english: "dialogue", chinese: "对话"},
+  {english: "die", chinese: "死"},
+  {english: "diet", chinese: "饮食"},
+  {english: "differ", chinese: "不同"},
+  {english: "difference", chinese: "不同之处"},
+  {english: "different", chinese: "不同的"},
+  {english: "differently", chinese: "不同"},
+  {english: "difficult", chinese: "难的"},
+  {english: "difficulty", chinese: "困难"},
+  {english: "dig", chinese: "挖"},
+  {english: "digital", chinese: "数字的"},
+  {english: "dimension", chinese: "方面"},
+  {english: "dining", chinese: "用餐"},
+  {english: "dinner", chinese: "晚餐"},
+  {english: "direct", chinese: "直接的"},
+  {english: "direction", chinese: "方向"},
+  {english: "directly", chinese: "直接地"},
+  {english: "director", chinese: "导演"},
+  {english: "dirt", chinese: "污垢"},
+  {english: "dirty", chinese: "肮脏的"},
+  {english: "disability", chinese: "失能"},
+  {english: "disagree", chinese: "不同意"},
+  {english: "disappear", chinese: "消失"},
+  {english: "disaster", chinese: "灾难"},
+  {english: "discipline", chinese: "纪律"},
+  {english: "discourse", chinese: "话语"},
+  {english: "discover", chinese: "发现"},
+  {english: "discovery", chinese: "发现"},
+  {english: "discrimination", chinese: "歧视"},
+  {english: "discuss", chinese: "讨论"},
+  {english: "discussion", chinese: "讨论"},
+  {english: "disease", chinese: "疾病"},
+  {english: "dish", chinese: "盘子"},
+  {english: "dismiss", chinese: "解雇"},
+  {english: "disorder", chinese: "紊乱"},
+  {english: "display", chinese: "展示"},
+  {english: "dispute", chinese: "争议"},
+  {english: "distance", chinese: "距离"},
+  {english: "distant", chinese: "遥远"},
+  {english: "distinct", chinese: "清楚的"},
+  {english: "distinction", chinese: "区别"},
+  {english: "distinguish", chinese: "区分"},
+  {english: "distribute", chinese: "分发"},
+  {english: "distribution", chinese: "分配"},
+  {english: "district", chinese: "区"},
+  {english: "diverse", chinese: "各种各样的"},
+  {english: "diversity", chinese: "多样性"},
+  {english: "divide", chinese: "划分"},
+  {english: "division", chinese: "分配"},
+  {english: "divorce", chinese: "离婚"},
+  {english: "DNA", chinese: "脱氧核糖核酸"},
+  {english: "doctor", chinese: "医生"},
+  {english: "document", chinese: "文档"},
+  {english: "dog", chinese: "狗"},
+  {english: "domestic", chinese: "国内的"},
+  {english: "dominant", chinese: "主导的"},
+  {english: "dominate", chinese: "支配"},
+  {english: "door", chinese: "门"},
+  {english: "double", chinese: "双倍的"},
+  {english: "doubt", chinese: "怀疑"},
+  {english: "down", chinese: "向下"},
+  {english: "downtown", chinese: "市中心"},
+  {english: "dozen", chinese: "打"},
+  {english: "draft", chinese: "草稿"},
+  {english: "drag", chinese: "拖"},
+  {english: "drama", chinese: "戏剧"},
+  {english: "dramatic", chinese: "戏剧性"},
+  {english: "dramatically", chinese: "急剧"},
+  {english: "draw", chinese: "画"},
+  {english: "drawing", chinese: "绘画"},
+  {english: "dream", chinese: "梦"},
+  {english: "dress", chinese: "裙子"},
+  {english: "drink", chinese: "喝"},
+  {english: "drive", chinese: "驾驶"},
+  {english: "driver", chinese: "司机"},
+  {english: "drop", chinese: "降低"},
+  {english: "drug", chinese: "药品"},
+  {english: "dry", chinese: "干燥"},
+  {english: "due", chinese: "到期的"},
+  {english: "during", chinese: "期间"},
+  {english: "dust", chinese: "灰尘"},
+  {english: "duty", chinese: "责任"},
+  {english: "each", chinese: "每个"},
+  {english: "eager", chinese: "渴望的"},
+  {english: "ear", chinese: "耳朵"},
+  {english: "early", chinese: "早期的"},
+  {english: "earn", chinese: "赚"},
+  {english: "earnings", chinese: "收益"},
+  {english: "earth", chinese: "地球"},
+  {english: "ease", chinese: "舒适"},
+  {english: "easily", chinese: "容易地"},
+  {english: "east", chinese: "东方"},
+  {english: "eastern", chinese: "东"},
+  {english: "easy", chinese: "简单的"},
+  {english: "eat", chinese: "吃"},
+  {english: "economic", chinese: "经济的"},
+  {english: "economics", chinese: "经济学"},
+  {english: "economist", chinese: "经济学家"},
+  {english: "economy", chinese: "经济"},
+  {english: "edge", chinese: "边缘"},
+  {english: "edition", chinese: "版"},
+  {english: "editor", chinese: "编辑"},
+  {english: "educate", chinese: "教育"},
+  {english: "education", chinese: "教育"},
+  {english: "educational", chinese: "教育"},
+  {english: "educator", chinese: "教育家"},
+  {english: "effect", chinese: "影响"},
+  {english: "effective", chinese: "有效的"},
+  {english: "effectively", chinese: "有效地"},
+  {english: "efficiency", chinese: "效率"},
+  {english: "efficient", chinese: "高效的"},
+  {english: "effort", chinese: "努力"},
+  {english: "egg", chinese: "蛋"},
+  {english: "eight", chinese: "八"},
+  {english: "either", chinese: "任何一个"},
+  {english: "elderly", chinese: "老年"},
+  {english: "elect", chinese: "选"},
+  {english: "election", chinese: "选举"},
+  {english: "electric", chinese: "电的"},
+  {english: "electricity", chinese: "电"},
+  {english: "electronic", chinese: "电子的"},
+  {english: "element", chinese: "元素"},
+  {english: "elementary", chinese: "初级"},
+  {english: "eliminate", chinese: "排除"},
+  {english: "elite", chinese: "精英"},
+  {english: "else", chinese: "别的"},
+  {english: "elsewhere", chinese: "别处"},
+  {english: "e-mail", chinese: "电子邮件"},
+  {english: "embrace", chinese: "拥抱"},
+  {english: "emerge", chinese: "出现"},
+  {english: "emergency", chinese: "紧急情况"},
+  {english: "emission", chinese: "排放"},
+  {english: "emotion", chinese: "情感"},
+  {english: "emotional", chinese: "情绪化"},
+  {english: "emphasis", chinese: "强调"},
+  {english: "emphasize", chinese: "强调"},
+  {english: "employ", chinese: "采用"},
+  {english: "employee", chinese: "员工"},
+  {english: "employer", chinese: "雇主"},
+  {english: "employment", chinese: "就业"},
+  {english: "empty", chinese: "空的"},
+  {english: "enable", chinese: "使能够"},
+  {english: "encounter", chinese: "遇到"},
+  {english: "encourage", chinese: "鼓励"},
+  {english: "end", chinese: "结尾"},
+  {english: "enemy", chinese: "敌人"},
+  {english: "energy", chinese: "活力"},
+  {english: "enforcement", chinese: "执法"},
+  {english: "engage", chinese: "从事"},
+  {english: "engine", chinese: "引擎"},
+  {english: "engineer", chinese: "工程师"},
+  {english: "engineering", chinese: "工程"},
+  {english: "English", chinese: "英语"},
+  {english: "enhance", chinese: "提高"},
+  {english: "enjoy", chinese: "享受"},
+  {english: "enormous", chinese: "巨大的"},
+  {english: "enough", chinese: "足够的"},
+  {english: "ensure", chinese: "确保"},
+  {english: "enter", chinese: "进入"},
+  {english: "enterprise", chinese: "企业"},
+  {english: "entertainment", chinese: "娱乐"},
+  {english: "entire", chinese: "全部的"},
+  {english: "entirely", chinese: "完全"},
+  {english: "entrance", chinese: "入口"},
+  {english: "entry", chinese: "入口"},
+  {english: "environment", chinese: "环境"},
+  {english: "environmental", chinese: "环境的"},
+  {english: "episode", chinese: "插曲"},
+  {english: "equal", chinese: "平等的"},
+  {english: "equally", chinese: "一样"},
+  {english: "equipment", chinese: "设备"},
+  {english: "era", chinese: "时代"},
+  {english: "error", chinese: "错误"},
+  {english: "escape", chinese: "逃脱"},
+  {english: "especially", chinese: "尤其"},
+  {english: "essay", chinese: "散文"},
+  {english: "essential", chinese: "基本的"},
+  {english: "essentially", chinese: "本质上"},
+  {english: "establish", chinese: "建立"},
+  {english: "establishment", chinese: "建立"},
+  {english: "estate", chinese: "财产"},
+  {english: "estimate", chinese: "估计"},
+  {english: "ethics", chinese: "伦理"},
+  {english: "ethnic", chinese: "种族的"},
+  {english: "European", chinese: "欧洲的"},
+  {english: "evaluate", chinese: "评价"},
+  {english: "evaluation", chinese: "评估"},
+  {english: "even", chinese: "甚至"},
+  {english: "evening", chinese: "晚上"},
+  {english: "event", chinese: "事件"},
+  {english: "eventually", chinese: "最终"},
+  {english: "ever", chinese: "曾经"},
+  {english: "every", chinese: "每一个"},
+  {english: "everybody", chinese: "大家"},
+  {english: "everyday", chinese: "每天"},
+  {english: "everyone", chinese: "每个人"},
+  {english: "everything", chinese: "一切"},
+  {english: "everywhere", chinese: "到处"},
+  {english: "evidence", chinese: "证据"},
+  {english: "evolution", chinese: "进化"},
+  {english: "evolve", chinese: "发展"},
+  {english: "exact", chinese: "精确的"},
+  {english: "exactly", chinese: "确切地"},
+  {english: "examination", chinese: "考试"},
+  {english: "examine", chinese: "检查"},
+  {english: "example", chinese: "例子"},
+  {english: "exceed", chinese: "超过"},
+  {english: "excellent", chinese: "出色的"},
+  {english: "except", chinese: "除了"},
+  {english: "exception", chinese: "例外"},
+  {english: "exchange", chinese: "交换"},
+  {english: "exciting", chinese: "令人兴奋"},
+  {english: "executive", chinese: "管理人员"},
+  {english: "exercise", chinese: "锻炼"},
+  {english: "exhibit", chinese: "展示"},
+  {english: "exhibition", chinese: "展览"},
+  {english: "exist", chinese: "存在"},
+  {english: "existence", chinese: "存在"},
+  {english: "existing", chinese: "现存的"},
+  {english: "expand", chinese: "扩张"},
+  {english: "expansion", chinese: "扩张"},
+  {english: "expect", chinese: "预计"},
+  {english: "expectation", chinese: "期待"},
+  {english: "expense", chinese: "费用"},
+  {english: "expensive", chinese: "昂贵的"},
+  {english: "experience", chinese: "经验"},
+  {english: "experiment", chinese: "实验"},
+  {english: "expert", chinese: "专家"},
+  {english: "explain", chinese: "解释"},
+  {english: "explanation", chinese: "解释"},
+  {english: "explode", chinese: "爆炸"},
+  {english: "explore", chinese: "探索"},
+  {english: "explosion", chinese: "爆炸"},
+  {english: "expose", chinese: "暴露"},
+  {english: "exposure", chinese: "接触"},
+  {english: "express", chinese: "表达"},
+  {english: "expression", chinese: "表达"},
+  {english: "extend", chinese: "延长"},
+  {english: "extension", chinese: "扩大"},
+  {english: "extensive", chinese: "广泛的"},
+  {english: "extent", chinese: "程度"},
+  {english: "external", chinese: "外部的"},
+  {english: "extra", chinese: "额外的"},
+  {english: "extraordinary", chinese: "非凡的"},
+  {english: "extreme", chinese: "极端"},
+  {english: "extremely", chinese: "极其"},
+  {english: "eye", chinese: "眼睛"},
+  {english: "fabric", chinese: "织物"},
+  {english: "face", chinese: "脸"},
+  {english: "facility", chinese: "设施"},
+  {english: "fact", chinese: "事实"},
+  {english: "factor", chinese: "因素"},
+  {english: "factory", chinese: "工厂"},
+  {english: "faculty", chinese: "学院"},
+  {english: "fade", chinese: "褪色"},
+  {english: "fail", chinese: "失败"},
+  {english: "failure", chinese: "失败"},
+  {english: "fair", chinese: "公平的"},
+  {english: "fairly", chinese: "相当"},
+  {english: "faith", chinese: "信仰"},
+  {english: "fall", chinese: "落下"},
+  {english: "FALSE", chinese: "错误的"},
+  {english: "familiar", chinese: "熟悉的"},
+  {english: "family", chinese: "家庭"},
+  {english: "famous", chinese: "著名的"},
+  {english: "fan", chinese: "扇子"},
+  {english: "fantasy", chinese: "幻想"},
+  {english: "far", chinese: "远的"},
+  {english: "farm", chinese: "农场"},
+  {english: "farmer", chinese: "农民"},
+  {english: "fashion", chinese: "时尚"},
+  {english: "fast", chinese: "快速地"},
+  {english: "fat", chinese: "胖的"},
+  {english: "fate", chinese: "命运"},
+  {english: "father", chinese: "父亲"},
+  {english: "fault", chinese: "过错"},
+  {english: "favor", chinese: "恩宠"},
+  {english: "favorite", chinese: "最喜欢的"},
+  {english: "fear", chinese: "害怕"},
+  {english: "feature", chinese: "特征"},
+  {english: "federal", chinese: "联邦"},
+  {english: "fee", chinese: "费用"},
+  {english: "feed", chinese: "喂养"},
+  {english: "feel", chinese: "感觉"},
+  {english: "feeling", chinese: "感觉"},
+  {english: "fellow", chinese: "家伙"},
+  {english: "female", chinese: "女性"},
+  {english: "fence", chinese: "栅栏"},
+  {english: "few", chinese: "很少"},
+  {english: "fewer", chinese: "更少"},
+  {english: "fiber", chinese: "纤维"},
+  {english: "fiction", chinese: "小说"},
+  {english: "field", chinese: "场地"},
+  {english: "fifteen", chinese: "十五"},
+  {english: "fifth", chinese: "第五"},
+  {english: "fifty", chinese: "五十"},
+  {english: "fight", chinese: "斗争"},
+  {english: "fighter", chinese: "战斗机"},
+  {english: "fighting", chinese: "斗争"},
+  {english: "figure", chinese: "数字"},
+  {english: "file", chinese: "文件"},
+  {english: "fill", chinese: "充满"},
+  {english: "film", chinese: "电影"},
+  {english: "final", chinese: "最终的"}
+];
+
+        let remainingWords = [];
+        let currentWord = null;
+        let learnedCount = 0;
+
+        function init() {
+            const saved = localStorage.getItem('vocabularyProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                learnedCount = data.learnedCount || 0;
+                const learnedWords = data.learnedWords || [];
+                
+                remainingWords = words.filter(w => !learnedWords.includes(w.english));
+            } else {
+                remainingWords = [...words];
+            }
+            
+            updateStats();
+            showNextWord();
+        }
+
+        function updateStats() {
+            const total = words.length;
+            const remaining = remainingWords.length;
+            const learned = total - remaining;
+            
+            document.getElementById('totalWords').textContent = total;
+            document.getElementById('remainingWords').textContent = remaining;
+            document.getElementById('learnedWords').textContent = learned;
+            
+            const progress = (learned / total) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `进度: ${learned} / ${total}`;
+        }
+
+        function showNextWord() {
+            if (remainingWords.length === 0) {
+                showCompleted();
+                return;
+            }
+            
+            const randomIndex = Math.floor(Math.random() * remainingWords.length);
+            currentWord = remainingWords[randomIndex];
+            
+            document.getElementById('word').textContent = currentWord.english;
+            document.getElementById('translation').textContent = currentWord.chinese;
+            document.getElementById('translation').classList.remove('visible');
+            document.getElementById('hint').textContent = '点击单词或按钮显示中文翻译';
+            document.getElementById('hint').style.display = 'block';
+        }
+
+        function showTranslation() {
+            if (currentWord) {
+                document.getElementById('translation').classList.add('visible');
+                document.getElementById('hint').style.display = 'none';
+            }
+        }
+
+        function markLearned() {
+            if (!currentWord) return;
+            
+            const index = remainingWords.indexOf(currentWord);
+            if (index > -1) {
+                remainingWords.splice(index, 1);
+                learnedCount++;
+                saveProgress();
+                updateStats();
+            }
+            
+            showNextWord();
+        }
+
+        function nextWord() {
+            showNextWord();
+        }
+
+        function saveProgress() {
+            const learnedWords = words
+                .filter(w => !remainingWords.includes(w))
+                .map(w => w.english);
+            
+            localStorage.setItem('vocabularyProgress', JSON.stringify({
+                learnedWords: learnedWords,
+                learnedCount: learnedCount
+            }));
+        }
+
+        function resetProgress() {
+            if (confirm('确定要重置学习进度吗？所有已学会的单词将被重新开始学习。')) {
+                localStorage.removeItem('vocabularyProgress');
+                remainingWords = [...words];
+                learnedCount = 0;
+                updateStats();
+                showNextWord();
+            }
+        }
+
+        function showCompleted() {
+            const card = document.getElementById('wordCard');
+            card.innerHTML = `
+                <div class="completed">
+                    <div class="celebration">🎉</div>
+                    <h2>恭喜完成！</h2>
+                    <p>你已经学会了所有 ${words.length} 个单词！</p>
+                    <button class="btn btn-reset" onclick="resetProgress()">重新学习</button>
+                </div>
+            `;
+            document.getElementById('buttons').style.display = 'none';
+            document.getElementById('hint').style.display = 'none';
+        }
+
+        init();
+    </script>
+</body>
+</html>
