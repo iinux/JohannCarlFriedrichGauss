@@ -6,6 +6,7 @@ import subprocess
 import json
 import threading
 import time
+import my_config
 from flask import Flask, render_template, request, redirect, url_for, flash, Response
 from werkzeug.utils import secure_filename
 from pdf2image import convert_from_path
@@ -203,69 +204,120 @@ def words():
 @app.route("/rtsp/ch00")
 def rtsp_ch00():
     """RTSP 视频流 - 通道 00"""
-    return render_template("rtsp_ch00x.html")
+    return render_template("rtsp_ch00.html")
 
 @app.route("/rtsp/ch01")
 def rtsp_ch01():
     """RTSP 视频流 - 通道 01"""
-    return render_template("rtsp_ch01x.html")
+    return render_template("rtsp_ch01.html")
 
 
 # RTSP 流配置 - 请根据实际摄像头修改
 RTSP_CONFIGS = {
     'ch00': {
-        'rtsp_url': 'rtsp://admin:passport@192.168.1.9:554/live/ch00_00',
+        'rtsp_url': my_config.rtsp_url1,
         'width': 1920,
         'height': 1080
     },
     'ch01': {
-        'rtsp_url': 'rtsp://admin:passport@192.168.1.9:554/live/ch01_00',
+        'rtsp_url': my_config.rtsp_url2,
         'width': 1920,
         'height': 1080
     }
 }
 
-# 缓存最近的 frames
+# 每个频道只跑一个 ffmpeg，最新一帧写入 stream_cache，所有 HTTP 请求从这里读
 stream_cache = {}
 stream_lock = threading.Lock()
+stream_threads = {}
 
 
-def generate_frames(channel):
-    """使用 FFmpeg 读取 RTSP 流，输出 MJPEG frames"""
-    config = RTSP_CONFIGS.get(channel)
-    if not config:
-        return
+def _drain_stderr(process):
+    """持续读取 ffmpeg stderr，避免 64KB 管道写满后阻塞主进程"""
+    try:
+        for _ in iter(process.stderr.readline, b''):
+            pass
+    except Exception:
+        pass
 
-    rtsp_url = config['rtsp_url']
 
-    # 启动 FFmpeg 进程读取 RTSP 流，输出 MJPEG
+def _stream_reader(channel):
+    """后台线程：跑 ffmpeg、解析 JPEG 帧、写入 stream_cache，异常时自动重连"""
+    config = RTSP_CONFIGS[channel]
     cmd = [
         'ffmpeg',
         '-rtsp_transport', 'tcp',
-        '-i', rtsp_url,
+        '-i', config['rtsp_url'],
         '-f', 'mjpeg',
         '-q:v', '5',
         '-vf', f'scale={config["width"]}:{config["height"]}',
         '-'
     ]
 
-    try:
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=-1)
+    while True:
+        process = None
+        try:
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
+            threading.Thread(target=_drain_stderr, args=(process,), daemon=True).start()
 
-        while True:
-            # 读取 MJPEG 数据
-            jpeg_data = process.stdout.read(1024)
-            if not jpeg_data:
-                break
+            buffer = b''
+            while True:
+                chunk = process.stdout.read(8192)
+                if not chunk:
+                    break
+                buffer += chunk
+                while True:
+                    soi = buffer.find(b'\xff\xd8')
+                    if soi < 0:
+                        buffer = b''
+                        break
+                    eoi = buffer.find(b'\xff\xd9', soi + 2)
+                    if eoi < 0:
+                        buffer = buffer[soi:]
+                        break
+                    frame = buffer[soi:eoi + 2]
+                    buffer = buffer[eoi + 2:]
+                    with stream_lock:
+                        stream_cache[channel] = frame
+        except Exception as e:
+            print(f"RTSP 流 {channel} 读取错误: {e}")
+        finally:
+            if process is not None:
+                try:
+                    process.kill()
+                    process.wait(timeout=5)
+                except Exception:
+                    pass
 
+        print(f"RTSP 流 {channel} ffmpeg 退出，3 秒后重连")
+        time.sleep(3)
+
+
+def _ensure_stream(channel):
+    """首次请求时启动该频道的后台读取线程"""
+    if channel not in RTSP_CONFIGS:
+        return
+    with stream_lock:
+        t = stream_threads.get(channel)
+        if t and t.is_alive():
+            return
+        t = threading.Thread(target=_stream_reader, args=(channel,), daemon=True)
+        stream_threads[channel] = t
+        t.start()
+
+
+def generate_frames(channel):
+    """从 stream_cache 取最新帧，输出 MJPEG multipart"""
+    _ensure_stream(channel)
+    last_frame = None
+    while True:
+        with stream_lock:
+            frame = stream_cache.get(channel)
+        if frame is not None and frame is not last_frame:
+            last_frame = frame
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + jpeg_data + b'\r\n')
-
-    except Exception as e:
-        print(f"RTSP 流 {channel} 错误: {e}")
-    finally:
-        process.terminate()
-        process.wait()
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        time.sleep(0.04)
 
 
 @app.route("/rtsp/stream/<channel>")
@@ -286,6 +338,7 @@ def rtsp_feed(channel):
     if channel not in RTSP_CONFIGS:
         return "Channel not found", 404
 
+    _ensure_stream(channel)
     with stream_lock:
         frame = stream_cache.get(channel)
 
