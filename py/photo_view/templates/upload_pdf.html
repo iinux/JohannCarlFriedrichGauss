@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文件上传</title>
+    <title>PDF转图片</title>
     <style>
         * {
             margin: 0;
@@ -12,26 +12,29 @@
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #f5f5f5;
+            background: linear-gradient(135deg, #e91e63 0%, #9c27b0 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 40px 20px;
         }
         .container {
-            max-width: 800px;
+            max-width: 600px;
             margin: 0 auto;
         }
         h1 {
             text-align: center;
             margin-bottom: 30px;
-            color: #333;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
         }
         .back-link {
             display: inline-block;
             margin-bottom: 20px;
-            color: #0066cc;
+            color: #fff;
             text-decoration: none;
+            opacity: 0.9;
         }
         .back-link:hover {
+            opacity: 1;
             text-decoration: underline;
         }
         .flash-messages {
@@ -56,8 +59,7 @@
             background: white;
             padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
         .drop-zone {
             border: 2px dashed #ccc;
@@ -68,8 +70,8 @@
             transition: all 0.3s;
         }
         .drop-zone:hover, .drop-zone.dragover {
-            border-color: #0066cc;
-            background: #f0f7ff;
+            border-color: #e91e63;
+            background: #fce4ec;
         }
         .drop-zone p {
             color: #666;
@@ -80,7 +82,7 @@
         }
         .btn-upload {
             display: inline-block;
-            background: #0066cc;
+            background: #e91e63;
             color: white;
             padding: 12px 30px;
             border-radius: 6px;
@@ -90,54 +92,11 @@
             margin-top: 15px;
         }
         .btn-upload:hover {
-            background: #0052a3;
+            background: #c2185b;
         }
         .btn-upload:disabled {
             background: #ccc;
             cursor: not-allowed;
-        }
-        .file-list {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .file-list h2 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-        .file-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-        }
-        .file-item:last-child {
-            border-bottom: none;
-        }
-        .file-info {
-            flex: 1;
-        }
-        .file-name {
-            font-weight: 500;
-            color: #333;
-        }
-        .file-size {
-            font-size: 12px;
-            color: #999;
-            margin-top: 4px;
-        }
-        .btn-delete {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .btn-delete:hover {
-            background: #c82333;
         }
         .progress-bar {
             width: 100%;
@@ -150,7 +109,7 @@
         }
         .progress-bar-fill {
             height: 100%;
-            background: #0066cc;
+            background: linear-gradient(135deg, #e91e63 0%, #9c27b0 100%);
             width: 0%;
             transition: width 0.3s;
         }
@@ -164,55 +123,35 @@
 <body>
     <div class="container">
         <a href="/index" class="back-link">&larr; 返回首页</a>
-        <h1>文件上传</h1>
+        <h1>PDF转图片</h1>
 
         {% with messages = get_flashed_messages() %}
         {% if messages %}
         <ul class="flash-messages">
             {% for message in messages %}
-            <li class="flash-{{ 'success' if '成功' in message or '删除' in message else 'error' }}">{{ message }}</li>
+            <li class="flash-{{ 'success' if '成功' in message else 'error' }}">{{ message }}</li>
             {% endfor %}
         </ul>
         {% endif %}
         {% endwith %}
 
         <div class="upload-form">
-            <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+            <form id="uploadForm" action="/upload/pdf" method="POST" enctype="multipart/form-data">
                 <div class="drop-zone" id="dropZone">
                     <svg width="50" height="50" fill="none" stroke="#999" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                     </svg>
-                    <p>拖拽文件到此处，或点击选择文件</p>
-                    <p style="font-size: 12px; color: #999;">支持格式: {{ allowed_extensions|join(', ') }} (最大 500MB)</p>
-                    <input type="file" name="file" id="fileInput" accept="{{ '.' + allowed_extensions|join(',.') }}">
+                    <p>拖拽PDF文件到此处，或点击选择文件</p>
+                    <p style="font-size: 12px; color: #999;">每页转换为一张200 DPI的JPG图片</p>
+                    <input type="file" name="file" id="fileInput" accept=".pdf">
                     <div id="selected-file-name"></div>
-                    <button type="submit" class="btn-upload" id="uploadBtn" disabled>上传文件</button>
+                    <button type="submit" class="btn-upload" id="uploadBtn" disabled>转换并上传</button>
                 </div>
                 <div class="progress-bar" id="progressBar">
                     <div class="progress-bar-fill" id="progressFill"></div>
                 </div>
             </form>
         </div>
-
-        {% if uploaded_files %}
-        <div class="file-list">
-            <h2>已上传文件 ({{ uploaded_files|length }})</h2>
-            {% for file in uploaded_files %}
-            <div class="file-item">
-                <div class="file-info">
-                    <div class="file-name">{{ file.name }}</div>
-                    <div class="file-size">{{ file.size }}</div>
-                </div>
-                <div style="display: flex; gap: 8px;">
-                    <a href="/upload/download/{{ file.name }}" class="btn-download" style="background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; text-decoration: none;">下载</a>
-                    <form action="/upload/delete/{{ file.name }}" method="POST" style="display:inline;">
-                        <button type="submit" class="btn-delete" onclick="return confirm('确定要删除此文件吗？')">删除</button>
-                    </form>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
     </div>
 
     <script>
@@ -224,14 +163,12 @@
         const progressBar = document.getElementById('progressBar');
         const progressFill = document.getElementById('progressFill');
 
-        // 点击选择文件
         dropZone.addEventListener('click', (e) => {
             if (e.target !== uploadBtn) {
                 fileInput.click();
             }
         });
 
-        // 文件选择
         fileInput.addEventListener('change', () => {
             if (fileInput.files.length > 0) {
                 selectedFileName.textContent = fileInput.files[0].name;
@@ -239,7 +176,6 @@
             }
         });
 
-        // 拖拽
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             dropZone.classList.add('dragover');
@@ -259,16 +195,15 @@
             }
         });
 
-        // 使用 XMLHttpRequest 实现上传进度
         uploadForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            
+
             const formData = new FormData(uploadForm);
             const xhr = new XMLHttpRequest();
-            
+
             progressBar.style.display = 'block';
             uploadBtn.disabled = true;
-            uploadBtn.textContent = '上传中...';
+            uploadBtn.textContent = '转换中...';
 
             xhr.upload.addEventListener('progress', (e) => {
                 if (e.lengthComputable) {
@@ -283,7 +218,7 @@
                 } else {
                     alert('上传失败');
                     uploadBtn.disabled = false;
-                    uploadBtn.textContent = '上传文件';
+                    uploadBtn.textContent = '转换并上传';
                     progressBar.style.display = 'none';
                 }
             });
@@ -291,11 +226,11 @@
             xhr.addEventListener('error', () => {
                 alert('上传出错');
                 uploadBtn.disabled = false;
-                uploadBtn.textContent = '上传文件';
+                uploadBtn.textContent = '转换并上传';
                 progressBar.style.display = 'none';
             });
 
-            xhr.open('POST', '/upload');
+            xhr.open('POST', '/upload/pdf');
             xhr.send(formData);
         });
     </script>

@@ -4,8 +4,11 @@ import requests
 import random
 import subprocess
 import json
-from flask import Flask, render_template, request, redirect, url_for, flash
+import threading
+import time
+from flask import Flask, render_template, request, redirect, url_for, flash, Response
 from werkzeug.utils import secure_filename
+from pdf2image import convert_from_path
 
 work_dir = "."
 mp4_dir = work_dir + '/mp4'
@@ -181,7 +184,7 @@ def image(filename):
 @app.route("/words")
 def words():
     """Random vocabulary page"""
-    dict_path = "dict.txt"
+    dict_path = "dict2.txt"
     lines = []
     try:
         with open(dict_path, 'r') as f:
@@ -196,6 +199,100 @@ def words():
     
     return render_template("words.html", words=random_lines)
 
+
+@app.route("/rtsp/ch00")
+def rtsp_ch00():
+    """RTSP 视频流 - 通道 00"""
+    return render_template("rtsp_ch00x.html")
+
+@app.route("/rtsp/ch01")
+def rtsp_ch01():
+    """RTSP 视频流 - 通道 01"""
+    return render_template("rtsp_ch01x.html")
+
+
+# RTSP 流配置 - 请根据实际摄像头修改
+RTSP_CONFIGS = {
+    'ch00': {
+        'rtsp_url': 'rtsp://admin:passport@192.168.1.9:554/live/ch00_00',
+        'width': 1920,
+        'height': 1080
+    },
+    'ch01': {
+        'rtsp_url': 'rtsp://admin:passport@192.168.1.9:554/live/ch01_00',
+        'width': 1920,
+        'height': 1080
+    }
+}
+
+# 缓存最近的 frames
+stream_cache = {}
+stream_lock = threading.Lock()
+
+
+def generate_frames(channel):
+    """使用 FFmpeg 读取 RTSP 流，输出 MJPEG frames"""
+    config = RTSP_CONFIGS.get(channel)
+    if not config:
+        return
+
+    rtsp_url = config['rtsp_url']
+
+    # 启动 FFmpeg 进程读取 RTSP 流，输出 MJPEG
+    cmd = [
+        'ffmpeg',
+        '-rtsp_transport', 'tcp',
+        '-i', rtsp_url,
+        '-f', 'mjpeg',
+        '-q:v', '5',
+        '-vf', f'scale={config["width"]}:{config["height"]}',
+        '-'
+    ]
+
+    try:
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=-1)
+
+        while True:
+            # 读取 MJPEG 数据
+            jpeg_data = process.stdout.read(1024)
+            if not jpeg_data:
+                break
+
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + jpeg_data + b'\r\n')
+
+    except Exception as e:
+        print(f"RTSP 流 {channel} 错误: {e}")
+    finally:
+        process.terminate()
+        process.wait()
+
+
+@app.route("/rtsp/stream/<channel>")
+def rtsp_stream(channel):
+    """RTSP 流 MJPEG 视频流"""
+    if channel not in RTSP_CONFIGS:
+        return "Channel not found", 404
+
+    return Response(
+        generate_frames(channel),
+        mimetype='multipart/x-mixed-replace; boundary=frame'
+    )
+
+
+@app.route("/rtsp/feed/<channel>")
+def rtsp_feed(channel):
+    """RTSP 流单帧图片 (供前端轮询)"""
+    if channel not in RTSP_CONFIGS:
+        return "Channel not found", 404
+
+    with stream_lock:
+        frame = stream_cache.get(channel)
+
+    if frame:
+        return Response(frame, mimetype='image/jpeg')
+    else:
+        return "No frame", 404
 
 @app.route("/upload", methods=['GET', 'POST'])
 def upload():
@@ -245,7 +342,55 @@ def upload():
                     size_str = f"{size / (1024 * 1024):.1f} MB"
                 uploaded_files.append({'name': f, 'size': size_str})
     
-    return render_template("upload.html", uploaded_files=uploaded_files)
+    return render_template("upload.html", uploaded_files=uploaded_files, allowed_extensions=ALLOWED_EXTENSIONS)
+
+
+@app.route("/upload/pdf", methods=['GET', 'POST'])
+def upload_pdf():
+    """上传PDF并转换为图片"""
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('没有选择文件')
+            return redirect(request.url)
+
+        file = request.files['file']
+        if file.filename == '':
+            flash('没有选择文件')
+            return redirect(request.url)
+
+        if file and file.filename.lower().endswith('.pdf'):
+            if not os.path.exists(upload_dir):
+                os.makedirs(upload_dir)
+
+            filename = secure_filename(file.filename)
+            import time
+            timestamp = str(int(time.time()))
+            unique_filename = f"upload_{timestamp}_{filename}"
+            filepath = os.path.join(upload_dir, unique_filename)
+            file.save(filepath)
+
+            try:
+                images = convert_from_path(filepath, dpi=200)
+                converted_names = []
+                for i, image in enumerate(images):
+                    img_filename = f"pdf_{timestamp}_page_{i + 1}.jpg"
+                    img_path = os.path.join(upload_dir, img_filename)
+                    image.save(img_path, "JPEG")
+                    converted_names.append(img_filename)
+
+                os.remove(filepath)
+                flash(f'PDF转换成功! 共转换 {len(converted_names)} 页')
+            except Exception as e:
+                flash(f'PDF转换失败: {str(e)}')
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+
+            return redirect(url_for('upload_pdf'))
+        else:
+            flash('请上传PDF文件')
+            return redirect(request.url)
+
+    return render_template("upload_pdf.html")
 
 
 @app.route("/upload/delete/<filename>", methods=['POST'])
@@ -255,12 +400,21 @@ def delete_upload(filename):
     # 安全检查：防止路径遍历攻击
     safe_name = re.sub(r'[^a-zA-Z0-9_\-.]', '', filename)
     filepath = os.path.join(upload_dir, safe_name)
-    
+
     if os.path.exists(filepath) and os.path.isfile(filepath):
         os.remove(filepath)
         flash(f'文件 {filename} 已删除')
-    
+
     return redirect(url_for('upload'))
+
+
+@app.route("/upload/download/<filename>")
+def download_upload(filename):
+    """下载已上传的文件"""
+    import re
+    from flask import send_from_directory
+    safe_name = re.sub(r'[^a-zA-Z0-9_\-.]', '', filename)
+    return send_from_directory(upload_dir, safe_name, as_attachment=True)
 
 
 if __name__ == "__main__":

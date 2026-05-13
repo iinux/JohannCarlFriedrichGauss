@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RTSP 视频流 - 通道 00</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1.page-title {
+            text-align: center;
+            color: #fff;
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .video-container {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .video-player {
+            width: 100%;
+            height: 600px;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-player img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .placeholder {
+            color: #666;
+            font-size: 1.2rem;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #764ba2;
+        }
+
+        .btn-secondary:hover {
+            background: #6a4192;
+        }
+
+        .status {
+            text-align: center;
+            color: #666;
+            margin-top: 15px;
+            font-size: 1rem;
+        }
+
+        .status.online {
+            color: #4caf50;
+        }
+
+        .status.offline {
+            color: #f44336;
+        }
+
+        @media (max-width: 768px) {
+            .video-player {
+                height: 400px;
+            }
+
+            h1.page-title {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="page-title">RTSP 视频流 - 通道 00</h1>
+
+        <div class="video-container">
+            <div class="video-player">
+                <img id="videoPlayer" src="/rtsp/stream/ch00" alt="RTSP 流">
+                <span id="placeholder" class="placeholder" style="display:none;">连接中...</span>
+            </div>
+
+            <div class="controls">
+                <a href="/rtsp/ch01" class="btn">通道 01</a>
+                <a href="/index" class="btn btn-secondary">返回首页</a>
+            </div>
+        </div>
+
+        <div id="status" class="status offline">RTSP 流地址: rtsp://admin:password@127.0.0.1:554/live/ch00_00</div>
+    </div>
+
+    <script>
+        const img = document.getElementById('videoPlayer');
+        const placeholder = document.getElementById('placeholder');
+        const status = document.getElementById('status');
+
+        img.onload = function() {
+            status.textContent = 'RTSP 流已连接';
+            status.className = 'status online';
+        };
+
+        img.onerror = function() {
+            status.textContent = 'RTSP 流连接失败，请检查摄像头和网络';
+            status.className = 'status offline';
+            // 5秒后重试
+            setTimeout(() => {
+                img.src = '/rtsp/stream/ch00?' + Date.now();
+            }, 5000);
+        };
+    </script>
+</body>
+</html>
