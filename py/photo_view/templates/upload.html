@@ -204,6 +204,9 @@
                     <div class="file-size">{{ file.size }}</div>
                 </div>
                 <div style="display: flex; gap: 8px;">
+                    {% if file.name.lower().endswith('.pdf') %}
+                    <a href="/upload/preview/{{ file.name }}" target="_blank" style="background: #6f42c1; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; text-decoration: none;">预览</a>
+                    {% endif %}
                     <a href="/upload/download/{{ file.name }}" class="btn-download" style="background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; text-decoration: none;">下载</a>
                     <form action="/upload/delete/{{ file.name }}" method="POST" style="display:inline;">
                         <button type="submit" class="btn-delete" onclick="return confirm('确定要删除此文件吗？')">删除</button>

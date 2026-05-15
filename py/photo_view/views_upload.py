@@ -1,3 +1,5 @@
+import base64
+import io
 import os
 import re
 import time
@@ -123,6 +125,24 @@ def delete_upload(filename):
         flash(f'文件 {filename} 已删除')
 
     return redirect(url_for('upload.upload'))
+
+
+@bp.route("/upload/preview/<filename>")
+def preview_upload(filename):
+    """将 PDF 每页转为图片并在页面中展示"""
+    safe_name = re.sub(r'[^a-zA-Z0-9_\-.]', '', filename)
+    filepath = os.path.join(upload_dir, safe_name)
+    images_b64 = []
+    error = None
+    try:
+        pages = convert_from_path(filepath, dpi=150)
+        for page in pages:
+            buf = io.BytesIO()
+            page.save(buf, 'JPEG')
+            images_b64.append(base64.b64encode(buf.getvalue()).decode())
+    except Exception as e:
+        error = str(e)
+    return render_template("upload_preview.html", filename=safe_name, images=images_b64, error=error)
 
 
 @bp.route("/upload/download/<filename>")

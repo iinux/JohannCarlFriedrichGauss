@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>预览 - {{ filename }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #333; min-height: 100vh; padding: 20px; }
+        .toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #222;
+            color: #fff;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: -20px -20px 20px;
+        }
+        .toolbar a { color: #aaa; text-decoration: none; font-size: 14px; }
+        .toolbar a:hover { color: #fff; }
+        .toolbar span { font-size: 14px; color: #ccc; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pages { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+        .page-img {
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .error { color: #f88; text-align: center; margin-top: 40px; font-size: 16px; }
+        .page-num { color: #888; font-size: 12px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <a href="/upload">&larr; 返回</a>
+        <span>{{ filename }}</span>
+        <a href="/upload/download/{{ filename }}">下载</a>
+    </div>
+
+    {% if error %}
+        <p class="error">PDF 转换失败: {{ error }}</p>
+    {% else %}
+        <div class="pages">
+            {% for img in images %}
+            <div>
+                <p class="page-num">第 {{ loop.index }} / {{ images|length }} 页</p>
+                <img class="page-img" src="data:image/jpeg;base64,{{ img }}">
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</body>
+</html>
