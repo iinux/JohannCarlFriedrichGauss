@@ -65,16 +65,45 @@ def _resolve_rtsp_url(template_url):
 # RTSP 流配置 - 请根据实际摄像头修改
 RTSP_CONFIGS = {
     'ch00': {
-        'rtsp_url': _resolve_rtsp_url(my_config.rtsp_url1),
+        'rtsp_url_template': my_config.rtsp_url1,
         'width': 1920,
         'height': 1080
     },
     'ch01': {
-        'rtsp_url': _resolve_rtsp_url(my_config.rtsp_url2),
+        'rtsp_url_template': my_config.rtsp_url2,
         'width': 1920,
         'height': 1080
     }
 }
+
+# 缓存解析后的 URL 和 IP
+_cached_ip = {}
+_cached_url = {}
+_ip_check_interval = 3600  # 每3600秒检查一次 IP 变化
+_last_ip_check = {}
+
+
+def _get_resolved_url(channel):
+    """获取当前解析后的 RTSP URL，检查 IP 是否变化"""
+    config = RTSP_CONFIGS[channel]
+    template = config['rtsp_url_template']
+
+    if '<ip>' not in template:
+        return template
+
+    now = time.time()
+    last_check = _last_ip_check.get(channel, 0)
+
+    # 检查是否需要重新查找 IP
+    if now - last_check >= _ip_check_interval:
+        _last_ip_check[channel] = now
+        new_ip = find_ip_by_mac(my_config.mac)
+        if new_ip:
+            _cached_ip[channel] = new_ip
+            _cached_url[channel] = template.replace('<ip>', new_ip)
+            print(f"RTSP {channel} IP 更新: {new_ip}")
+
+    return _cached_url.get(channel, template)
 
 # 每个频道按需启动单个 ffmpeg：有人看才跑，全部空闲后关掉
 stream_cache = {}
@@ -104,15 +133,8 @@ def _drain_stderr(process):
 def _stream_reader(channel):
     """后台线程：跑 ffmpeg、解析 JPEG 帧、写入 stream_cache；空闲时自我注销并退出"""
     config = RTSP_CONFIGS[channel]
-    cmd = [
-        'ffmpeg',
-        '-rtsp_transport', 'tcp',
-        '-i', config['rtsp_url'],
-        '-f', 'mjpeg',
-        '-q:v', '5',
-        '-vf', f'scale={config["width"]}:{config["height"]}',
-        '-'
-    ]
+    last_ip_check = 0
+    last_known_ip = None
 
     while True:
         # 启动 ffmpeg 之前先确认仍有人需要
@@ -125,6 +147,19 @@ def _stream_reader(channel):
 
         process = None
         try:
+            # 每次启动前获取最新解析的 URL
+            rtsp_url = _get_resolved_url(channel)
+            cmd = [
+                'ffmpeg',
+                '-rtsp_transport', 'tcp',
+                '-i', rtsp_url,
+                '-f', 'mjpeg',
+                '-q:v', '5',
+                '-vf', f'scale={config["width"]}:{config["height"]}',
+                '-'
+            ]
+            print(f"RTSP 流 {channel} 启动，使用 URL: {rtsp_url}")
+
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
             threading.Thread(target=_drain_stderr, args=(process,), daemon=True).start()
 
@@ -138,6 +173,21 @@ def _stream_reader(channel):
                     with stream_lock:
                         if not _stream_active(channel):
                             break
+
+                    # 检查 IP 是否变化
+                    if '<ip>' in config['rtsp_url_template']:
+                        if now - last_ip_check >= _ip_check_interval:
+                            last_ip_check = now
+                            new_ip = find_ip_by_mac(my_config.mac)
+                            if new_ip and new_ip != last_known_ip:
+                                last_known_ip = new_ip
+                                old_url = _cached_url.get(channel, '')
+                                new_url = config['rtsp_url_template'].replace('<ip>', new_ip)
+                                if old_url and new_url != old_url:
+                                    print(f"RTSP {channel} IP 变化 {old_url} -> {new_url}，重启 ffmpeg")
+                                    process.kill()
+                                    process.wait(timeout=5)
+                                    break
 
                 chunk = process.stdout.read(8192)
                 if not chunk:
