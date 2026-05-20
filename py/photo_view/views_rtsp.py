@@ -1,6 +1,7 @@
 import subprocess
 import threading
 import time
+import re
 
 import my_config
 from flask import Blueprint, Response, render_template
@@ -8,15 +9,68 @@ from flask import Blueprint, Response, render_template
 bp = Blueprint('rtsp', __name__)
 
 
+def find_ip_by_mac(target_mac):
+    """通过 MAC 地址查找局域网设备的 IP 地址"""
+    try:
+        # 先尝试从 arp 缓存中查找
+        result = subprocess.run(['arp', '-a'], capture_output=True, text=True, timeout=10)
+        for line in result.stdout.split('\n'):
+            # 格式: host (192.168.1.1) at 98:03:cf:a4:64:1c on enp0s3 ...
+            match = re.search(r'\((\d+\.\d+\.\d+\.\d+)\)\s+at\s+([0-9a-fA-F:]+)', line)
+            if match:
+                ip = match.group(1)
+                mac = match.group(2).lower().replace('-', ':')
+                if mac == target_mac.lower().replace('-', ':'):
+                    return ip
+
+        # 如果 arp 缓存没有，尝试 ping 整个网段再查
+        # 获取本机 IP 和子网
+        local_ip = subprocess.run(
+            ["hostname", "-I"], capture_output=True, text=True, timeout=5
+        ).stdout.strip().split()[0]
+        subnet = '.'.join(local_ip.split('.')[:3])
+
+        # ping 扫描子网
+        subprocess.run(
+            f'for i in $(seq 1 254); do ping -c 1 -W 1 {subnet}.$i & done',
+            shell=True, capture_output=True, timeout=30
+        )
+        time.sleep(2)
+
+        # 再次尝试从 arp 缓存中查找
+        result = subprocess.run(['arp', '-a'], capture_output=True, text=True, timeout=10)
+        for line in result.stdout.split('\n'):
+            match = re.search(r'\((\d+\.\d+\.\d+\.\d+)\)\s+at\s+([0-9a-fA-F:]+)', line)
+            if match:
+                ip = match.group(1)
+                mac = match.group(2).lower().replace('-', ':')
+                if mac == target_mac.lower().replace('-', ':'):
+                    return ip
+    except Exception as e:
+        print(f"查找 IP 失败: {e}")
+    return None
+
+
+# 启动前解析 RTSP URL 中的 <ip> 占位符
+def _resolve_rtsp_url(template_url):
+    """解析 RTSP URL 中的 <ip> 占位符为实际 IP"""
+    if '<ip>' in template_url:
+        ip = find_ip_by_mac(my_config.mac)
+        if ip:
+            return template_url.replace('<ip>', ip)
+        print(f"未找到 MAC {my_config.mac} 对应的 IP，使用原 URL")
+    return template_url
+
+
 # RTSP 流配置 - 请根据实际摄像头修改
 RTSP_CONFIGS = {
     'ch00': {
-        'rtsp_url': my_config.rtsp_url1,
+        'rtsp_url': _resolve_rtsp_url(my_config.rtsp_url1),
         'width': 1920,
         'height': 1080
     },
     'ch01': {
-        'rtsp_url': my_config.rtsp_url2,
+        'rtsp_url': _resolve_rtsp_url(my_config.rtsp_url2),
         'width': 1920,
         'height': 1080
     }

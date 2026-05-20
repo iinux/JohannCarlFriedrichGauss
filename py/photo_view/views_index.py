@@ -16,7 +16,7 @@ def get_images():
     for filename in os.listdir(img_dir):
         if filename.endswith(".jpg") or filename.endswith(".png") or filename.endswith(".webp"):
             images.append(filename)
-    return images
+    return sorted(images)
 
 
 def get_mp4s():

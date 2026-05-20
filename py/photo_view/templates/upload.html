@@ -284,7 +284,7 @@
                 if (xhr.status === 302 || xhr.status === 200) {
                     window.location.reload();
                 } else {
-                    alert('上传失败');
+                    alert('上传失败'+xhr.status);
                     uploadBtn.disabled = false;
                     uploadBtn.textContent = '上传文件';
                     progressBar.style.display = 'none';
