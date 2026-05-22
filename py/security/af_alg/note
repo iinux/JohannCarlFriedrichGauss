@@ -1,0 +1,22 @@
+python核心要点:
+  - socket.socket(AF_ALG, SOCK_SEQPACKET, 0) 创建算法 socket,bind(("skcipher", "cbc(aes)")) 绑定算法
+  - setsockopt(SOL_ALG, ALG_SET_KEY, key) 设置密钥
+  - accept() 得到操作 socket,用 sendmsg_afalg([data], op=ALG_OP_ENCRYPT/DECRYPT, iv=iv) 传入操作类型和 IV
+  - recv() 取出结果
+  - 输入需 16 字节对齐,这里用 PKCS7 填充
+
+  支持 AES-128/192/256(由 key 长度决定),只需把 alg_name 换成 "ecb(aes)"、"ctr(aes)"、"xts(aes)" 即可切换模式。
+
+go核心实现要点:
+
+  1. 创建算法 socket:unix.Socket(AF_ALG, SOCK_SEQPACKET, 0)
+  2. 绑定算法:unix.Bind(fd, &unix.SockaddrALG{Type:"skcipher", Name:"cbc(aes)"})
+  3. 设置密钥:unix.SetsockoptString(fd, SOL_ALG, ALG_SET_KEY, key)
+  4. accept 得到操作 fd:这里有个坑 —— unix.Accept 内部用 accept4 + SOCK_CLOEXEC,在某些内核版本对 AF_ALG 会返回 ECONNABORTED。所以用 syscall.SYS_ACCEPT 走原始 accept(2)。
+  5. 传 op 和 IV:Go 没有 Python 那样的 sendmsg_afalg 便捷封装,需要手动构造两条 cmsg:
+    - SOL_ALG / ALG_SET_OP:4 字节 op (ALG_OP_ENCRYPT/ALG_OP_DECRYPT)
+    - SOL_ALG / ALG_SET_IV:struct af_alg_iv { __u32 ivlen; __u8 iv[]; }
+  然后 unix.Sendmsg(opFd, data, oob, nil, 0) 一次发出。
+  6. 读结果:unix.Read(opFd, out),长度等于输入。
+
+  依赖:golang.org/x/sys/unix,Linux 内核需启用 CONFIG_CRYPTO_USER_API_SKCIPHER。
