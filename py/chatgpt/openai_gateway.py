@@ -7,6 +7,7 @@ OpenAI API 代理网关
 
 import json
 import re
+import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
@@ -18,43 +19,35 @@ import my_config
 # 目标 OpenAI API 地址
 TARGET_HOST = "dashscope.aliyuncs.com"
 TARGET_URL = f"https://{TARGET_HOST}/compatible-mode/v1"
-#TARGET_HOST = "open.bigmodel.cn"
-#TARGET_URL = f"https://{TARGET_HOST}/api/paas/v4"
 
 # 替换配置
 REPLACEMENTS = {
     # 替换 API Key: {原始key或正则: 新key}
     "api_keys": {
         # 示例：替换特定 key
-        "sk-original123": "sk-newapikey456",
+        "sk-original123": "sk-newApiKey456",
         # 示例：替换所有 sk- 开头的 key（使用正则）
         r"sk-[a-zA-Z0-9]+": my_config.ali_key,
-        #r"sk-[a-zA-Z0-9]+": my_config.glm_key,
+        # r"sk-[a-zA-Z0-9]+": my_config.glm_key,
     },
 
-    # 替换 Model: {原始model: 新model}
-    "models": {
-        # 示例：替换特定 model
-        "gpt-4-1106-preview": "gpt-3.5-turbo-1106",
-        # 示例：替换所有 gpt-4 变体
-        #r".*": "qvq-max-2025-03-25",
-        #r".*": "qwen3.5-122b-a10b",
-        #r".*": "glm-4.7-flash",
-        r".*": "qwen3.5-plus-2026-02-15",
-    }
+    # 替换 Model: {原始model: 新model}，运行时由命令行参数填充
+    "models": {}
 }
 
 # 网关监听配置
 GATEWAY_HOST = "0.0.0.0"
 GATEWAY_PORT = 8081
+PRINT_REQUEST = True
+PRINT_RESPONSE = False
 
 
 class OpenAIGatewayHandler(BaseHTTPRequestHandler):
     """OpenAI API 网关处理器"""
 
     def log_message(self, format, *args):
-        """自定义日志格式"""
-        print(f"[{self.log_date_time_string()}] {args[0]}")
+        elapsed = time.time() - getattr(self, '_start', time.time())
+        print(f"[{self.log_date_time_string()}] {args[0]} {elapsed:.2f}s")
 
     def do_GET(self):
         """处理 GET 请求"""
@@ -90,6 +83,8 @@ class OpenAIGatewayHandler(BaseHTTPRequestHandler):
         """
         try:
             data = json.loads(body.decode('utf-8'))
+            if PRINT_REQUEST:
+                print(f'[Request]{data}')
 
             # 替换 model
             if 'model' in data:
@@ -99,7 +94,7 @@ class OpenAIGatewayHandler(BaseHTTPRequestHandler):
                     REPLACEMENTS['models']
                 )
                 if original_model != data['model']:
-                    print(f"  [Model] {original_model} -> {data['model']}")
+                    print(f"[Model] {original_model} -> {data['model']}")
 
             return json.dumps(data).encode('utf-8')
         except:
@@ -115,7 +110,6 @@ class OpenAIGatewayHandler(BaseHTTPRequestHandler):
             key = 'Authorization'
             auth_header = headers.get(key, '')
 
-
         if auth_header.startswith('Bearer '):
             original_key = auth_header[7:]  # 去掉 "Bearer "
             new_key = self._replace_value(
@@ -123,7 +117,8 @@ class OpenAIGatewayHandler(BaseHTTPRequestHandler):
                 REPLACEMENTS['api_keys']
             )
             if original_key != new_key:
-                print(f"  [API Key] {original_key[:20]}... -> {new_key[:20]}...")
+                # print(f"[API Key] {original_key[:20]}... -> {new_key[:20]}...")
+                print(f"[API Key] {original_key} -> {new_key}")
                 headers[key] = f'Bearer {new_key}'
 
         return headers
@@ -177,8 +172,7 @@ class OpenAIGatewayHandler(BaseHTTPRequestHandler):
             del headers['Content-Length']
 
         # 移除 hop-by-hop 头
-        hop_by_hop = ['connection', 'keep-alive', 'proxy-authenticate',
-                      'proxy-authorization', 'te', 'trailers',
+        hop_by_hop = ['connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization', 'te', 'trailers',
                       'transfer-encoding', 'upgrade']
         for header in hop_by_hop:
             headers.pop(header, None)
@@ -187,8 +181,8 @@ class OpenAIGatewayHandler(BaseHTTPRequestHandler):
         # 构建目标 URL
         target_url = f"{TARGET_URL}{self.path}"
 
-        print(f"\n[{method}] {self.path}")
-        print(f"  -> {target_url}")
+        self._start = time.time()
+        print(f"[{method}] {self.path} -> {target_url}")
 
         try:
             # 创建请求
@@ -204,7 +198,7 @@ class OpenAIGatewayHandler(BaseHTTPRequestHandler):
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
 
-            with urlopen(req, context=ctx, timeout=60) as response:
+            with urlopen(req, context=ctx, timeout=120) as response:
                 # 发送响应状态
                 self.send_response(response.status)
 
@@ -218,22 +212,21 @@ class OpenAIGatewayHandler(BaseHTTPRequestHandler):
 
                 # 复制响应体
                 rr = response.read()
-                #print('响应：')
-                #print(rr)
+                if PRINT_RESPONSE:
+                    print(f'[Response] {rr}')
+                print()
                 self.wfile.write(rr)
 
         except HTTPError as e:
-            print(f"  [Error] {e.code}: {e.reason}")
             self.send_response(e.code)
             self._send_cors_headers()
             self.end_headers()
             er = e.read()
-            print('错误响应：')
-            print(er)
+            print(f'[Error] {e.code}: {e.reason} 错误响应：{er}')
             self.wfile.write(er)
 
         except Exception as e:
-            print(f"  [Error] {e}")
+            print(f"[Error] {e}")
             self.send_response(500)
             self._send_cors_headers()
             self.end_headers()
@@ -267,17 +260,21 @@ def run_gateway(host_info):
 # ========== 使用示例 ==========
 
 if __name__ == "__main__":
-    import sys
+    import argparse
 
-    # 可以通过环境变量配置
-    if os.getenv('OPENAI_TARGET_HOST'):
-        TARGET_HOST = os.getenv('OPENAI_TARGET_HOST')
+    parser = argparse.ArgumentParser(description="OpenAI API 代理网关")
+    parser.add_argument("model", help="转发给上游的 model 名称，例如 qwen3.5-122b-a10b")
+    parser.add_argument("--port", type=int, default=int(os.getenv("GATEWAY_PORT", GATEWAY_PORT)), help="监听端口（默认 8081）")
+    parser.add_argument("--target", default='ali', help="目标 API 主机")
+    parser.add_argument("--print-response", action="store_true", help="打印响应体到终端（默认关闭）")
+    parser.add_argument("--hide-request", action="store_false", help="打印请求到终端（默认打开）")
+    args = parser.parse_args()
 
-    if os.getenv('GATEWAY_PORT'):
-        GATEWAY_PORT = int(os.getenv('GATEWAY_PORT'))
+    if args.target == 'glm':
+        TARGET_HOST = "open.bigmodel.cn"
+        TARGET_URL = f"https://{TARGET_HOST}/api/paas/v4"
+    REPLACEMENTS["models"][r".*"] = args.model
+    PRINT_REQUEST = args.hide_request
+    PRINT_RESPONSE = args.print_response
 
-    # 或者通过命令行参数
-    if len(sys.argv) > 1:
-        GATEWAY_PORT = int(sys.argv[1])
-
-    run_gateway((GATEWAY_HOST,GATEWAY_PORT))
+    run_gateway((GATEWAY_HOST, args.port))
