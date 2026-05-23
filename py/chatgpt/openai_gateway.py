@@ -26,9 +26,8 @@ REPLACEMENTS = {
     "api_keys": {
         # 示例：替换特定 key
         "sk-original123": "sk-newApiKey456",
-        # 示例：替换所有 sk- 开头的 key（使用正则）
+        # 替换所有 sk- 开头的 key，运行时由命令行参数填充
         r"sk-[a-zA-Z0-9]+": my_config.ali_key,
-        # r"sk-[a-zA-Z0-9]+": my_config.glm_key,
     },
 
     # 替换 Model: {原始model: 新model}，运行时由命令行参数填充
@@ -45,9 +44,13 @@ PRINT_RESPONSE = False
 class OpenAIGatewayHandler(BaseHTTPRequestHandler):
     """OpenAI API 网关处理器"""
 
+    def log_request(self, code='-', size='-'):
+        pass  # 禁用 send_response 触发的自动日志，改为读完 body 后手动打印
+
     def log_message(self, format, *args):
-        elapsed = time.time() - getattr(self, '_start', time.time())
-        print(f"[{self.log_date_time_string()}] {args[0]} {elapsed:.2f}s")
+        elapsed = getattr(self, '_elapsed', None)
+        suffix = f" {elapsed:.2f}s" if elapsed is not None else ""
+        print(f"[{self.log_date_time_string()}] {args[0]}{suffix}")
 
     def do_GET(self):
         """处理 GET 请求"""
@@ -212,8 +215,10 @@ class OpenAIGatewayHandler(BaseHTTPRequestHandler):
 
                 # 复制响应体
                 rr = response.read()
+                self._elapsed = time.time() - self._start
                 if PRINT_RESPONSE:
                     print(f'[Response] {rr}')
+                self.log_message('"%s" %s', self.requestline, str(response.status))
                 print()
                 self.wfile.write(rr)
 
@@ -236,6 +241,25 @@ class OpenAIGatewayHandler(BaseHTTPRequestHandler):
                     "type": "gateway_error"
                 }
             }).encode('utf-8'))
+
+
+def select_model(target_url: str, api_key: str) -> str:
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    req = Request(f"{target_url}/models", headers={"Authorization": f"Bearer {api_key}"})
+    with urlopen(req, context=ctx, timeout=10) as resp:
+        data = json.loads(resp.read())
+    models = sorted(m["id"] for m in data.get("data", []))
+    if not models:
+        raise RuntimeError("未获取到可用模型")
+    for i, m in enumerate(models, 1):
+        print(f"  {i:>3}. {m}")
+    while True:
+        choice = input(f"请选择模型 [1-{len(models)}]: ").strip()
+        if choice.isdigit() and 1 <= int(choice) <= len(models):
+            return models[int(choice) - 1]
+        print("输入无效，请重新选择")
 
 
 def run_gateway(host_info):
@@ -263,8 +287,9 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="OpenAI API 代理网关")
-    parser.add_argument("model", help="转发给上游的 model 名称，例如 qwen3.5-122b-a10b")
+    parser.add_argument("model", nargs="?", default=None, help="转发给上游的 model 名称，省略则从上游列表选择")
     parser.add_argument("--port", type=int, default=int(os.getenv("GATEWAY_PORT", GATEWAY_PORT)), help="监听端口（默认 8081）")
+    parser.add_argument("--api-key", default=None, help="上游 API Key，默认取 my_config.ali_key")
     parser.add_argument("--target", default='ali', help="目标 API 主机")
     parser.add_argument("--print-response", action="store_true", help="打印响应体到终端（默认关闭）")
     parser.add_argument("--hide-request", action="store_false", help="打印请求到终端（默认打开）")
@@ -273,7 +298,19 @@ if __name__ == "__main__":
     if args.target == 'glm':
         TARGET_HOST = "open.bigmodel.cn"
         TARGET_URL = f"https://{TARGET_HOST}/api/paas/v4"
-    REPLACEMENTS["models"][r".*"] = args.model
+    elif args.target == 'nvidia':
+        TARGET_HOST = "integrate.api.nvidia.com"
+        TARGET_URL = f"https://{TARGET_HOST}/v1"
+
+
+    api_key = args.api_key or my_config.ali_key
+    REPLACEMENTS["api_keys"][r"sk-[a-zA-Z0-9]+"] = api_key
+
+    model = args.model
+    if model is None:
+        model = select_model(TARGET_URL, api_key)
+    print(f"使用模型: {model}")
+    REPLACEMENTS["models"][r".*"] = model
     PRINT_REQUEST = args.hide_request
     PRINT_RESPONSE = args.print_response
 
