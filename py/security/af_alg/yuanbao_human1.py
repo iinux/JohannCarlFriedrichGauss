@@ -11,6 +11,7 @@ import hashlib
 from typing import Optional, Tuple, Union
 import array
 import traceback
+from cryptography.hazmat.primitives import padding
 
 def pkcs7_pad(data: bytes, block_size: int = 16) -> bytes:
     pad_len = block_size - (len(data) % block_size)
@@ -300,7 +301,7 @@ def benchmark_afalg_vs_openssl():
     # 准备测试数据
     key = os.urandom(32)
     iv = os.urandom(16)
-    data = os.urandom(1024 * 1024)  # 1MB 数据
+    data = os.urandom(1024 * 1024)
     
     # 测试 AF_ALG
     print("测试 AF_ALG 加密速度...")
@@ -311,19 +312,22 @@ def benchmark_afalg_vs_openssl():
         ciphertext = cipher.encrypt(data)
     
     afalg_time = time.time() - start_time
-    print(f"AF_ALG 加密 1MB 数据耗时: {afalg_time:.4f} 秒")
+    print(f"AF_ALG 加密数据耗时: {afalg_time:.4f} 秒")
     print(f"AF_ALG 吞吐量: {len(data) / afalg_time / 1024 / 1024:.2f} MB/s")
     
     # 测试 cryptography 库
     print("\n测试 cryptography 库加密速度...")
     start_time = time.time()
     
+    padder = padding.PKCS7(algorithms.AES.block_size).padder()
+    padded_data = padder.update(data) + padder.finalize()
+
     cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
     encryptor = cipher.encryptor()
-    ciphertext2 = encryptor.update(data) + encryptor.finalize()
+    ciphertext2 = encryptor.update(padded_data) + encryptor.finalize()
     
     crypto_time = time.time() - start_time
-    print(f"cryptography 加密 1MB 数据耗时: {crypto_time:.4f} 秒")
+    print(f"cryptography 加密数据耗时: {crypto_time:.4f} 秒")
     print(f"cryptography 吞吐量: {len(data) / crypto_time / 1024 / 1024:.2f} MB/s")
     
     # 验证结果一致
@@ -403,7 +407,7 @@ def main():
         test_afalg_hash()
         
         # 性能测试
-        #benchmark_afalg_vs_openssl()
+        benchmark_afalg_vs_openssl()
         
     except Exception as e:
         traceback.print_exc()
