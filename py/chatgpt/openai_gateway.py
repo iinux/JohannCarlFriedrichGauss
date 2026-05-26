@@ -13,7 +13,12 @@ from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 import ssl
 import os
-import my_config
+try:
+    import my_config
+    _DEFAULT_API_KEY = getattr(my_config, 'ali_key', None)
+except ImportError:
+    my_config = None
+    _DEFAULT_API_KEY = None
 
 # ============ 配置 ============
 # 目标 OpenAI API 地址
@@ -27,7 +32,7 @@ REPLACEMENTS = {
         # 示例：替换特定 key
         "sk-original123": "sk-newApiKey456",
         # 替换所有 sk- 开头的 key，运行时由命令行参数填充
-        r"sk-[a-zA-Z0-9]+": my_config.ali_key,
+        r"sk-[a-zA-Z0-9]+": _DEFAULT_API_KEY,
     },
 
     # 替换 Model: {原始model: 新model}，运行时由命令行参数填充
@@ -301,9 +306,17 @@ if __name__ == "__main__":
     elif args.target == 'nvidia':
         TARGET_HOST = "integrate.api.nvidia.com"
         TARGET_URL = f"https://{TARGET_HOST}/v1"
+    elif args.target == 'minimax':
+        TARGET_HOST = 'api.minimaxi.com'
+        TARGET_URL = f"https://{TARGET_HOST}/v1"
+    elif args.target == 'deepseek':
+        TARGET_HOST = 'api.deepseek.com'
+        TARGET_URL = f'https://{TARGET_HOST}'
 
 
-    api_key = args.api_key or my_config.ali_key
+    api_key = args.api_key or _DEFAULT_API_KEY
+    if not api_key:
+        parser.error("未找到 API Key：请通过 --api-key 传入，或在 my_config.py 中设置 ali_key")
     REPLACEMENTS["api_keys"][r"sk-[a-zA-Z0-9]+"] = api_key
 
     model = args.model

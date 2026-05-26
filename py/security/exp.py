@@ -3,6 +3,9 @@ import socket
 import os
 
 
+# cat /proc/crypto
+
+
 def transfer_data_via_raw_socket(
         source_fd: int,
         data_length: int,
@@ -32,7 +35,8 @@ def transfer_data_via_raw_socket(
     SO_VM_SOCKETS_NONBLOCK_TXRX = 5
 
     # 创建VSOCK套接字
-    sock = socket.socket(AF_VSOCK, SOCK_STREAM, IPPROTO_VSOCK)
+    #sock = socket.socket(AF_VSOCK, SOCK_STREAM, IPPROTO_VSOCK)
+    sock = socket.socket(socket.AF_ALG, socket.SOCK_SEQPACKET, 0)
 
     try:
         sock.bind(("aead", "authencesn(hmac(sha256),cbc(aes))"))

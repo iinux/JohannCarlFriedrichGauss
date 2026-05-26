@@ -1,0 +1,1 @@
+clang -arch arm64 -o rbtree rbtree.s
