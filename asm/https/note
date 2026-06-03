@@ -1,0 +1,3 @@
+nasm -f elf64 https_baidu.asm -o https_baidu.o
+gcc -no-pie https_baidu.o -o https_baidu -lssl -lcrypto
+./https_baidu
