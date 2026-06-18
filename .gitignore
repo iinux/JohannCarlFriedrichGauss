@@ -12,3 +12,4 @@ projectFilesBackup
 __pycache__
 c/dns_sniffer
 c/dns_sniffer2
+cookies.json

@@ -1,0 +1,1 @@
+SMTP_RELAY_HOST=smtp.qq.com:587 SMTP_RELAY_USER=iinux@qq.com SMTP_RELAY_PASS=xxx SMTP_RELAY_TO=iinux@qq.com ./smtp-relay-server :2525

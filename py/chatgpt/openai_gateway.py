@@ -298,7 +298,12 @@ if __name__ == "__main__":
     parser.add_argument("--target", default='ali', help="目标 API 主机")
     parser.add_argument("--print-response", action="store_true", help="打印响应体到终端（默认关闭）")
     parser.add_argument("--hide-request", action="store_false", help="打印请求到终端（默认打开）")
+    parser.add_argument("--list-model", action="store_true", help="指定地址的支持模型列表")
     args = parser.parse_args()
+
+    if args.list_model:
+        select_model(args.target, args.api_key)
+        sys.exit(-1)
 
     if args.target == 'glm':
         TARGET_HOST = "open.bigmodel.cn"

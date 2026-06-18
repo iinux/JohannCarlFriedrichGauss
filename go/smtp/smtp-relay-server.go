@@ -3,8 +3,14 @@ package main
 import (
 	"bufio"
 	"crypto/tls"
+	"encoding/base64"
 	"fmt"
+	"io"
+	"mime"
+	"mime/multipart"
+	"mime/quotedprintable"
 	"net"
+	"net/mail"
 	"net/smtp"
 	"os"
 	"strings"
@@ -65,13 +71,15 @@ func (s *SMTPSession) WriteResponse(code int, message string) error {
 	return err
 }
 
-// ReadLine 读取一行命令
+// ReadLine 读取一行
+// 只去掉行尾 CRLF，保留前导空白
+// Why: DATA 阶段的折叠头（RFC 5322）续行必须以空白开头，TrimSpace 会破坏头部结构
 func (s *SMTPSession) ReadLine() (string, error) {
 	line, err := s.reader.ReadString('\n')
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSpace(line), nil
+	return strings.TrimRight(line, "\r\n"), nil
 }
 
 // Handle 处理SMTP会话
@@ -344,29 +352,155 @@ func (s *SMTPSession) relayMessage(message string) error {
 	return nil
 }
 
-// addForwardHeaders 添加转发头部信息
+// addForwardHeaders 解析原邮件，提取关键信息后重组为易读的转发邮件
 func (s *SMTPSession) addForwardHeaders(message string) string {
-	var result strings.Builder
-
-	// 添加转发头部
-	result.WriteString(fmt.Sprintf("X-Forwarded-For: %s\r\n", s.from))
-	result.WriteString(fmt.Sprintf("X-Forwarded-To: %s\r\n", strings.Join(s.to, ", ")))
-	result.WriteString(fmt.Sprintf("X-Forwarded-Time: %s\r\n", time.Now().Format(time.RFC1123)))
-	result.WriteString(fmt.Sprintf("X-Relay-Server: Go SMTP Relay\r\n"))
-
-	// 查找原始头部结束位置
-	headerEnd := strings.Index(message, "\r\n\r\n")
-	if headerEnd == -1 {
-		// 没有明显的头部，直接添加
-		result.WriteString(message)
-	} else {
-		// 在原始头部后插入转发头部
-		result.WriteString(message[:headerEnd+2])
-		result.WriteString(fmt.Sprintf("X-Forwarded-For: %s\r\n", s.from))
-		result.WriteString(message[headerEnd+2:])
+	msg, err := mail.ReadMessage(strings.NewReader(message))
+	if err != nil {
+		// 解析失败，原样返回
+		return message
 	}
 
-	return result.String()
+	dec := new(mime.WordDecoder)
+	decodeHeader := func(h string) string {
+		v, err := dec.DecodeHeader(h)
+		if err != nil {
+			return h
+		}
+		return v
+	}
+
+	origFrom := decodeHeader(msg.Header.Get("From"))
+	origTo := decodeHeader(msg.Header.Get("To"))
+	origSubject := decodeHeader(msg.Header.Get("Subject"))
+	origDate := msg.Header.Get("Date")
+	if origDate == "" {
+		origDate = time.Now().Format(time.RFC1123Z)
+	}
+
+	body := strings.TrimSpace(extractTextBody(
+		msg.Header.Get("Content-Type"),
+		msg.Header.Get("Content-Transfer-Encoding"),
+		msg.Body,
+	))
+
+	var buf strings.Builder
+	fmt.Fprintf(&buf, "From: %s\r\n", s.config.RelayUser)
+	fmt.Fprintf(&buf, "To: %s\r\n", s.config.RelayTo)
+	fmt.Fprintf(&buf, "Subject: %s\r\n", encodeMIMEHeader("[转发] "+origSubject))
+	fmt.Fprintf(&buf, "Date: %s\r\n", time.Now().Format(time.RFC1123Z))
+	buf.WriteString("MIME-Version: 1.0\r\n")
+	buf.WriteString("Content-Type: text/plain; charset=utf-8\r\n")
+	buf.WriteString("Content-Transfer-Encoding: 8bit\r\n")
+	buf.WriteString("\r\n")
+	buf.WriteString("---------- 转发邮件 ----------\r\n")
+	fmt.Fprintf(&buf, "发件人: %s\r\n", origFrom)
+	fmt.Fprintf(&buf, "日  期: %s\r\n", origDate)
+	fmt.Fprintf(&buf, "主  题: %s\r\n", origSubject)
+	fmt.Fprintf(&buf, "收件人: %s\r\n", origTo)
+	buf.WriteString("\r\n")
+	buf.WriteString(body)
+	buf.WriteString("\r\n")
+	return buf.String()
+}
+
+// encodeMIMEHeader 含非 ASCII 字符的头部使用 RFC 2047 编码
+func encodeMIMEHeader(s string) string {
+	for _, r := range s {
+		if r > 127 {
+			return "=?utf-8?B?" + base64.StdEncoding.EncodeToString([]byte(s)) + "?="
+		}
+	}
+	return s
+}
+
+// extractTextBody 提取邮件正文的纯文本部分（解码 base64 / quoted-printable，展平 multipart）
+func extractTextBody(contentType, encoding string, body io.Reader) string {
+	if contentType == "" {
+		return decodePart(body, encoding)
+	}
+	mediaType, params, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return decodePart(body, encoding)
+	}
+	if strings.HasPrefix(mediaType, "multipart/") {
+		return extractMultipart(body, params["boundary"])
+	}
+	return decodePart(body, encoding)
+}
+
+// extractMultipart 在 multipart 邮件中优先取 text/plain，否则降级 text/html 并剥离标签
+func extractMultipart(body io.Reader, boundary string) string {
+	if boundary == "" {
+		data, _ := io.ReadAll(body)
+		return string(data)
+	}
+	mr := multipart.NewReader(body, boundary)
+	var plain, html string
+	for {
+		part, err := mr.NextPart()
+		if err != nil {
+			break
+		}
+		ct := part.Header.Get("Content-Type")
+		mediaType, params, _ := mime.ParseMediaType(ct)
+		encoding := part.Header.Get("Content-Transfer-Encoding")
+
+		if strings.HasPrefix(mediaType, "multipart/") {
+			inner := extractMultipart(part, params["boundary"])
+			if plain == "" {
+				plain = inner
+			}
+			continue
+		}
+
+		decoded := decodePart(part, encoding)
+		switch mediaType {
+		case "text/plain":
+			if plain == "" {
+				plain = decoded
+			}
+		case "text/html":
+			if html == "" {
+				html = decoded
+			}
+		}
+	}
+	if plain != "" {
+		return plain
+	}
+	return stripHTMLTags(html)
+}
+
+// decodePart 根据 Content-Transfer-Encoding 解码内容
+func decodePart(body io.Reader, encoding string) string {
+	var reader io.Reader = body
+	switch strings.ToLower(strings.TrimSpace(encoding)) {
+	case "base64":
+		reader = base64.NewDecoder(base64.StdEncoding, body)
+	case "quoted-printable":
+		reader = quotedprintable.NewReader(body)
+	}
+	data, _ := io.ReadAll(reader)
+	return string(data)
+}
+
+// stripHTMLTags 简单去除 HTML 标签，仅在没有纯文本可用时作为兜底
+func stripHTMLTags(html string) string {
+	var b strings.Builder
+	inTag := false
+	for _, r := range html {
+		switch r {
+		case '<':
+			inTag = true
+		case '>':
+			inTag = false
+		default:
+			if !inTag {
+				b.WriteRune(r)
+			}
+		}
+	}
+	return strings.TrimSpace(b.String())
 }
 
 // SMTPServer SMTP服务器
