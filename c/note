@@ -1,0 +1,2 @@
+gcc -O3 -mavx2 avx.c
+objdump -S a.out

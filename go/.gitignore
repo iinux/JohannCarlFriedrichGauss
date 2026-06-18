@@ -1,4 +1,5 @@
 *.exe
+nm.log.*
 aes
 dialog
 dmb
@@ -15,3 +16,4 @@ dmb_amd64
 go_proxy_try_i.go
 thrift_packet
 https-sni-socks-proxy
+mwget
