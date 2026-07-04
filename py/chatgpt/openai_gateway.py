@@ -13,6 +13,7 @@ from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 import ssl
 import os
+import sys
 try:
     import my_config
     _DEFAULT_API_KEY = getattr(my_config, 'ali_key', None)
@@ -314,9 +315,20 @@ if __name__ == "__main__":
     elif args.target == 'minimax':
         TARGET_HOST = 'api.minimaxi.com'
         TARGET_URL = f"https://{TARGET_HOST}/v1"
+    elif args.target == 'minimax-a':
+        TARGET_HOST = 'api.minimaxi.com'
+        TARGET_URL = f"https://{TARGET_HOST}/anthropic"
     elif args.target == 'deepseek':
         TARGET_HOST = 'api.deepseek.com'
         TARGET_URL = f'https://{TARGET_HOST}'
+    elif args.target == 'agnes':
+        TARGET_HOST = 'apihub.agnes-ai.com'
+        TARGET_URL = f'https://{TARGET_HOST}/v1'
+    elif args.target == 'ali':
+        pass
+    else:
+        print('unknown target')
+        sys.exit(-1)
 
 
     api_key = args.api_key or _DEFAULT_API_KEY

@@ -38,7 +38,7 @@ def upload():
 
             filename = secure_filename(file.filename)
             # 添加时间戳避免文件名冲突
-            timestamp = str(int(time.time()))
+            timestamp = time.strftime("%Y%m%d_%H%M%S", time.gmtime(time.time() + 8 * 3600))
             unique_filename = f"upload_{timestamp}_{filename}"
 
             filepath = os.path.join(upload_dir, unique_filename)
@@ -84,7 +84,7 @@ def upload_pdf():
                 os.makedirs(upload_dir)
 
             filename = secure_filename(file.filename)
-            timestamp = str(int(time.time()))
+            timestamp = time.strftime("%Y%m%d_%H%M%S", time.gmtime(time.time() + 8 * 3600))
             unique_filename = f"upload_{timestamp}_{filename}"
             filepath = os.path.join(upload_dir, unique_filename)
             file.save(filepath)
