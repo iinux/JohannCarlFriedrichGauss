@@ -1,0 +1,63 @@
+关键设计点
+
+  DPDK 旁路了内核，所以必须自己实现 TCP/IP 协议栈。程序核心结构：
+
+  两个方向的 TCP 状态机（每个连接同时维护）：
+  - cli_state：面向客户端方向（监听 0.0.0.0:3001）
+  - bk_state：面向后端方向（主动连接 192.168.1.10:8000）
+
+  包处理流程：
+  1. RX 收包 → 区分 ARP / IPv4
+  2. ARP 请求网关 MAC（后端需经网关可达）
+  3. TCP 包按四元组查 conn 表，分别走两条状态机
+  4. 客户端 ESTABLISHED 后立即向后端发 SYN；后端 ESTABLISHED 后开始双向数据转发
+  5. 所有发出的 TCP 包都重算 IP 头校验和 + TCP 伪头校验和
+
+  使用前必须改的配置
+
+  tcp_forwarder.c:30-37 这几个宏必须改成你实际网络：
+
+  #define LOCAL_IP   "10.0.0.1"       // DPDK 网卡绑定的 IP
+  #define LOCAL_MASK "255.255.255.0"
+  #define GATEWAY_IP "10.0.0.254"     // 下一跳（与 DPDK 网卡同 L2 段）
+  #define BACKEND_IP "192.168.1.10"
+
+  如果后端 192.168.1.10 和本地网卡在同一 L2 网段，把 GATEWAY_IP 改成后端 IP 即可（程序把 dst_mac 当成 L2 下一跳用）。
+
+  编译运行
+
+  # 1) 装 DPDK（参考 dpdk.org 文档）
+  # 2) 绑定网卡到 DPDK 驱动，例如：
+  sudo dpdk-devbind --bind=vfio-pci 0000:03:00.0
+
+  # 3) 大页内存
+  sudo sysctl -w vm.nr_hugepages=1024
+
+  # 4) 编译
+  make
+
+  # 5) 运行（单核，单端口 0）
+  sudo ./build/tcp_forwarder -l 0 -n 1 -- -p 0
+
+  明确未实现的功能（简化权衡）
+
+  | 功能                    | 状态               |
+  |-----------------------|------------------|
+  | TCP 三次握手（客户端 + 后端）    | ✅                |
+  | 数据双向转发                | ✅                |
+  | FIN 半关闭               | ✅（简化版）           |
+  | ARP 请求/响应 + 网关 MAC 学习 | ✅                |
+  | IP/TCP 校验和重算          | ✅                |
+  | 重传定时器 / 超时            | ❌                |
+  | 滑动窗口流量控制              | ❌（写死 8KB 缓冲）     |
+  | TIME_WAIT             | ❌（FIN-ACK 后立即释放） |
+  | 多核 / RSS / 多队列        | ❌（单 RX/TX 队列）    |
+
+  如果需要生产级（重传、流控、TIME_WAIT），建议直接用 F-Stack（基于 FreeBSD TCP 栈 + DPDK）—— 但它的代码量是上面这个的 50 倍。如果只是需要 DPDK 加速转发而不是完全旁路内核，也可以考虑 AF_XDP，把 TCP 留给内核。
+
+什么情况下你会遇到它
+如果是在写/编译一个用户态数据包处理程序,或者调试一个基于 DPDK 的组件(比如某些高性能负载均衡器、VPP),编译报错找不到 rte_eal.h,通常是因为:
+
+没装 DPDK 开发包(libdpdk-dev / 源码编译安装)
+头文件路径没加进 -I(常见路径 /usr/local/include/dpdk 或 /usr/include/dpdk)
+pkg-config --cflags libdpdk 没在 Makefile/CMake 里正确引用
