@@ -2,7 +2,6 @@
 nm.log.*
 aes
 dialog
-dmb
 icmp2
 ip0x29
 nm
@@ -12,7 +11,6 @@ udp_client
 udp_client2
 go.iml
 nm_amd64
-dmb_amd64
 go_proxy_try_i.go
 thrift_packet
 https-sni-socks-proxy
