@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>拼音乐园 · 快乐学拼音</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; overflow: hidden; font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif; }
+  body {
+    background: linear-gradient(135deg, #FFE5B4 0%, #FFB6C1 50%, #B5EAD7 100%);
+    user-select: none;
+  }
+
+  /* ====== 通用屏幕 ====== */
+  .screen {
+    position: absolute; inset: 0;
+    display: none; flex-direction: column;
+    padding: 20px;
+    animation: fadeIn 0.4s ease;
+  }
+  .screen.active { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pop { 0% { transform: scale(0.7); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+  @keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+  @keyframes starPop { 0% { transform: scale(0) rotate(0); } 50% { transform: scale(1.5) rotate(180deg); } 100% { transform: scale(1) rotate(360deg); } }
+
+  /* ====== 主菜单 ====== */
+  .menu-header {
+    text-align: center; padding: 20px 0;
+  }
+  .menu-header h1 {
+    font-size: 52px; color: #FF6B6B;
+    text-shadow: 4px 4px 0 #FFD93D, 6px 6px 0 rgba(0,0,0,0.1);
+    letter-spacing: 4px;
+    animation: bounce 2s infinite;
+  }
+  .menu-header .subtitle {
+    font-size: 22px; color: #5C6BC0; margin-top: 8px; font-weight: bold;
+  }
+  .menu-mascot {
+    font-size: 80px; text-align: center; margin: 10px 0;
+    animation: bounce 1.5s infinite;
+  }
+  .mode-grid {
+    flex: 1; display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px; padding: 10px; max-width: 800px; margin: 0 auto; width: 100%;
+  }
+  .mode-card {
+    background: white; border-radius: 24px;
+    padding: 24px 16px; text-align: center;
+    box-shadow: 0 8px 0 rgba(0,0,0,0.1), 0 12px 20px rgba(0,0,0,0.1);
+    cursor: pointer; transition: all 0.15s;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border: 4px solid transparent;
+  }
+  .mode-card:active { transform: translateY(6px); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
+  .mode-card .icon { font-size: 70px; margin-bottom: 10px; }
+  .mode-card .name { font-size: 28px; font-weight: bold; color: #333; margin-bottom: 6px; }
+  .mode-card .desc { font-size: 16px; color: #888; }
+  .mode-card.c1 { background: linear-gradient(135deg, #FFD93D, #FFA500); }
+  .mode-card.c2 { background: linear-gradient(135deg, #6BCB77, #4CAF50); }
+  .mode-card.c3 { background: linear-gradient(135deg, #4D96FF, #2196F3); }
+  .mode-card.c4 { background: linear-gradient(135deg, #FF6B9D, #E91E63); }
+
+  .footer-tip {
+    text-align: center; color: #5C6BC0; font-size: 16px; padding: 10px;
+  }
+
+  /* ====== 游戏屏幕通用 ====== */
+  .game-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px; background: white; border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 16px;
+  }
+  .back-btn {
+    background: #FF6B6B; color: white; border: none;
+    padding: 10px 20px; border-radius: 20px; font-size: 18px; font-weight: bold;
+    cursor: pointer; box-shadow: 0 4px 0 #C44545;
+  }
+  .back-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #C44545; }
+  .game-title { font-size: 24px; font-weight: bold; color: #5C6BC0; }
+  .score-box {
+    background: #FFD93D; color: #C44545;
+    padding: 8px 16px; border-radius: 16px; font-size: 20px; font-weight: bold;
+    box-shadow: 0 3px 0 #C49B00;
+  }
+  .progress { font-size: 18px; color: #5C6BC0; font-weight: bold; }
+
+  .game-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+  /* ====== 看图选音 ====== */
+  .picture-card {
+    background: white; border-radius: 32px; padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    margin-bottom: 30px;
+    animation: pop 0.4s;
+    min-width: 280px;
+  }
+  .picture-card .emoji { font-size: 140px; line-height: 1; }
+  .picture-card .sound-btn {
+    background: #4D96FF; color: white; border: none;
+    width: 60px; height: 60px; border-radius: 50%;
+    font-size: 30px; cursor: pointer;
+    box-shadow: 0 5px 0 #2563EB;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+  .sound-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #2563EB; }
+
+  .options-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    width: 100%; max-width: 600px;
+  }
+  .option-btn {
+    background: white; border: 4px solid #E0E0E0;
+    padding: 22px; border-radius: 20px;
+    font-size: 32px; font-weight: bold; color: #5C6BC0;
+    cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 6px 0 #BDBDBD;
+    letter-spacing: 2px;
+  }
+  .option-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #BDBDBD; }
+  .option-btn.correct {
+    background: #6BCB77; color: white; border-color: #4CAF50;
+    box-shadow: 0 6px 0 #2E7D32; animation: pop 0.5s;
+  }
+  .option-btn.wrong {
+    background: #FF8A80; color: white; border-color: #E53935;
+    box-shadow: 0 6px 0 #B71C1C; animation: shake 0.4s;
+  }
+  .option-btn.disabled { pointer-events: none; opacity: 0.6; }
+
+  /* ====== 听音辨字 ====== */
+  .big-speaker {
+    background: linear-gradient(135deg, #FF6B9D, #C44569);
+    width: 200px; height: 200px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 100px; color: white;
+    box-shadow: 0 12px 0 #8E2A4A, 0 20px 40px rgba(0,0,0,0.2);
+    cursor: pointer; margin-bottom: 30px;
+    animation: pulse 1.5s infinite;
+  }
+  .big-speaker:active { transform: translateY(6px); box-shadow: 0 6px 0 #8E2A4A, 0 10px 20px rgba(0,0,0,0.2); }
+  .big-speaker.playing { animation: none; background: linear-gradient(135deg, #FFD93D, #FFA500); }
+  .hint-text { font-size: 22px; color: #5C6BC0; margin-bottom: 20px; font-weight: bold; }
+
+  /* ====== 声母匹配 ====== */
+  .initial-display {
+    background: linear-gradient(135deg, #FFD93D, #FFA500);
+    color: white;
+    font-size: 160px; font-weight: bold;
+    width: 220px; height: 220px; border-radius: 32px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 12px 0 #C49B00, 0 20px 40px rgba(0,0,0,0.2);
+    margin-bottom: 24px; text-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+    animation: pop 0.5s;
+  }
+  .initial-buttons {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    width: 100%; max-width: 500px;
+  }
+  .initial-btn {
+    background: white; border: 3px solid #FFD93D;
+    aspect-ratio: 1; border-radius: 16px;
+    font-size: 36px; font-weight: bold; color: #FF6B6B;
+    cursor: pointer; transition: all 0.15s;
+    box-shadow: 0 4px 0 #E0A800;
+  }
+  .initial-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #E0A800; }
+  .initial-btn.correct { background: #6BCB77; color: white; border-color: #4CAF50; box-shadow: 0 4px 0 #2E7D32; }
+  .initial-btn.wrong { background: #FF8A80; color: white; border-color: #E53935; box-shadow: 0 4px 0 #B71C1C; }
+
+  /* ====== 反馈层 ====== */
+  .feedback {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+    font-size: 120px; z-index: 100; pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .feedback.show { transform: translate(-50%, -50%) scale(1); }
+  .stars-layer { position: fixed; inset: 0; pointer-events: none; z-index: 99; }
+  .flying-star {
+    position: absolute; font-size: 50px;
+    animation: flyUp 1.5s ease-out forwards;
+  }
+  @keyframes flyUp {
+    0% { transform: translateY(0) scale(0); opacity: 1; }
+    50% { transform: translateY(-100px) scale(1.5); opacity: 1; }
+    100% { transform: translateY(-300px) scale(0.5); opacity: 0; }
+  }
+
+  /* ====== 弹窗 ====== */
+  .modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    display: none; align-items: center; justify-content: center;
+    z-index: 200;
+  }
+  .modal.show { display: flex; animation: fadeIn 0.3s; }
+  .modal-content {
+    background: white; border-radius: 30px;
+    padding: 40px; text-align: center;
+    max-width: 90%; width: 400px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: pop 0.4s;
+  }
+  .modal-content h2 { font-size: 36px; color: #FF6B6B; margin-bottom: 16px; }
+  .modal-content .trophy { font-size: 100px; margin: 10px 0; }
+  .modal-content .score-final { font-size: 24px; color: #5C6BC0; margin-bottom: 24px; font-weight: bold; }
+  .modal-content button {
+    background: #FFD93D; color: #C44545; border: none;
+    padding: 14px 32px; border-radius: 24px;
+    font-size: 22px; font-weight: bold; cursor: pointer;
+    box-shadow: 0 5px 0 #C49B00; margin: 6px;
+  }
+  .modal-content button:active { transform: translateY(3px); box-shadow: 0 2px 0 #C49B00; }
+  .modal-content button.secondary { background: #E0E0E0; color: #555; box-shadow: 0 5px 0 #BDBDBD; }
+
+  /* 移动端适配 */
+  @media (max-width: 600px) {
+    .menu-header h1 { font-size: 36px; }
+    .mode-card .icon { font-size: 50px; }
+    .mode-card .name { font-size: 22px; }
+    .picture-card .emoji { font-size: 100px; }
+    .initial-display { font-size: 110px; width: 160px; height: 160px; }
+    .big-speaker { width: 150px; height: 150px; font-size: 70px; }
+    .option-btn { font-size: 26px; padding: 16px; }
+    .initial-btn { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 主菜单 -->
+<div id="menu" class="screen active">
+  <div class="menu-header">
+    <h1>🎈 拼音乐园 🎈</h1>
+    <div class="subtitle">宝宝学拼音 · 快乐每一天</div>
+  </div>
+  <div class="menu-mascot">🐰</div>
+  <div class="mode-grid">
+    <div class="mode-card c1" onclick="startGame('picture')">
+      <div class="icon">🍎</div>
+      <div class="name">看图选音</div>
+      <div class="desc">看图片选拼音</div>
+    </div>
+    <div class="mode-card c2" onclick="startGame('listen')">
+      <div class="icon">👂</div>
+      <div class="name">听音辨字</div>
+      <div class="desc">听声音找拼音</div>
+    </div>
+    <div class="mode-card c3" onclick="startGame('initial')">
+      <div class="icon">🅱️</div>
+      <div class="name">声母找朋友</div>
+      <div class="desc">找出对应的字</div>
+    </div>
+    <div class="mode-card c4" onclick="startGame('final')">
+      <div class="icon">🌈</div>
+      <div class="name">韵母大冒险</div>
+      <div class="desc">拼出小韵母</div>
+    </div>
+  </div>
+  <div class="footer-tip">💡 戴上耳机听声音更清楚哦～</div>
+</div>
+
+<!-- 游戏屏幕 -->
+<div id="game" class="screen">
+  <div class="game-header">
+    <button class="back-btn" onclick="goMenu()">◀ 返回</button>
+    <div class="game-title" id="gameTitle">看图选音</div>
+    <div class="progress" id="progress">1/10</div>
+    <div class="score-box">⭐ <span id="score">0</span></div>
+  </div>
+  <div class="game-body" id="gameBody"></div>
+</div>
+
+<!-- 反馈层 -->
+<div class="feedback" id="feedback"></div>
+<div class="stars-layer" id="starsLayer"></div>
+
+<!-- 完成弹窗 -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <div class="trophy" id="trophy">🏆</div>
+    <h2 id="modalTitle">太棒啦！</h2>
+    <div class="score-final" id="modalScore">你获得了 0 颗星</div>
+    <button onclick="restartGame()">🔄 再玩一次</button>
+    <button class="secondary" onclick="goMenu()">🏠 回首页</button>
+  </div>
+</div>
+
+<script>
+// ========== 数据 ==========
+// 词库：常用字、emoji、拼音(无声调)、声母、韵母
+const VOCAB = [
+  // 动物
+  { char: '猫', pinyin: 'māo', emoji: '🐱', initial: 'm', final: 'ao' },
+  { char: '狗', pinyin: 'gǒu', emoji: '🐶', initial: 'g', final: 'ou' },
+  { char: '鸟', pinyin: 'niǎo', emoji: '🐦', initial: 'n', final: 'iao' },
+  { char: '鱼', pinyin: 'yú', emoji: '🐟', initial: 'y', final: 'u' },
+  { char: '马', pinyin: 'mǎ', emoji: '🐴', initial: 'm', final: 'a' },
+  { char: '兔', pinyin: 'tù', emoji: '🐰', initial: 't', final: 'u' },
+  { char: '牛', pinyin: 'niú', emoji: '🐮', initial: 'n', final: 'iu' },
+  { char: '羊', pinyin: 'yáng', emoji: '🐑', initial: 'y', final: 'ang' },
+  { char: '猪', pinyin: 'zhū', emoji: '🐷', initial: 'zh', final: 'u' },
+  { char: '虎', pinyin: 'hǔ', emoji: '🐯', initial: 'h', final: 'u' },
+  { char: '鸡', pinyin: 'jī', emoji: '🐔', initial: 'j', final: 'i' },
+  { char: '鸭', pinyin: 'yā', emoji: '🦆', initial: 'y', final: 'a' },
+  { char: '熊', pinyin: 'xióng', emoji: '🐻', initial: 'x', final: 'iong' },
+  { char: '象', pinyin: 'xiàng', emoji: '🐘', initial: 'x', final: 'iang' },
+  { char: '鼠', pinyin: 'shǔ', emoji: '🐭', initial: 'sh', final: 'u' },
+  // 水果
+  { char: '苹果', pinyin: 'píng guǒ', emoji: '🍎', initial: 'p', final: 'ing', display: 'píng' },
+  { char: '香蕉', pinyin: 'xiāng jiāo', emoji: '🍌', initial: 'x', final: 'iang', display: 'xiāng' },
+  { char: '西瓜', pinyin: 'xī guā', emoji: '🍉', initial: 'x', final: 'i', display: 'xī' },
+  { char: '葡萄', pinyin: 'pú táo', emoji: '🍇', initial: 'p', final: 'u', display: 'pú' },
+  { char: '桃子', pinyin: 'táo zi', emoji: '🍑', initial: 't', final: 'ao', display: 'táo' },
+  { char: '草莓', pinyin: 'cǎo méi', emoji: '🍓', initial: 'c', final: 'ao', display: 'cǎo' },
+  { char: '梨', pinyin: 'lí', emoji: '🍐', initial: 'l', final: 'i' },
+  // 食物
+  { char: '米饭', pinyin: 'mǐ fàn', emoji: '🍚', initial: 'm', final: 'i', display: 'mǐ' },
+  { char: '面条', pinyin: 'miàn tiáo', emoji: '🍜', initial: 'm', final: 'ian', display: 'miàn' },
+  { char: '饺子', pinyin: 'jiǎo zi', emoji: '🥟', initial: 'j', final: 'iao' },
+  { char: '包子', pinyin: 'bāo zi', emoji: '🍞', initial: 'b', final: 'ao' },
+  { char: '蛋糕', pinyin: 'dàn gāo', emoji: '🍰', initial: 'd', final: 'an', display: 'dàn' },
+  { char: '糖果', pinyin: 'táng guǒ', emoji: '🍬', initial: 't', final: 'ang', display: 'táng' },
+  { char: '饼干', pinyin: 'bǐng gān', emoji: '🍪', initial: 'b', final: 'ing', display: 'bǐng' },
+  // 自然
+  { char: '太阳', pinyin: 'tài yáng', emoji: '☀️', initial: 't', final: 'ai', display: 'tài' },
+  { char: '月亮', pinyin: 'yuè liang', emoji: '🌙', initial: 'y', final: 'ue', display: 'yuè' },
+  { char: '星星', pinyin: 'xīng xing', emoji: '⭐', initial: 'x', final: 'ing', display: 'xīng' },
+  { char: '云', pinyin: 'yún', emoji: '☁️', initial: 'y', final: 'un' },
+  { char: '雨', pinyin: 'yǔ', emoji: '🌧️', initial: 'y', final: 'u' },
+  { char: '雪', pinyin: 'xuě', emoji: '❄️', initial: 'x', final: 'ue' },
+  { char: '花', pinyin: 'huā', emoji: '🌸', initial: 'h', final: 'ua' },
+  { char: '树', pinyin: 'shù', emoji: '🌳', initial: 'sh', final: 'u' },
+  // 物品
+  { char: '书', pinyin: 'shū', emoji: '📚', initial: 'sh', final: 'u' },
+  { char: '笔', pinyin: 'bǐ', emoji: '✏️', initial: 'b', final: 'i' },
+  { char: '球', pinyin: 'qiú', emoji: '⚽', initial: 'q', final: 'iu' },
+  { char: '车', pinyin: 'chē', emoji: '🚗', initial: 'ch', final: 'e' },
+  { char: '飞机', pinyin: 'fēi jī', emoji: '✈️', initial: 'f', final: 'ei', display: 'fēi' },
+  { char: '船', pinyin: 'chuán', emoji: '🚢', initial: 'ch', final: 'uan' },
+  { char: '钟', pinyin: 'zhōng', emoji: '⏰', initial: 'zh', final: 'ong' },
+  { char: '伞', pinyin: 'sǎn', emoji: '☂️', initial: 's', final: 'an' },
+  // 身体
+  { char: '眼睛', pinyin: 'yǎn jing', emoji: '👀', initial: 'y', final: 'an', display: 'yǎn' },
+  { char: '耳朵', pinyin: 'ěr duo', emoji: '👂', initial: 'ěr', final: 'er', display: 'ěr' },
+  { char: '嘴巴', pinyin: 'zuǐ ba', emoji: '👄', initial: 'z', final: 'ui', display: 'zuǐ' },
+  { char: '手', pinyin: 'shǒu', emoji: '✋', initial: 'sh', final: 'ou' },
+  { char: '脚', pinyin: 'jiǎo', emoji: '🦶', initial: 'j', final: 'iao' },
+];
+
+const ALL_INITIALS = ['b','p','m','f','d','t','n','l','g','k','h','j','q','x','zh','ch','sh','r','z','c','s','y','w'];
+const ALL_FINALS = ['a','o','e','i','u','ü','ai','ei','ui','ao','ou','iu','ie','üe','er','an','en','in','un','ün','ang','eng','ing','ong'];
+
+const PRAISES = ['真棒！', '太厉害啦！', '答对啦！', '聪明宝宝！', '加油哦！', '再来一个！'];
+
+// ========== 状态 ==========
+let state = {
+  mode: 'picture',
+  score: 0,
+  total: 10,
+  current: 0,
+  currentItem: null,
+  questions: [],
+  answered: false
+};
+
+// ========== 工具 ==========
+function $(id) { return document.getElementById(id); }
+function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function removeTone(pinyin) {
+  return pinyin.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+// ========== 语音 ==========
+let voices = [];
+function loadVoices() {
+  voices = speechSynthesis.getVoices();
+}
+if ('speechSynthesis' in window) {
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+function speak(text, opts = {}) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'zh-CN';
+  utter.rate = opts.rate || 0.85;
+  utter.pitch = opts.pitch || 1.1;
+  // 优先选择中文女声
+  const cnVoice = voices.find(v => v.lang.startsWith('zh') && /female|woman|Tingting|Mei-Jia|Yating/i.test(v.name))
+                || voices.find(v => v.lang.startsWith('zh'));
+  if (cnVoice) utter.voice = cnVoice;
+  speechSynthesis.speak(utter);
+}
+
+function speakPinyin(pinyin) {
+  // 念汉字字符（更准确）
+  speak(pinyin.char || pinyin);
+}
+
+function speakEncourage() {
+  speak(rand(PRAISES));
+}
+
+function speakTryAgain() {
+  speak('再试一次吧');
+}
+
+// ========== 反馈 ==========
+function showFeedback(emoji) {
+  const fb = $('feedback');
+  fb.textContent = emoji;
+  fb.classList.add('show');
+  setTimeout(() => fb.classList.remove('show'), 900);
+}
+
+function flyStars(count = 1) {
+  const layer = $('starsLayer');
+  for (let i = 0; i < count; i++) {
+    const star = document.createElement('div');
+    star.className = 'flying-star';
+    star.textContent = '⭐';
+    star.style.left = (30 + Math.random() * 40) + '%';
+    star.style.top = (40 + Math.random() * 20) + '%';
+    star.style.animationDelay = (i * 0.15) + 's';
+    layer.appendChild(star);
+    setTimeout(() => star.remove(), 1800);
+  }
+}
+
+// ========== 题目生成 ==========
+function generateQuestions(mode) {
+  const count = 10;
+  let pool = VOCAB.slice();
+  // 不同模式筛选用词
+  if (mode === 'initial') {
+    pool = pool.filter(v => v.initial && ALL_INITIALS.includes(v.initial));
+  } else if (mode === 'final') {
+    pool = pool.filter(v => v.final && ALL_FINALS.includes(v.final));
+  }
+  return shuffle(pool).slice(0, Math.min(count, pool.length));
+}
+
+function buildOptions(item, mode) {
+  // 从词库中抽取干扰项（拼音不同）
+  let others = VOCAB.filter(v => v.pinyin !== item.pinyin);
+  if (mode === 'initial' || mode === 'final') {
+    // 保证干扰项的声母/韵母不同
+    if (mode === 'initial') {
+      others = others.filter(v => v.initial !== item.initial);
+    } else {
+      others = others.filter(v => v.final !== item.final);
+    }
+  }
+  others = shuffle(others).slice(0, 3);
+  return shuffle([item, ...others]);
+}
+
+// ========== 模式渲染 ==========
+function renderPicture() {
+  const item = state.currentItem;
+  $('gameBody').innerHTML = `
+    <div class="picture-card">
+      <div class="emoji">${item.emoji}</div>
+      <div style="font-size:24px;color:#888;font-weight:bold;">${item.char}</div>
+      <button class="sound-btn" onclick="speakChar()">🔊</button>
+    </div>
+    <div class="options-grid" id="opts"></div>
+  `;
+  const opts = buildOptions(item, 'picture');
+  const container = $('opts');
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = opt.pinyin;
+    btn.onclick = () => answerPicture(btn, opt);
+    container.appendChild(btn);
+  });
+  // 自动朗读
+  setTimeout(() => speakChar(), 400);
+}
+
+function speakChar() { speak(state.currentItem.char, { rate: 0.75 }); }
+
+function answerPicture(btn, opt) {
+  if (state.answered) return;
+  state.answered = true;
+  const correct = opt.pinyin === state.currentItem.pinyin;
+  document.querySelectorAll('.option-btn').forEach(b => {
+    b.classList.add('disabled');
+    if (b.textContent === state.currentItem.pinyin) b.classList.add('correct');
+  });
+  if (correct) {
+    btn.classList.add('correct');
+    onCorrect();
+  } else {
+    btn.classList.add('wrong');
+    onWrong();
+  }
+}
+
+function renderListen() {
+  const item = state.currentItem;
+  $('gameBody').innerHTML = `
+    <div class="hint-text">👂 仔细听，选出正确的拼音</div>
+    <div class="big-speaker" id="speaker" onclick="playListenSound()">🔊</div>
+    <div class="options-grid" id="opts"></div>
+  `;
+  const opts = buildOptions(item, 'listen');
+  const container = $('opts');
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = opt.pinyin;
+    btn.onclick = () => answerListen(btn, opt);
+    container.appendChild(btn);
+  });
+  setTimeout(playListenSound, 400);
+}
+
+function playListenSound() {
+  const sp = $('speaker');
+  if (sp) { sp.classList.add('playing'); setTimeout(() => sp.classList.remove('playing'), 1500); }
+  speak(state.currentItem.char, { rate: 0.7 });
+}
+
+function answerListen(btn, opt) {
+  if (state.answered) return;
+  state.answered = true;
+  const correct = opt.pinyin === state.currentItem.pinyin;
+  document.querySelectorAll('.option-btn').forEach(b => {
+    b.classList.add('disabled');
+    if (b.textContent === state.currentItem.pinyin) b.classList.add('correct');
+  });
+  if (correct) {
+    btn.classList.add('correct');
+    onCorrect();
+  } else {
+    btn.classList.add('wrong');
+    playListenSound();
+    setTimeout(onWrong, 1200);
+  }
+}
+
+function renderInitial() {
+  // 给定声母，选出对应的字（4 个选项中选拼音开头的字）
+  const item = state.currentItem;
+  $('gameBody').innerHTML = `
+    <div class="hint-text">找出读作 "<span style="color:#FF6B6B;">${item.initial}</span>" 开头的小动物/物品</div>
+    <div class="initial-display">${item.initial}</div>
+    <div class="initial-buttons" id="opts"></div>
+  `;
+  // 选项：item + 3 个首声母不同的词
+  let others = VOCAB.filter(v => v.initial !== item.initial);
+  others = shuffle(others).slice(0, 3);
+  const opts = shuffle([item, ...others]);
+  const container = $('opts');
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'initial-btn';
+    btn.innerHTML = `${opt.emoji}<div style="font-size:14px;color:#666;font-weight:normal;">${opt.pinyin}</div>`;
+    btn.onclick = () => answerInitial(btn, opt);
+    container.appendChild(btn);
+  });
+  // 自动朗读声母
+  setTimeout(() => speak(item.initial + '开头', { rate: 0.9 }), 400);
+}
+
+function answerInitial(btn, opt) {
+  if (state.answered) return;
+  state.answered = true;
+  const correct = opt.initial === state.currentItem.initial && opt.char === state.currentItem.char;
+  document.querySelectorAll('.initial-btn').forEach(b => b.style.pointerEvents = 'none');
+  if (correct) {
+    btn.classList.add('correct');
+    onCorrect();
+  } else {
+    btn.classList.add('wrong');
+    speak(state.currentItem.char);
+    onWrong();
+  }
+}
+
+function renderFinal() {
+  // 给定韵母，选出含此韵母的字
+  const item = state.currentItem;
+  $('gameBody').innerHTML = `
+    <div class="hint-text">找出韵母是 "<span style="color:#FF6B6B;">${item.final}</span>" 的字</div>
+    <div class="initial-display" style="background:linear-gradient(135deg,#4D96FF,#2196F3);font-size:90px;">${item.final}</div>
+    <div class="initial-buttons" id="opts"></div>
+  `;
+  let others = VOCAB.filter(v => v.final !== item.final);
+  others = shuffle(others).slice(0, 3);
+  const opts = shuffle([item, ...others]);
+  const container = $('opts');
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'initial-btn';
+    btn.innerHTML = `${opt.emoji}<div style="font-size:14px;color:#666;font-weight:normal;">${opt.pinyin}</div>`;
+    btn.onclick = () => answerFinal(btn, opt);
+    container.appendChild(btn);
+  });
+  setTimeout(() => speak(item.char), 400);
+}
+
+function answerFinal(btn, opt) {
+  if (state.answered) return;
+  state.answered = true;
+  const correct = opt.final === state.currentItem.final && opt.char === state.currentItem.char;
+  document.querySelectorAll('.initial-btn').forEach(b => b.style.pointerEvents = 'none');
+  if (correct) {
+    btn.classList.add('correct');
+    onCorrect();
+  } else {
+    btn.classList.add('wrong');
+    onWrong();
+  }
+}
+
+// ========== 答题逻辑 ==========
+function onCorrect() {
+  state.score++;
+  $('score').textContent = state.score;
+  showFeedback('🎉');
+  flyStars(2);
+  speakEncourage();
+  setTimeout(nextQuestion, 1600);
+}
+
+function onWrong() {
+  showFeedback('💪');
+  flyStars(1);
+  setTimeout(nextQuestion, 2000);
+}
+
+function nextQuestion() {
+  state.current++;
+  if (state.current >= state.questions.length) {
+    finishGame();
+    return;
+  }
+  state.currentItem = state.questions[state.current];
+  state.answered = false;
+  $('progress').textContent = `${state.current + 1}/${state.questions.length}`;
+  renderGame();
+}
+
+function renderGame() {
+  switch (state.mode) {
+    case 'picture': renderPicture(); break;
+    case 'listen': renderListen(); break;
+    case 'initial': renderInitial(); break;
+    case 'final': renderFinal(); break;
+  }
+}
+
+// ========== 切换 ==========
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+
+function startGame(mode) {
+  state = {
+    mode,
+    score: 0,
+    current: 0,
+    currentItem: null,
+    questions: generateQuestions(mode),
+    answered: false
+  };
+  if (state.questions.length === 0) {
+    alert('题库为空');
+    return;
+  }
+  state.total = state.questions.length;
+  state.currentItem = state.questions[0];
+
+  const titles = { picture: '看图选音', listen: '听音辨字', initial: '声母找朋友', final: '韵母大冒险' };
+  $('gameTitle').textContent = titles[mode];
+  $('score').textContent = '0';
+  $('progress').textContent = `1/${state.total}`;
+  showScreen('game');
+  renderGame();
+}
+
+function goMenu() {
+  speechSynthesis.cancel();
+  showScreen('menu');
+}
+
+function restartGame() {
+  $('modal').classList.remove('show');
+  startGame(state.mode);
+}
+
+function finishGame() {
+  speechSynthesis.cancel();
+  const pct = state.score / state.total;
+  let trophy = '🏆', title = '太棒啦！';
+  if (pct >= 0.9) { trophy = '🏆'; title = '拼音小达人！'; }
+  else if (pct >= 0.7) { trophy = '🥇'; title = '真厉害！'; }
+  else if (pct >= 0.5) { trophy = '🥈'; title = '继续加油！'; }
+  else { trophy = '🥉'; title = '不要灰心！'; }
+
+  $('trophy').textContent = trophy;
+  $('modalTitle').textContent = title;
+  $('modalScore').textContent = `你获得了 ${state.score} / ${state.total} 颗星`;
+  $('modal').classList.add('show');
+  speak(title, { rate: 0.9 });
+  for (let i = 0; i < state.score; i++) {
+    setTimeout(() => flyStars(1), i * 200);
+  }
+}
+
+// 阻止双指缩放（移动端）
+document.addEventListener('gesturestart', e => e.preventDefault());
+</script>
+</body>
+</html>

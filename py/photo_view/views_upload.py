@@ -6,11 +6,21 @@ import time
 
 from flask import Blueprint, flash, redirect, render_template, request, send_from_directory, url_for
 from pdf2image import convert_from_path
+from PIL import Image
 from werkzeug.utils import secure_filename
 
 from paths import ALLOWED_EXTENSIONS, upload_dir
 
 bp = Blueprint('upload', __name__)
+
+# rembg is optional. If installed it gives ML-based background removal
+# (best quality). Otherwise we fall back to a simple PIL corner-color
+# threshold method that only works on plain-color backgrounds.
+try:
+    from rembg import remove as _rembg_remove
+    HAS_REMBG = True
+except Exception:
+    HAS_REMBG = False
 
 
 def allowed_file(filename):
@@ -148,5 +158,102 @@ def preview_upload(filename):
 @bp.route("/upload/download/<filename>")
 def download_upload(filename):
     """下载已上传的文件"""
+    safe_name = re.sub(r'[^a-zA-Z0-9_\-.]', '', filename)
+    return send_from_directory(upload_dir, safe_name, as_attachment=True)
+
+
+# ---------------------------------------------------------------------------
+# Background removal
+# ---------------------------------------------------------------------------
+
+BG_IMAGE_EXTS = {'jpg', 'jpeg', 'png', 'webp'}
+
+
+def _remove_bg_pil(img, tolerance=30):
+    """PIL fallback: treat the brightest corner color as background and
+    make all pixels within `tolerance` transparent. Works only when the
+    background is a single plain color (typical for ID photos etc.)."""
+    rgba = img.convert('RGBA')
+    w, h = rgba.size
+    corners = [rgba.getpixel((0, 0)), rgba.getpixel((w - 1, 0)),
+               rgba.getpixel((0, h - 1)), rgba.getpixel((w - 1, h - 1))]
+    bg = max(corners, key=lambda p: p[0] + p[1] + p[2])
+    br, bgc, bb, _ = bg
+
+    pixels = rgba.load()
+    tol = int(tolerance)
+    for y in range(h):
+        for x in range(w):
+            r, g, b, _a = pixels[x, y]
+            if abs(r - br) <= tol and abs(g - bgc) <= tol and abs(b - bb) <= tol:
+                pixels[x, y] = (255, 255, 255, 0)
+    return rgba
+
+
+def _remove_bg(img_bytes):
+    """Return PNG bytes with the background removed. Uses rembg when
+    available, otherwise the PIL fallback."""
+    if HAS_REMBG:
+        return _rembg_remove(img_bytes)
+    img = Image.open(io.BytesIO(img_bytes))
+    out = _remove_bg_pil(img)
+    buf = io.BytesIO()
+    out.save(buf, format='PNG')
+    return buf.getvalue()
+
+
+@bp.route("/upload/bg", methods=['GET', 'POST'])
+def upload_bg():
+    """Upload an image, strip its background, save the result as PNG."""
+    result_b64 = None
+    original_b64 = None
+    output_name = None
+    error = None
+
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            error = 'No file selected'
+        else:
+            f = request.files['file']
+            if f.filename == '':
+                error = 'No file selected'
+            elif not allowed_file(f.filename):
+                error = 'Unsupported file type'
+            else:
+                ext = f.filename.rsplit('.', 1)[1].lower()
+                if ext not in BG_IMAGE_EXTS:
+                    error = 'Only image files are supported'
+                else:
+                    if not os.path.exists(upload_dir):
+                        os.makedirs(upload_dir)
+                    raw = f.read()
+                    timestamp = time.strftime(
+                        "%Y%m%d_%H%M%S",
+                        time.gmtime(time.time() + 8 * 3600))
+                    output_name = f"nobg_{timestamp}.png"
+                    output_path = os.path.join(upload_dir, output_name)
+                    try:
+                        result_bytes = _remove_bg(raw)
+                        with open(output_path, 'wb') as out:
+                            out.write(result_bytes)
+                        result_b64 = base64.b64encode(result_bytes).decode()
+                        original_b64 = base64.b64encode(raw).decode()
+                    except Exception as e:
+                        error = f'Background removal failed: {e}'
+
+    return render_template(
+        "upload_bg.html",
+        result_b64=result_b64,
+        original_b64=original_b64,
+        output_name=output_name,
+        error=error,
+        has_rembg=HAS_REMBG,
+        allowed_image_exts=', '.join(sorted(BG_IMAGE_EXTS)),
+    )
+
+
+@bp.route("/upload/bg/download/")
+def download_bg(filename):
+    """Download the background-removed image."""
     safe_name = re.sub(r'[^a-zA-Z0-9_\-.]', '', filename)
     return send_from_directory(upload_dir, safe_name, as_attachment=True)

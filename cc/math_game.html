@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>欢乐数学乐园 - 6岁小朋友专属</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Comic Sans MS", "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 25%, #ff7675 50%, #74b9ff 75%, #a29bfe 100%);
+    background-size: 400% 400%;
+    animation: bg 15s ease infinite;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    overflow: hidden;
+  }
+  @keyframes bg {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .stars {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
+  }
+  .star {
+    position: absolute; font-size: 24px;
+    animation: float 8s infinite ease-in-out;
+    opacity: 0.6;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-30px) rotate(180deg); }
+  }
+  .container {
+    position: relative; z-index: 1;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 30px;
+    padding: 30px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    max-width: 600px; width: 100%;
+    text-align: center;
+    border: 5px solid #fff;
+  }
+  h1 {
+    color: #ff6b6b;
+    font-size: 36px;
+    margin-bottom: 10px;
+    text-shadow: 3px 3px 0 #ffd93d;
+    animation: bounce 2s infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .subtitle { color: #6c5ce7; font-size: 16px; margin-bottom: 20px; }
+
+  /* 菜单界面 */
+  .menu { display: block; }
+  .menu h2 { color: #00b894; font-size: 24px; margin-bottom: 20px; }
+  .mode-btn, .diff-btn {
+    display: inline-block;
+    background: linear-gradient(45deg, #ff7675, #fdcb6e);
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+    padding: 15px 30px;
+    margin: 8px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #d63031, 0 8px 10px rgba(0,0,0,0.2);
+    transition: all 0.1s;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+  }
+  .mode-btn:hover, .diff-btn:hover { transform: translateY(-2px); }
+  .mode-btn:active, .diff-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #d63031; }
+  .diff-btn { background: linear-gradient(45deg, #74b9ff, #0984e3); box-shadow: 0 6px 0 #0652DD, 0 8px 10px rgba(0,0,0,0.2); }
+  .diff-btn:active { box-shadow: 0 2px 0 #0652DD; }
+  .section-title { color: #e17055; margin: 15px 0 10px; font-size: 20px; }
+
+  /* 游戏界面 */
+  .game { display: none; }
+  .top-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .score, .question-num, .lives {
+    background: #fff; padding: 8px 16px; border-radius: 20px;
+    font-size: 18px; font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  .score { color: #fdcb6e; }
+  .question-num { color: #00b894; }
+  .lives { color: #ff7675; }
+
+  .question-box {
+    background: linear-gradient(135deg, #fff9e6, #ffe4e1);
+    border: 4px dashed #fdcb6e;
+    border-radius: 25px;
+    padding: 30px 20px;
+    margin: 20px 0;
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .visual-aid { font-size: 40px; line-height: 1.4; margin-bottom: 15px; word-break: break-all; }
+  .equation {
+    font-size: 48px;
+    font-weight: bold;
+    color: #2d3436;
+    margin: 10px 0;
+    text-shadow: 2px 2px 0 #fab1a0;
+  }
+  .equation .num { color: #0984e3; }
+  .equation .op { color: #d63031; margin: 0 8px; }
+  .equation .q { color: #6c5ce7; }
+
+  .answers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .ans-btn {
+    background: linear-gradient(45deg, #55efc4, #00b894);
+    color: white;
+    font-size: 32px;
+    font-weight: bold;
+    padding: 20px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #019875, 0 8px 10px rgba(0,0,0,0.15);
+    transition: all 0.15s;
+  }
+  .ans-btn:hover { transform: translateY(-2px); }
+  .ans-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #019875; }
+  .ans-btn.correct {
+    background: linear-gradient(45deg, #00b894, #019875);
+    animation: shake 0.5s;
+  }
+  .ans-btn.wrong {
+    background: linear-gradient(45deg, #ff7675, #d63031);
+    animation: shake 0.5s;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+  }
+  .ans-btn.disabled { pointer-events: none; opacity: 0.6; }
+
+  /* 反馈弹窗 */
+  .feedback {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: white;
+    padding: 40px 60px;
+    border-radius: 30px;
+    font-size: 48px;
+    font-weight: bold;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    z-index: 100;
+    transition: transform 0.3s;
+    pointer-events: none;
+  }
+  .feedback.show { transform: translate(-50%, -50%) scale(1); }
+  .feedback.good { color: #00b894; border: 6px solid #00b894; }
+  .feedback.bad { color: #d63031; border: 6px solid #d63031; }
+
+  /* 结果界面 */
+  .result { display: none; }
+  .result h2 { font-size: 32px; margin-bottom: 20px; }
+  .big-emoji { font-size: 80px; margin: 20px 0; animation: spin 3s infinite linear; }
+  @keyframes spin {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.2); }
+    100% { transform: rotate(360deg) scale(1); }
+  }
+  .stars-earned { font-size: 40px; margin: 15px 0; }
+  .result-info { font-size: 20px; color: #636e72; margin: 10px 0; }
+  .result-btns { margin-top: 25px; }
+
+  /* 漂浮emoji */
+  .floating-emoji {
+    position: fixed;
+    font-size: 40px;
+    pointer-events: none;
+    z-index: 99;
+    animation: floatUp 1.5s ease-out forwards;
+  }
+  @keyframes floatUp {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-200px) scale(1.5); opacity: 0; }
+  }
+
+  /* 数字键盘 */
+  .numpad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .num-btn {
+    background: linear-gradient(45deg, #74b9ff, #0984e3);
+    color: white;
+    font-size: 32px;
+    font-weight: bold;
+    padding: 20px;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #0652DD;
+    transition: all 0.1s;
+  }
+  .num-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #0652DD; }
+  .num-btn.clear { background: linear-gradient(45deg, #fab1a0, #e17055); box-shadow: 0 5px 0 #b34d1a; }
+  .num-btn.ok { background: linear-gradient(45deg, #55efc4, #00b894); box-shadow: 0 5px 0 #019875; }
+
+  .input-display {
+    font-size: 48px;
+    color: #6c5ce7;
+    background: #fff;
+    border: 4px solid #6c5ce7;
+    border-radius: 15px;
+    padding: 10px;
+    min-height: 70px;
+    margin: 10px auto;
+    width: 200px;
+    font-weight: bold;
+  }
+
+  /* 移动端适配 */
+  @media (max-width: 480px) {
+    h1 { font-size: 28px; }
+    .equation { font-size: 36px; }
+    .ans-btn { font-size: 26px; padding: 15px; }
+    .container { padding: 20px; }
+    .visual-aid { font-size: 30px; }
+    .num-btn { font-size: 26px; padding: 15px; }
+  }
+</style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+
+  <div class="container">
+    <!-- 主菜单 -->
+    <div id="menu" class="menu">
+      <h1>🌈 欢乐数学乐园 🎈</h1>
+      <p class="subtitle">小朋友，一起来玩数学吧！</p>
+      <h2>选择游戏类型：</h2>
+      <button class="mode-btn" onclick="startGame('add')">➕ 加法乐园</button>
+      <button class="mode-btn" onclick="startGame('sub')">➖ 减法乐园</button>
+      <button class="mode-btn" onclick="startGame('mix')">🎯 加减混合</button>
+
+      <h2 class="section-title">选择难度：</h2>
+      <button class="diff-btn" onclick="setDiff(10)">🌟 简单（10以内）</button>
+      <button class="diff-btn" onclick="setDiff(20)">⭐ 进阶（20以内）</button>
+      <button class="diff-btn" onclick="setDiff(50)">🚀 挑战（50以内）</button>
+
+      <p class="subtitle" style="margin-top:20px;">当前难度：<span id="curDiff" style="color:#d63031;font-weight:bold;">10以内</span></p>
+    </div>
+
+    <!-- 游戏界面 -->
+    <div id="game" class="game">
+      <div class="top-bar">
+        <div class="score">⭐ <span id="score">0</span></div>
+        <div class="question-num">第 <span id="qnum">1</span> / 10 题</div>
+        <div class="lives">❤️ <span id="lives">3</span></div>
+      </div>
+
+      <div class="question-box">
+        <div class="visual-aid" id="visualAid"></div>
+        <div class="equation" id="equation"></div>
+      </div>
+
+      <!-- 选择题模式 -->
+      <div class="answers" id="choices"></div>
+
+      <!-- 输入题模式 -->
+      <div id="inputMode" style="display:none;">
+        <div class="input-display" id="inputDisplay">?</div>
+        <div class="numpad" id="numpad"></div>
+      </div>
+
+      <button class="diff-btn" onclick="backToMenu()" style="margin-top:15px;">🏠 返回菜单</button>
+    </div>
+
+    <!-- 结果界面 -->
+    <div id="result" class="result">
+      <div class="big-emoji" id="bigEmoji">🎉</div>
+      <h2 id="resultTitle">太棒了！</h2>
+      <div class="stars-earned" id="starsEarned">⭐⭐⭐</div>
+      <p class="result-info">得分：<span id="finalScore">0</span> 分</p>
+      <p class="result-info">答对：<span id="correctNum">0</span> 题</p>
+      <div class="result-btns">
+        <button class="mode-btn" onclick="playAgain()">🔄 再玩一次</button>
+        <button class="diff-btn" onclick="backToMenu()">🏠 返回菜单</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="feedback" id="feedback"></div>
+
+<script>
+// ==================== 游戏状态 ====================
+const state = {
+  mode: 'add',     // add / sub / mix
+  diff: 10,        // 10 / 20 / 50
+  score: 0,
+  qIndex: 0,
+  totalQ: 10,
+  lives: 3,
+  correct: 0,
+  current: null,   // 当前题目
+  inputAnswer: '',  // 输入模式下的答案
+  inputMode: false, // 是否输入模式
+};
+
+// ==================== 装饰背景星星 ====================
+function createStars() {
+  const stars = document.getElementById('stars');
+  const emojis = ['⭐','🌟','✨','💫','🌈','🎈'];
+  for (let i = 0; i < 15; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    s.style.left = Math.random()*100 + '%';
+    s.style.top = Math.random()*100 + '%';
+    s.style.animationDelay = Math.random()*5 + 's';
+    s.style.animationDuration = (5 + Math.random()*5) + 's';
+    stars.appendChild(s);
+  }
+}
+createStars();
+
+// ==================== 音效（用Web Audio API合成） ====================
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playTone(freq, duration, type='sine') {
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch(e){}
+}
+function playCorrect() {
+  playTone(523.25, 0.15); // C5
+  setTimeout(() => playTone(659.25, 0.15), 100); // E5
+  setTimeout(() => playTone(783.99, 0.3), 200);  // G5
+}
+function playWrong() {
+  playTone(220, 0.2, 'sawtooth');
+  setTimeout(() => playTone(180, 0.3, 'sawtooth'), 150);
+}
+function playWin() {
+  [523,659,784,1047].forEach((f,i) => setTimeout(()=>playTone(f, 0.2), i*150));
+}
+function playClick() { playTone(800, 0.05); }
+
+// ==================== 工具函数 ====================
+function rand(min, max) { return Math.floor(Math.random()*(max-min+1)) + min; }
+function shuffle(arr) {
+  for (let i = arr.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+
+// 生成水果emoji用于视觉辅助
+const fruits = ['🍎','🍌','🍇','🍓','🍊','🍑','🍒','🥝','🍉','🍐'];
+function getFruit(n) { return fruits[Math.floor(Math.random()*fruits.length)]; }
+
+// ==================== 题目生成 ====================
+function genQuestion() {
+  let a, b, op, answer, text, visual;
+  const max = state.diff;
+
+  if (state.mode === 'mix') {
+    op = Math.random() < 0.5 ? '+' : '-';
+  } else {
+    op = state.mode === 'add' ? '+' : '-';
+  }
+
+  if (op === '+') {
+    if (max <= 10) {
+      a = rand(1, max-1);
+      b = rand(1, max-a);
+    } else {
+      a = rand(2, max-2);
+      b = rand(1, max-a);
+    }
+    answer = a + b;
+    text = `${a} + ${b} = ?`;
+    visual = `${getFruit().repeat(a)} ➕ ${getFruit().repeat(b)}`;
+  } else {
+    a = rand(3, max);
+    b = rand(1, a-1);  // 保证结果为正
+    answer = a - b;
+    text = `${a} - ${b} = ?`;
+    visual = `${getFruit().repeat(a)} ➖ ${getFruit().repeat(b)}`;
+  }
+
+  // 随机决定使用选择模式还是输入模式（20以内时多出现输入模式锻炼）
+  const useInput = max >= 20 && Math.random() < 0.4;
+
+  return { a, b, op, answer, text, visual, useInput };
+}
+
+// 生成选择题选项
+function genChoices(answer) {
+  const choices = new Set([answer]);
+  while (choices.size < 4) {
+    let delta = rand(1, 3);
+    let opt = answer + (Math.random()<0.5 ? -delta : delta);
+    if (opt >= 0 && opt <= state.diff + 5 && opt !== answer) choices.add(opt);
+  }
+  return shuffle([...choices]);
+}
+
+// ==================== UI更新 ====================
+function setDiff(d) {
+  state.diff = d;
+  playClick();
+  const txt = d === 10 ? '10以内' : d === 20 ? '20以内' : '50以内';
+  document.getElementById('curDiff').textContent = txt;
+}
+
+function startGame(mode) {
+  playClick();
+  state.mode = mode;
+  state.score = 0;
+  state.qIndex = 0;
+  state.lives = 3;
+  state.correct = 0;
+  document.getElementById('menu').style.display = 'none';
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('game').style.display = 'block';
+  nextQuestion();
+}
+
+function nextQuestion() {
+  if (state.qIndex >= state.totalQ || state.lives <= 0) {
+    showResult();
+    return;
+  }
+  state.current = genQuestion();
+  state.inputAnswer = '';
+  renderQuestion();
+  updateHUD();
+}
+
+function renderQuestion() {
+  const q = state.current;
+  document.getElementById('qnum').textContent = state.qIndex + 1;
+  document.getElementById('visualAid').textContent = q.visual;
+  document.getElementById('equation').innerHTML =
+    `<span class="num">${q.a}</span> <span class="op">${q.op}</span> <span class="num">${q.b}</span> <span class="op">=</span> <span class="q">?</span>`;
+
+  const choicesDiv = document.getElementById('choices');
+  const inputDiv = document.getElementById('inputMode');
+  choicesDiv.innerHTML = '';
+
+  if (q.useInput) {
+    choicesDiv.style.display = 'none';
+    inputDiv.style.display = 'block';
+    state.inputMode = true;
+    renderNumpad();
+    document.getElementById('inputDisplay').textContent = '?';
+  } else {
+    inputDiv.style.display = 'none';
+    choicesDiv.style.display = 'grid';
+    state.inputMode = false;
+    const choices = genChoices(q.answer);
+    choices.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'ans-btn';
+      btn.textContent = c;
+      btn.onclick = () => checkAnswer(c, btn);
+      choicesDiv.appendChild(btn);
+    });
+  }
+}
+
+function renderNumpad() {
+  const pad = document.getElementById('numpad');
+  pad.innerHTML = '';
+  for (let i = 1; i <= 9; i++) {
+    const b = document.createElement('button');
+    b.className = 'num-btn';
+    b.textContent = i;
+    b.onclick = () => inputNum(i);
+    pad.appendChild(b);
+  }
+  // 0
+  const b0 = document.createElement('button');
+  b0.className = 'num-btn';
+  b0.textContent = '0';
+  b0.onclick = () => inputNum(0);
+  pad.appendChild(b0);
+  // 清空
+  const clr = document.createElement('button');
+  clr.className = 'num-btn clear';
+  clr.textContent = '⌫';
+  clr.onclick = () => { state.inputAnswer = ''; updateInput(); };
+  pad.appendChild(clr);
+  // 确定
+  const ok = document.createElement('button');
+  ok.className = 'num-btn ok';
+  ok.textContent = '✓';
+  ok.onclick = () => {
+    if (state.inputAnswer !== '') checkAnswer(parseInt(state.inputAnswer));
+  };
+  pad.appendChild(ok);
+}
+
+function inputNum(n) {
+  playClick();
+  if (state.inputAnswer.length < 3) {
+    state.inputAnswer += n;
+    updateInput();
+  }
+}
+function updateInput() {
+  document.getElementById('inputDisplay').textContent =
+    state.inputAnswer === '' ? '?' : state.inputAnswer;
+}
+
+function updateHUD() {
+  document.getElementById('score').textContent = state.score;
+  document.getElementById('qnum').textContent = state.qIndex + 1;
+  document.getElementById('lives').textContent = '❤️'.repeat(state.lives) || '💔';
+}
+
+function checkAnswer(userAns, btn) {
+  const correct = state.current.answer;
+  const isCorrect = userAns === correct;
+
+  if (btn) {
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    document.querySelectorAll('.ans-btn').forEach(b => b.classList.add('disabled'));
+  }
+
+  showFeedback(isCorrect);
+
+  if (isCorrect) {
+    state.score += 10;
+    state.correct++;
+    playCorrect();
+    // 漂浮emoji
+    for (let i = 0; i < 5; i++) {
+      setTimeout(() => spawnFloatingEmoji(['⭐','🌟','✨','💖'][rand(0,3)], btn), i*100);
+    }
+  } else {
+    state.lives--;
+    playWrong();
+    spawnFloatingEmoji('❌', btn);
+  }
+
+  updateHUD();
+
+  setTimeout(() => {
+    state.qIndex++;
+    nextQuestion();
+  }, isCorrect ? 1200 : 1800);
+}
+
+function showFeedback(isCorrect) {
+  const fb = document.getElementById('feedback');
+  fb.textContent = isCorrect ? '🎉 真棒！' : '💪 再试试！';
+  fb.className = 'feedback show ' + (isCorrect ? 'good' : 'bad');
+  setTimeout(() => fb.classList.remove('show'), 1000);
+}
+
+function spawnFloatingEmoji(emoji, target) {
+  const el = document.createElement('div');
+  el.className = 'floating-emoji';
+  el.textContent = emoji;
+  let x, y;
+  if (target) {
+    const r = target.getBoundingClientRect();
+    x = r.left + r.width/2;
+    y = r.top;
+  } else {
+    x = window.innerWidth/2 + rand(-100,100);
+    y = window.innerHeight/2;
+  }
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1500);
+}
+
+function showResult() {
+  document.getElementById('game').style.display = 'none';
+  document.getElementById('result').style.display = 'block';
+  document.getElementById('finalScore').textContent = state.score;
+  document.getElementById('correctNum').textContent = state.correct;
+
+  const ratio = state.correct / state.totalQ;
+  let emoji, title, stars;
+  if (ratio >= 0.9) {
+    emoji = '🏆'; title = '数学小天才！'; stars = '⭐⭐⭐⭐⭐';
+    playWin();
+  } else if (ratio >= 0.7) {
+    emoji = '🎉'; title = '太厉害啦！'; stars = '⭐⭐⭐⭐';
+    playWin();
+  } else if (ratio >= 0.5) {
+    emoji = '😊'; title = '继续加油！'; stars = '⭐⭐⭐';
+  } else {
+    emoji = '🤗'; title = '别灰心，再来一次！'; stars = '⭐⭐';
+  }
+  document.getElementById('bigEmoji').textContent = emoji;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('starsEarned').textContent = stars;
+}
+
+function playAgain() {
+  playClick();
+  startGame(state.mode);
+}
+
+function backToMenu() {
+  playClick();
+  document.getElementById('game').style.display = 'none';
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('menu').style.display = 'block';
+}
+</script>
+</body>
+</html>
