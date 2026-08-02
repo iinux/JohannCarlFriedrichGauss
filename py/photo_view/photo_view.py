@@ -1,5 +1,6 @@
 from flask import Flask
 
+import views_clipboard
 import views_index
 import views_rtsp
 import views_upload
@@ -15,6 +16,7 @@ app.register_blueprint(views_index.bp)
 app.register_blueprint(views_words.bp)
 app.register_blueprint(views_rtsp.bp)
 app.register_blueprint(views_upload.bp)
+app.register_blueprint(views_clipboard.bp)
 
 
 if __name__ == "__main__":

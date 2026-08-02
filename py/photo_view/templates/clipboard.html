@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>共享剪切板</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1.page-title {
+            text-align: center;
+            color: #fff;
+            font-size: 2.2rem;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-links {
+            text-align: center;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            display: inline-block;
+            padding: 10px 24px;
+            background: #fff;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+        }
+
+        .panel {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 280px;
+            padding: 14px;
+            border: 2px solid #e8eaed;
+            border-radius: 8px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #333;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        textarea:focus {
+            border-color: #667eea;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn.paste {
+            background: #3f51b5;
+        }
+
+        .btn.copy {
+            background: #4caf50;
+        }
+
+        .btn.save {
+            background: #ff9800;
+        }
+
+        .btn.refresh {
+            background: #9e9e9e;
+        }
+
+        .status {
+            margin-top: 16px;
+            min-height: 22px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .status.ok {
+            color: #2e7d32;
+        }
+
+        .status.err {
+            color: #c62828;
+        }
+
+        .hint {
+            margin-top: 8px;
+            font-size: 0.82rem;
+            color: #999;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            h1.page-title {
+                font-size: 1.6rem;
+            }
+
+            .panel {
+                padding: 16px;
+            }
+
+            .btn {
+                flex: 1 1 40%;
+                padding: 12px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="page-title">共享剪切板</h1>
+
+        <div class="nav-links">
+            <a href="/index" class="nav-btn">返回首页</a>
+        </div>
+
+        <div class="panel">
+            <textarea id="content" placeholder="点「粘贴」把本机剪切板内容放进来，或直接在此输入……"></textarea>
+
+            <div class="actions">
+                <button type="button" class="btn paste" id="btn-paste">粘贴</button>
+                <button type="button" class="btn copy" id="btn-copy">复制</button>
+                <button type="button" class="btn save" id="btn-save">保存</button>
+                <button type="button" class="btn refresh" id="btn-refresh">刷新</button>
+            </div>
+
+            <div class="status" id="status"></div>
+            <div class="hint">
+                「粘贴」会读取本机剪切板并自动保存到服务器；「复制」把输入框内容写入本机剪切板。<br>
+                浏览器只在 https 或 localhost 下允许读取剪切板，普通 http 访问时请手动按 Ctrl+V / ⌘V 再点「保存」。
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var contentEl = document.getElementById('content');
+        var statusEl = document.getElementById('status');
+
+        function setStatus(msg, kind) {
+            statusEl.textContent = msg;
+            statusEl.className = 'status' + (kind ? ' ' + kind : '');
+        }
+
+        function load() {
+            setStatus('加载中……');
+            fetch('/clipboard/content')
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    contentEl.value = data.text || '';
+                    setStatus('已加载服务器内容', 'ok');
+                })
+                .catch(function () {
+                    setStatus('加载失败', 'err');
+                });
+        }
+
+        function save() {
+            setStatus('保存中……');
+            return fetch('/clipboard/content', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: contentEl.value })
+            })
+                .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+                .then(function (res) {
+                    if (res.ok && res.data.ok) {
+                        setStatus('已保存，其他人刷新即可看到', 'ok');
+                    } else {
+                        setStatus(res.data.error || '保存失败', 'err');
+                    }
+                })
+                .catch(function () {
+                    setStatus('保存失败', 'err');
+                });
+        }
+
+        function fallbackCopy() {
+            contentEl.focus();
+            contentEl.select();
+            try {
+                return document.execCommand('copy');
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function tryFallbackCopy() {
+            if (fallbackCopy()) {
+                setStatus('已复制到本机剪切板', 'ok');
+            } else {
+                setStatus('复制失败，请手动选中后 Ctrl+C / ⌘C', 'err');
+            }
+        }
+
+        document.getElementById('btn-paste').addEventListener('click', function () {
+            if (!navigator.clipboard || !navigator.clipboard.readText) {
+                contentEl.focus();
+                setStatus('当前浏览器/协议不允许读取剪切板，请手动按 Ctrl+V / ⌘V 粘贴后点「保存」', 'err');
+                return;
+            }
+            navigator.clipboard.readText()
+                .then(function (text) {
+                    contentEl.value = text;
+                    return save();
+                })
+                .catch(function () {
+                    contentEl.focus();
+                    setStatus('读取剪切板被拒绝，请手动按 Ctrl+V / ⌘V 粘贴后点「保存」', 'err');
+                });
+        });
+
+        document.getElementById('btn-copy').addEventListener('click', function () {
+            var text = contentEl.value;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text)
+                    .then(function () {
+                        setStatus('已复制到本机剪切板', 'ok');
+                    })
+                    .catch(tryFallbackCopy);
+            } else {
+                tryFallbackCopy();
+            }
+        });
+
+        document.getElementById('btn-save').addEventListener('click', save);
+        document.getElementById('btn-refresh').addEventListener('click', load);
+
+        load();
+    </script>
+</body>
+</html>
