@@ -1,0 +1,33 @@
+wget https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-7.1.5.tar.xz
+
+make tinyconfig
+make menuconfig
+make -j 4
+
+sudo dnf config-manager --set-enabled crb
+sudo yum install epel-release -y
+sudo yum install qemu-kvm syslinux genisoimage glibc-static glibc-devel -y
+/usr/libexec/qemu-kvm -kernel arch/x86/boot/bzImage
+
+gcc -c shell.c
+as sys.S
+ld -o shell shell.o a.out --entry main -z noexecstack
+
+mv shell init
+echo init | cpio -H newc -o > init.cpio
+
+make isoimage FDARGS="initrd=/init.cpio" FDINITRD=shell/init.cpio
+
+wget https://www. lua.org/ftp/lua-5.4.7.tar.gz
+tar xzf lua-5.4.7.tar.gz
+cd lua-5.4.7/src/
+vi Makefile
+# MYLDFLAGS=-static
+make
+
+cp lua-5.4.7/src/lua .
+echo init >> files
+echo lua >> files
+cat files | cpio -H newc -o > init.cpio
+
+qemu-kvm -cpu max -cdrom arch/x86/boot/image.iso
