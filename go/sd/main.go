@@ -120,7 +120,9 @@ func handleConn(nConn net.Conn, config *ssh.ServerConfig, shellPath string) {
 				log.Printf("channel accept: %v", err)
 				continue
 			}
-			go handleSession(channel, requests, shellPath)
+			go handleSession(channel, requests, shellPath, func() {
+				sshConn.Close()
+			})
 		case "direct-tcpip":
 			go handleDirectTCPIP(newChannel)
 		default:
@@ -348,8 +350,9 @@ func closeWrite(conn net.Conn) {
 	conn.Close()
 }
 
-func handleSession(channel ssh.Channel, requests <-chan *ssh.Request, shellPath string) {
+func handleSession(channel ssh.Channel, requests <-chan *ssh.Request, shellPath string, onDone func()) {
 	defer channel.Close()
+	defer onDone()
 
 	var (
 		ptmx     *os.File
