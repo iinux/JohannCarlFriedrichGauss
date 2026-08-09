@@ -1,3 +1,5 @@
 *.eml
 smtp-relay-server
 smtp-relay-server-linux
+eml_test
+eml-viewer

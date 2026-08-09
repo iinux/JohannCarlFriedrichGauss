@@ -31,3 +31,22 @@ echo lua >> files
 cat files | cpio -H newc -o > init.cpio
 
 qemu-kvm -cpu max -cdrom arch/x86/boot/image.iso
+
+qemu-kvm -kernel arch/x86/boot/bzImage -initrd ~/git/JohannCarlFriedrichGauss/c/mytinylinux/init.cpio -s -S
+# 另一个终端
+  gdb vmlinux
+  (gdb) target remote :1234
+  (gdb) break do_execveat_common
+  (gdb) continue
+
+nm vmlinux | grep do_execve
+
+scripts/config --set-val CONFIG_DEBUG_INFO_DWARF4 y
+scripts/config --set-val CONFIG_DEBUG_INFO_NONE n
+grep DEBUG_INFO .config   # 确认结果
+make olddefconfig          # 补全依赖项
+make -j$(nproc)
+
+验证是否真的生成了 DWARF 信息(编译完之后):
+readelf -S vmlinux | grep debug
+如果能看到 .debug_info、.debug_line 这些 section,说明调试信息成功生成了,这时候 GDB 加载就不会再提示 "No debugging symbols found"。
