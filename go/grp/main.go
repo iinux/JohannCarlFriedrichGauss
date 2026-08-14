@@ -25,22 +25,26 @@ const (
 
 func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
-	if len(os.Args) < 2 {
+	args := os.Args[1:]
+	if len(args) == 0 {
+		args = strings.Fields(os.Getenv("arg"))
+	}
+	if len(args) == 0 {
 		usage()
 	}
 
 	var err error
-	switch os.Args[1] {
+	switch args[0] {
 	case "-s":
-		if len(os.Args) != 4 {
+		if len(args) != 3 {
 			usage()
 		}
-		err = runServer(os.Args[2], os.Args[3])
+		err = runServer(args[1], args[2])
 	case "-c":
-		if len(os.Args) != 6 {
+		if len(args) != 5 {
 			usage()
 		}
-		err = runClient(os.Args[2], os.Args[3], os.Args[4], os.Args[5])
+		err = runClient(args[1], args[2], args[3], args[4])
 	default:
 		usage()
 	}
@@ -50,7 +54,7 @@ func main() {
 }
 
 func usage() {
-    //fmt.Fprintf(os.Stderr, "用法:\n  %s -s <控制端口> <请求端口>\n  %s -c <服务端地址> <服务端端口> <目标地址> <目标端口>\n", os.Args[0], os.Args[0])
+	//fmt.Fprintf(os.Stderr, "用法:\n  %s -s <控制端口> <请求端口>\n  %s -c <服务端地址> <服务端端口> <目标地址> <目标端口>\n", os.Args[0], os.Args[0])
 	os.Exit(2)
 }
 
@@ -253,7 +257,7 @@ func runClient(serverHost, serverPort, targetHost, targetPort string) error {
 	}
 	serverAddr := net.JoinHostPort(serverHost, serverPort)
 	targetAddr := net.JoinHostPort(targetHost, targetPort)
-    //log.Printf("客户端已启动：服务端 %s，目标 %s", serverAddr, targetAddr)
+	//log.Printf("客户端已启动：服务端 %s，目标 %s", serverAddr, targetAddr)
 	for {
 		if err := clientSession(serverAddr, targetAddr); err != nil {
 			log.Printf("控制连接断开：%v；3 秒后重连", err)
@@ -271,7 +275,7 @@ func clientSession(serverAddr, targetAddr string) error {
 	if _, err := io.WriteString(conn, "CONTROL\n"); err != nil {
 		return err
 	}
-    //log.Printf("控制连接已建立：%s", serverAddr)
+	//log.Printf("控制连接已建立：%s", serverAddr)
 	r := bufio.NewReader(conn)
 	var writeMu sync.Mutex
 	for {
