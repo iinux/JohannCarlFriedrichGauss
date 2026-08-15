@@ -1,13 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"net"
 	"os"
-	"github.com/blevesearch/bleve/size"
-	"encoding/json"
-	"encoding/binary"
 	"time"
 )
 
@@ -18,102 +16,119 @@ var code = flag.String("code", "1234", "auth code")
 func main() {
 	flag.Parse()
 
-	addr, err := net.ResolveUDPAddr("udp", *host + ":" + *port)
+	addr, err := net.ResolveUDPAddr("udp", *host+":"+*port)
 	if err != nil {
 		fmt.Println("Can't resolve address: ", err)
 		os.Exit(1)
 	}
-	conn, err := net.DialUDP("udp", nil, addr)
+	// Use one unconnected UDP socket for both the rendezvous server and the
+	// peer. This keeps the same local port (and therefore the same NAT mapping)
+	// for every packet.
+	conn, err := net.ListenUDP("udp", nil)
 	if err != nil {
-		fmt.Println("Can't dial: ", err)
+		fmt.Println("Can't listen: ", err)
 		os.Exit(1)
 	}
+	defer conn.Close()
+	fmt.Println("local UDP:", conn.LocalAddr())
+	fmt.Println("rendezvous server:", addr)
 
-	_, err = conn.Write([]byte(*code))
+	_, err = conn.WriteToUDP([]byte(*code), addr)
 	if err != nil {
 		fmt.Println("failed:", err)
 		os.Exit(1)
 	}
 
-	data := make([]byte, size.SizeOfUint16)
-	_, err = conn.Read(data)
+	data := make([]byte, 64*1024)
+	n, remoteAddr, err := conn.ReadFromUDP(data)
 	if err != nil {
 		fmt.Println("failed to read UDP msg because of ", err)
 		os.Exit(1)
 	}
-
-	l := binary.BigEndian.Uint16(data)
-	data = make([]byte, l)
-	_, err = conn.Read(data)
-	if err != nil {
-		fmt.Println("failed to read UDP msg because of ", err)
+	if !sameUDPAddr(remoteAddr, addr) {
+		fmt.Println("received unexpected UDP message from", remoteAddr)
 		os.Exit(1)
 	}
 
 	var peerAddr net.UDPAddr
-	err = json.Unmarshal(data, &peerAddr)
+	err = json.Unmarshal(data[:n], &peerAddr)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println(peerAddr)
+	fmt.Println("peer public address:", &peerAddr)
+
+	peerReady := make(chan struct{})
 
 	go func() {
-		data = make([]byte, 5)
-		fmt.Println("before read")
-		dataLen, err := conn.Read(data)
-		fmt.Println("after read")
+		const punchInterval = 500 * time.Millisecond
+		const punchTimeout = 30 * time.Second
+		const keepaliveInterval = 20 * time.Second
+
+		send := func() bool {
+			if _, err := conn.WriteToUDP([]byte(*code), &peerAddr); err != nil {
+				fmt.Println("failed to write peer UDP msg:", err)
+				return false
+			}
+			return true
+		}
+
+		punchTicker := time.NewTicker(punchInterval)
+		punchTimer := time.NewTimer(punchTimeout)
+		defer punchTicker.Stop()
+		defer punchTimer.Stop()
+
+		fmt.Println("starting UDP hole punching")
+		if !send() {
+			return
+		}
+
+	punching:
+		for {
+			select {
+			case <-peerReady:
+				fmt.Println("UDP hole punching succeeded")
+				break punching
+			case <-punchTimer.C:
+				fmt.Println("UDP hole punching timed out; continuing with keepalives")
+				break punching
+			case <-punchTicker.C:
+				if !send() {
+					return
+				}
+			}
+		}
+
+		keepaliveTicker := time.NewTicker(keepaliveInterval)
+		defer keepaliveTicker.Stop()
+
+		for range keepaliveTicker.C {
+			if !send() {
+				return
+			}
+		}
+	}()
+
+	peerSeen := false
+	for {
+		data = make([]byte, 64*1024)
+		dataLen, remoteAddr, err := conn.ReadFromUDP(data)
 		if err != nil {
 			fmt.Println("failed to read UDP msg because of ", err)
 			return
 		}
-		fmt.Println(dataLen, string(data))
-	}()
-
-	/*
-	for true {
-		fmt.Println("before write")
-		conn.WriteToUDP([]byte("hello"), &peerAddr)
-		fmt.Println("after write")
-		if err != nil {
-			fmt.Println("failed to write UDP msg because of ", err)
+		if !sameUDPAddr(remoteAddr, &peerAddr) {
+			fmt.Printf("ignored %d bytes from unexpected address %s\n", dataLen, remoteAddr)
+			continue
 		}
-		time.Sleep(time.Minute)
-	}
-	*/
-
-	peerConn, err := net.DialUDP("udp", nil, &peerAddr)
-	if err != nil {
-		fmt.Println("Can't dial: ", err)
-		os.Exit(1)
-	}
-
-	go func() {
-		for true {
-			_, err = peerConn.Write([]byte(*code))
-			if err != nil {
-				fmt.Println("failed:", err)
-				os.Exit(1)
-			}
-			time.Sleep(time.Minute)
+		if !peerSeen {
+			peerSeen = true
+			close(peerReady)
 		}
-	}()
-
-	go func() {
-		for true {
-			data = make([]byte, len(*code))
-			fmt.Println("before peer read")
-			_, err = peerConn.Read(data)
-			fmt.Println("after peer read")
-			if err != nil {
-				fmt.Println("failed to read UDP msg because of ", err)
-				os.Exit(1)
-			}
-		}
-	}()
-
-	for true {
-		time.Sleep(time.Minute)
+		fmt.Printf("received %d bytes from peer %s: %q\n", dataLen, remoteAddr, data[:dataLen])
 	}
 }
 
+func sameUDPAddr(a, b *net.UDPAddr) bool {
+	return a != nil && b != nil && a.Port == b.Port && a.IP.Equal(b.IP)
+}
