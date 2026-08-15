@@ -24,6 +24,7 @@ const matchProtocol = protocol.ID("/iinux/p2p/match/1.0.0")
 
 type matchRequest struct {
 	Code string `json:"code"`
+	Role string `json:"role"`
 }
 
 type matchResponse struct {
@@ -34,6 +35,7 @@ type matchResponse struct {
 type waiter struct {
 	peerID peer.ID
 	stream network.Stream
+	role   string
 }
 
 type matcher struct {
@@ -97,13 +99,22 @@ func (m *matcher) handle(stream network.Stream) {
 		writeResponse(stream, matchResponse{Error: "code cannot be empty"})
 		return
 	}
+	if req.Role != "provider" && req.Role != "visitor" {
+		writeResponse(stream, matchResponse{Error: "role must be provider or visitor"})
+		return
+	}
 
 	m.mu.Lock()
 	previous, found := m.waiting[req.Code]
 	if !found {
-		m.waiting[req.Code] = waiter{peerID: requester, stream: stream}
+		m.waiting[req.Code] = waiter{peerID: requester, stream: stream, role: req.Role}
 		m.mu.Unlock()
-		fmt.Printf("waiting: code=%q peer=%s\n", req.Code, requester)
+		fmt.Printf("waiting: code=%q role=%s peer=%s\n", req.Code, req.Role, requester)
+		return
+	}
+	if previous.role == req.Role {
+		m.mu.Unlock()
+		writeResponse(stream, matchResponse{Error: "waiting peer has the same role"})
 		return
 	}
 	delete(m.waiting, req.Code)
@@ -115,7 +126,7 @@ func (m *matcher) handle(stream network.Stream) {
 		return
 	}
 
-	fmt.Printf("paired: code=%q %s <-> %s\n", req.Code, previous.peerID, requester)
+	fmt.Printf("paired: code=%q %s(%s) <-> %s(%s)\n", req.Code, previous.peerID, previous.role, requester, req.Role)
 	writeResponse(previous.stream, matchResponse{PeerID: requester.String()})
 	writeResponse(stream, matchResponse{PeerID: previous.peerID.String()})
 }

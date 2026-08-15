@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -24,11 +26,12 @@ import (
 
 const (
 	matchProtocol = protocol.ID("/iinux/p2p/match/1.0.0")
-	chatProtocol  = protocol.ID("/iinux/p2p/chat/1.0.0")
+	proxyProtocol = protocol.ID("/iinux/p2p/tcp-proxy/1.0.0")
 )
 
 type matchRequest struct {
 	Code string `json:"code"`
+	Role string `json:"role"`
 }
 
 type matchResponse struct {
@@ -39,10 +42,17 @@ type matchResponse struct {
 func main() {
 	relayFlag := flag.String("relay", "", "relay multiaddr including /p2p/<peer-id>")
 	code := flag.String("code", "1234", "pairing code")
-	message := flag.String("message", "hello from libp2p", "message sent to the peer")
+	targetIP := flag.String("target-ip", "", "client1 target host or IP")
+	targetPort := flag.Int("target-port", 0, "client1 target TCP port")
+	listenIP := flag.String("listen-ip", "127.0.0.1", "client2 local listen IP")
+	listenPort := flag.Int("listen-port", 0, "client2 local TCP listen port")
 	flag.Parse()
 	if *relayFlag == "" {
 		log.Fatal("-relay is required; copy 'client relay address' from the server")
+	}
+	role, err := clientRole(*targetIP, *targetPort, *listenPort)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	relayAddr, err := ma.NewMultiaddr(*relayFlag)
@@ -66,8 +76,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer h.Close()
-	h.SetStreamHandler(chatProtocol, receiveChat)
-	fmt.Println("local peer ID:", h.ID())
+	fmt.Printf("local peer ID: %s (role=%s)\n", h.ID(), role)
 
 	if err := h.Connect(ctx, *relayInfo); err != nil {
 		log.Fatal("connect relay: ", err)
@@ -78,11 +87,21 @@ func main() {
 	}
 	fmt.Println("relay reservation expires:", reservation.Expiration.Format(time.RFC3339))
 
-	peerID, err := findPeer(ctx, h, relayInfo.ID, *code)
+	peerID, err := findPeer(ctx, h, relayInfo.ID, *code, role)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("matched peer:", peerID)
+	if role == "provider" {
+		target := net.JoinHostPort(*targetIP, strconv.Itoa(*targetPort))
+		h.SetStreamHandler(proxyProtocol, func(stream network.Stream) {
+			if stream.Conn().RemotePeer() != peerID {
+				_ = stream.Reset()
+				return
+			}
+			go forwardToTarget(stream, target)
+		})
+	}
 
 	circuitSuffix, _ := ma.NewMultiaddr("/p2p-circuit/p2p/" + peerID.String())
 	peerRelayAddr := relayAddr.Encapsulate(circuitSuffix)
@@ -95,20 +114,45 @@ func main() {
 	}
 	fmt.Println("connected through relay; libp2p will attempt a direct upgrade")
 
-	go sendChat(ctx, h, peerID, *message)
 	go reportPath(ctx, h, peerID)
+	if role == "visitor" {
+		listenAddress := net.JoinHostPort(*listenIP, strconv.Itoa(*listenPort))
+		if err := serveLocalTCP(ctx, h, peerID, listenAddress); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
+	fmt.Printf("provider ready: forwarding peer streams to %s\n", net.JoinHostPort(*targetIP, strconv.Itoa(*targetPort)))
 	<-ctx.Done()
+}
+
+func clientRole(targetIP string, targetPort, listenPort int) (string, error) {
+	hasTarget := targetIP != "" || targetPort != 0
+	hasListener := listenPort != 0
+	if hasTarget == hasListener {
+		return "", fmt.Errorf("choose exactly one mode: client1 uses -target-ip and -target-port; client2 uses -listen-port")
+	}
+	if hasTarget {
+		if targetIP == "" || targetPort < 1 || targetPort > 65535 {
+			return "", fmt.Errorf("client1 requires a valid -target-ip and -target-port")
+		}
+		return "provider", nil
+	}
+	if listenPort < 1 || listenPort > 65535 {
+		return "", fmt.Errorf("invalid -listen-port")
+	}
+	return "visitor", nil
 }
 
 func findPeer(ctx context.Context, h interface {
 	NewStream(context.Context, peer.ID, ...protocol.ID) (network.Stream, error)
-}, relayID peer.ID, code string) (peer.ID, error) {
+}, relayID peer.ID, code, role string) (peer.ID, error) {
 	stream, err := h.NewStream(ctx, relayID, matchProtocol)
 	if err != nil {
 		return "", fmt.Errorf("open matching stream: %w", err)
 	}
 	defer stream.Close()
-	if err := json.NewEncoder(stream).Encode(matchRequest{Code: code}); err != nil {
+	if err := json.NewEncoder(stream).Encode(matchRequest{Code: code, Role: role}); err != nil {
 		return "", fmt.Errorf("send matching code: %w", err)
 	}
 
@@ -122,29 +166,75 @@ func findPeer(ctx context.Context, h interface {
 	return peer.Decode(response.PeerID)
 }
 
-func sendChat(ctx context.Context, h interface {
+func serveLocalTCP(ctx context.Context, h interface {
 	NewStream(context.Context, peer.ID, ...protocol.ID) (network.Stream, error)
-}, peerID peer.ID, message string) {
-	streamCtx := network.WithAllowLimitedConn(ctx, "chat over relay")
-	stream, err := h.NewStream(streamCtx, peerID, chatProtocol)
+}, peerID peer.ID, listenAddress string) error {
+	listener, err := net.Listen("tcp", listenAddress)
 	if err != nil {
-		log.Println("open chat stream:", err)
-		return
+		return fmt.Errorf("listen on %s: %w", listenAddress, err)
 	}
-	defer stream.Close()
-	if _, err := fmt.Fprintln(stream, message); err != nil {
-		log.Println("send chat message:", err)
+	defer listener.Close()
+	fmt.Println("client2 listening on:", listener.Addr())
+	go func() {
+		<-ctx.Done()
+		_ = listener.Close()
+	}()
+
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			if ctx.Err() != nil {
+				return nil
+			}
+			log.Println("accept local TCP connection:", err)
+			continue
+		}
+		go forwardToPeer(ctx, h, peerID, conn.(*net.TCPConn))
 	}
 }
 
-func receiveChat(stream network.Stream) {
-	defer stream.Close()
-	data, err := io.ReadAll(io.LimitReader(stream, 64*1024))
+func forwardToPeer(ctx context.Context, h interface {
+	NewStream(context.Context, peer.ID, ...protocol.ID) (network.Stream, error)
+}, peerID peer.ID, local *net.TCPConn) {
+	streamCtx := network.WithAllowLimitedConn(ctx, "TCP proxy over relay")
+	stream, err := h.NewStream(streamCtx, peerID, proxyProtocol)
 	if err != nil {
-		log.Println("read chat message:", err)
+		log.Println("open proxy stream:", err)
+		_ = local.Close()
 		return
 	}
-	fmt.Printf("message from %s: %s\n", stream.Conn().RemotePeer(), strings.TrimSpace(string(data)))
+	log.Printf("proxy opened: %s -> peer %s", local.RemoteAddr(), peerID)
+	bridge(local, stream)
+}
+
+func forwardToTarget(stream network.Stream, target string) {
+	targetConn, err := net.DialTimeout("tcp", target, 10*time.Second)
+	if err != nil {
+		log.Printf("connect target %s: %v", target, err)
+		_ = stream.Reset()
+		return
+	}
+	log.Printf("proxy opened: peer %s -> %s", stream.Conn().RemotePeer(), target)
+	bridge(targetConn.(*net.TCPConn), stream)
+}
+
+func bridge(tcpConn *net.TCPConn, stream network.Stream) {
+	defer tcpConn.Close()
+	defer stream.Close()
+	done := make(chan struct{}, 2)
+	go func() {
+		_, _ = io.Copy(stream, tcpConn)
+		_ = stream.CloseWrite()
+		done <- struct{}{}
+	}()
+	go func() {
+		_, _ = io.Copy(tcpConn, stream)
+		_ = tcpConn.CloseWrite()
+		done <- struct{}{}
+	}()
+	<-done
+	<-done
+	log.Println("proxy closed")
 }
 
 func reportPath(ctx context.Context, h interface {
