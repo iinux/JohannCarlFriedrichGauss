@@ -1,0 +1,53 @@
+./libp2p-server \
+    -listen /ip4/0.0.0.0/tcp/4001 \
+    -announce /dns4/hw.iinux.cn/tcp/4001
+
+
+client1 指定目标服务，例如转发到本机 SSH：
+
+  ./libp2p-client \
+    -relay /dns4/hw.iinux.cn/tcp/4001/p2p/12D3KooWATfGciDLRHHrXsdZvZbZkuFDroidXZT4qMjcWNWL7dZp \
+    -code 1234 \
+    -target-ip 127.0.0.1 \
+    -target-port 22
+
+  client2 开放本地端口：
+
+  ./libp2p-client \
+    -relay /dns4/hw.iinux.cn/tcp/4001/p2p/12D3KooWATfGciDLRHHrXsdZvZbZkuFDroidXZT4qMjcWNWL7dZp \
+    -code 1234 \
+    -listen-ip 127.0.0.1 \
+    -listen-port 6000
+
+
+root@0tdl9vgp14:~#   ./natcheck \
+    -server stun.miwifi.com:3478 \
+    -fallback-server stun.qq.com:3478 \
+    -timeout 5s
+local socket: 0.0.0.0:42355
+primary STUN server: 111.206.174.3:3478
+public endpoint: 102.205.44.53:42355
+response origin: 111.206.174.3:3478
+RFC 5780 other address: 111.206.174.2:3479
+mapping via other IP, primary port: 102.205.44.53:42355
+
+NAT mapping behavior: endpoint-independent
+NAT filtering behavior: address-and-port-dependent
+likely NAT type: port-restricted-cone-like
+
+
+root@0tdl9vgp14:~#   ./natcheck \
+    -server stun.cloudflare.com:3478 \
+    -fallback-server stun.l.google.com:19302 \
+    -timeout 5s
+local socket: 0.0.0.0:37327
+primary STUN server: 162.159.207.0:3478
+public endpoint: 102.205.44.53:37327
+primary server does not provide OTHER-ADDRESS; using limited two-server mapping test
+fallback STUN server: 74.125.250.129:19302
+public endpoint via fallback: 102.205.44.53:37327
+
+NAT mapping behavior: endpoint-independent
+NAT filtering behavior: inconclusive
+likely NAT type: endpoint-independent mapping; filtering unknown
+note: an inconclusive result means the STUN server lacks RFC 5780 support or a probe timed out
