@@ -36,6 +36,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -245,6 +246,12 @@ func (s *server) run() error {
 // endpoint-dependent NAT mappings: if the source port stays constant
 // across probes to different destinations, the NAT is endpoint-independent
 // (cone); if it changes, the NAT is endpoint-dependent (symmetric-like).
+//
+// A payload starting with "REVERSE|" is treated as a server-echo
+// diagnostic: the server immediately replies "REVERSE|<name>" to the
+// source address. The client uses this to verify that *inbound* UDP to
+// its own socket is reachable (a prerequisite for the peer-to-peer punch
+// that the probe alone cannot test).
 func (s *server) readProbes(c *net.UDPConn) {
 	buf := make([]byte, 256)
 	for {
@@ -252,7 +259,19 @@ func (s *server) readProbes(c *net.UDPConn) {
 		if err != nil {
 			return
 		}
-		sessName, peerName, seq, ok := splitProbe(string(buf[:n]))
+		data := string(buf[:n])
+
+		// Reverse-UDP diagnostic: client asks the server to send a UDP
+		// packet back, so the client can confirm inbound UDP works.
+		if rest, ok := strings.CutPrefix(data, "REVERSE|"); ok {
+			log.Printf("server: REVERSE request from %s, echoing back", src)
+			if _, err := c.WriteToUDP([]byte("REVERSE|"+rest), src); err != nil {
+				log.Printf("server: REVERSE echo failed: %v", err)
+			}
+			continue
+		}
+
+		sessName, peerName, seq, ok := splitProbe(data)
 		if !ok {
 			continue
 		}
@@ -557,6 +576,63 @@ func (c *client) run() error {
 		}
 	}()
 
+	// Reverse-UDP diagnostic: every 3 s, ask the server to send a UDP
+	// packet back. This verifies that *inbound* UDP to our socket is
+	// reachable from outside — the probe above only proves outbound.
+	// If REVERSE replies never come back, the NAT or ISP is filtering
+	// unsolicited inbound UDP on our side, and direct hole punching
+	// against this network will not work without a relay.
+	var (
+		reverseSent    atomic.Int64 // unix nano of last REVERSE request sent
+		reverseRecv    atomic.Int64 // unix nano of last REVERSE reply received
+		reverseWarned  atomic.Bool  // have we already logged the TIMEOUT?
+	)
+	go func() {
+		t := time.NewTicker(3 * time.Second)
+		defer t.Stop()
+		for {
+			select {
+			case <-done:
+				return
+			case <-t.C:
+				now := time.Now().UnixNano()
+				reverseSent.Store(now)
+				pkt := "REVERSE|" + c.session + "/" + c.name
+				if _, err := udp.WriteToUDP([]byte(pkt), srvUDP); err != nil {
+					return
+				}
+				log.Printf("client[%s]: REVERSE request sent", c.name)
+			}
+		}
+	}()
+	// Periodic watcher: if the most recent REVERSE request is older
+	// than 6 s and we haven't seen a reply since it was sent, log a
+	// one-shot TIMEOUT warning.
+	go func() {
+		t := time.NewTicker(2 * time.Second)
+		defer t.Stop()
+		for {
+			select {
+			case <-done:
+				return
+			case <-t.C:
+				sent := reverseSent.Load()
+				if sent == 0 {
+					continue
+				}
+				recv := reverseRecv.Load()
+				if recv >= sent {
+					continue
+				}
+				if time.Since(time.Unix(0, sent)) > 6*time.Second {
+					if reverseWarned.CompareAndSwap(false, true) {
+						log.Printf("client[%s]: REVERSE TIMEOUT — inbound UDP is being filtered on this side", c.name)
+					}
+				}
+			}
+		}
+	}()
+
 	// Reader. Exits on UDP read error or `done`.
 	go func() {
 		defer close(done)
@@ -576,6 +652,9 @@ func (c *client) run() error {
 			}
 			data := string(buf[:n])
 			switch {
+			case strings.HasPrefix(data, "REVERSE|"):
+				reverseRecv.Store(time.Now().UnixNano())
+				log.Printf("client[%s]: REVERSE reply received from %s (inbound UDP works ✓)", c.name, src)
 			case strings.HasPrefix(data, "PUNCH|"):
 				// heartbeat, no log spam
 			case strings.HasPrefix(data, "CHAT|"):
