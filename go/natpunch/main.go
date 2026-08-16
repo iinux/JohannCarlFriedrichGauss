@@ -239,8 +239,12 @@ func (s *server) run() error {
 }
 
 // readProbes consumes UDP datagrams from peers. The payload format is
-// "<session>/<name>"; the source address of the datagram is the peer's
-// public UDP endpoint as seen by the server.
+// "<session>/<name>[/<seq>]"; the source address of the datagram is the
+// peer's public UDP endpoint as seen by the server. The optional seq
+// segment is used by the client during the punch phase to diagnose
+// endpoint-dependent NAT mappings: if the source port stays constant
+// across probes to different destinations, the NAT is endpoint-independent
+// (cone); if it changes, the NAT is endpoint-dependent (symmetric-like).
 func (s *server) readProbes(c *net.UDPConn) {
 	buf := make([]byte, 256)
 	for {
@@ -248,19 +252,30 @@ func (s *server) readProbes(c *net.UDPConn) {
 		if err != nil {
 			return
 		}
-		sessName, peerName, ok := splitProbe(string(buf[:n]))
+		sessName, peerName, seq, ok := splitProbe(string(buf[:n]))
 		if !ok {
 			continue
 		}
 		ss := s.sess(sessName)
 		ss.mu <- struct{}{}
 		if p, ok := ss.peers[peerName]; ok {
+			oldAddr := p.addr
 			p.addr = src
-			log.Printf("server: %s/%s public UDP = %s", sessName, peerName, src)
+			if seq != "" {
+				log.Printf("server: %s/%s diag-probe seq=%s src=%s (was %s)",
+					sessName, peerName, seq, src, oldAddr)
+			} else {
+				log.Printf("server: %s/%s public UDP = %s", sessName, peerName, src)
+			}
 			s.matchLocked(ss)
 		} else {
 			ss.pending[peerName] = src
-			log.Printf("server: probe buffered for %s/%s from %s", sessName, peerName, src)
+			if seq != "" {
+				log.Printf("server: probe buffered for %s/%s seq=%s from %s",
+					sessName, peerName, seq, src)
+			} else {
+				log.Printf("server: probe buffered for %s/%s from %s", sessName, peerName, src)
+			}
 		}
 		<-ss.mu
 	}
@@ -346,12 +361,23 @@ func (s *server) matchLocked(ss *session) {
 	log.Printf("server: matched %d peers in session", len(known))
 }
 
-func splitProbe(s string) (sess, name string, ok bool) {
+func splitProbe(s string) (sess, name, seq string, ok bool) {
+	// Format: "<session>/<name>" or "<session>/<name>/<seq>".
+	// The optional trailing segment is a monotonically increasing counter
+	// the client uses to help diagnose endpoint-dependent NAT mappings.
 	i := strings.IndexByte(s, '/')
 	if i <= 0 || i == len(s)-1 {
-		return "", "", false
+		return "", "", "", false
 	}
-	return s[:i], s[i+1:], true
+	sess, rest := s[:i], s[i+1:]
+	j := strings.IndexByte(rest, '/')
+	if j < 0 {
+		return sess, rest, "", true
+	}
+	if j == 0 || j == len(rest)-1 {
+		return "", "", "", false
+	}
+	return sess, rest[:j], rest[j+1:], true
 }
 
 // =====================================================================
@@ -502,6 +528,31 @@ func (c *client) run() error {
 				if i == 1 || i%50 == 0 {
 					log.Printf("client[%s]: PUNCH #%d -> %s", c.name, i, peerAddr)
 				}
+			}
+		}
+	}()
+
+	// Diagnostic probe: every 5 s, send a numbered probe to the server.
+	// The server logs the source port of each probe. If the source port
+	// stays constant across probes (initial probe → probes during punch),
+	// the NAT is endpoint-independent (cone). If it changes, the NAT is
+	// endpoint-dependent (symmetric-like) and direct hole punching will
+	// not work — see server log for details.
+	go func() {
+		t := time.NewTicker(5 * time.Second)
+		defer t.Stop()
+		seq := 0
+		for {
+			select {
+			case <-done:
+				return
+			case <-t.C:
+				seq++
+				pkt := fmt.Sprintf("%s/%s/d%d", c.session, c.name, seq)
+				if _, err := udp.WriteToUDP([]byte(pkt), srvUDP); err != nil {
+					return
+				}
+				log.Printf("client[%s]: diag-probe d%d sent", c.name, seq)
 			}
 		}
 	}()
