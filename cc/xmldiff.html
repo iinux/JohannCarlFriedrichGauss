@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XML Diff · XML 对比工具</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: rgba(255, 255, 255, .92);
+      --text: #172033;
+      --muted: #68738a;
+      --line: #dfe4ed;
+      --brand: #5b5ce2;
+      --brand-dark: #4748c9;
+      --add: #dff7e8;
+      --add-strong: #78d49a;
+      --del: #ffe5e5;
+      --del-strong: #f29a9a;
+      --empty: #f4f6f9;
+      --shadow: 0 18px 50px rgba(31, 42, 68, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 0%, #e7e7ff 0, transparent 28rem),
+        radial-gradient(circle at 90% 20%, #ddf4ef 0, transparent 24rem),
+        var(--bg);
+      font: 14px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .app { width: min(1500px, calc(100% - 36px)); margin: 0 auto; padding: 34px 0 46px; }
+
+    header { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 24px; }
+    .eyebrow { color: var(--brand); font-weight: 800; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { margin: 5px 0 2px; font-size: clamp(25px, 3vw, 38px); letter-spacing: -.04em; }
+    .subtitle { margin: 0; color: var(--muted); }
+    .badge { padding: 7px 12px; border: 1px solid #cfd4ff; border-radius: 999px; color: #4d4ecb; background: #f0f0ff; font-weight: 700; white-space: nowrap; }
+
+    .card { background: var(--panel); border: 1px solid rgba(220, 225, 235, .9); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
+    .inputs { display: grid; grid-template-columns: 1fr 1fr; }
+    .input-pane:first-child { border-right: 1px solid var(--line); }
+    .pane-head { height: 54px; padding: 0 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+    .pane-title { font-weight: 800; }
+    .pane-note { color: var(--muted); font-size: 12px; }
+    textarea {
+      display: block; width: 100%; height: 310px; resize: vertical; padding: 18px; border: 0; outline: 0;
+      color: #26334d; background: transparent; tab-size: 2;
+      font: 13px/1.65 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    textarea:focus { box-shadow: inset 0 0 0 2px rgba(91, 92, 226, .2); }
+    textarea::placeholder { color: #a1aabd; }
+
+    .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 16px; border-top: 1px solid var(--line); background: rgba(249, 250, 253, .75); }
+    .actions, .secondary-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    button { border: 0; border-radius: 9px; padding: 9px 14px; cursor: pointer; color: #536079; background: #edf0f5; font: 700 13px inherit; transition: .15s ease; }
+    button:hover { transform: translateY(-1px); background: #e3e7ee; }
+    button.primary { padding: 10px 22px; color: white; background: var(--brand); box-shadow: 0 8px 18px rgba(91, 92, 226, .22); }
+    button.primary:hover { background: var(--brand-dark); }
+    button:focus-visible { outline: 3px solid rgba(91, 92, 226, .25); outline-offset: 2px; }
+    .shortcut { opacity: .7; margin-left: 7px; font-weight: 500; }
+
+    .message { min-height: 20px; margin: 14px 4px; color: var(--muted); }
+    .message.error { color: #c23c45; font-weight: 700; }
+    .message.ok { color: #278255; }
+
+    .result { display: none; }
+    .result.visible { display: block; }
+    .result-top { padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--line); }
+    .stats { display: flex; gap: 10px; flex-wrap: wrap; }
+    .stat { padding: 5px 10px; border-radius: 999px; color: var(--muted); background: #f0f2f6; font-size: 12px; font-weight: 700; }
+    .stat.add { color: #25744a; background: var(--add); }
+    .stat.del { color: #ad3b43; background: var(--del); }
+    .legend { color: var(--muted); font-size: 12px; }
+    .diff-grid { display: grid; grid-template-columns: 1fr 1fr; min-height: 200px; }
+    .diff-pane { min-width: 0; overflow: auto; max-height: 560px; background: #fbfcfe; }
+    .diff-pane:first-child { border-right: 1px solid var(--line); }
+    .diff-label { position: sticky; top: 0; z-index: 2; height: 42px; padding: 0 15px; display: flex; align-items: center; background: rgba(248, 249, 252, .96); border-bottom: 1px solid var(--line); font-weight: 800; }
+    .code-line { display: grid; grid-template-columns: 54px minmax(max-content, 1fr); min-height: 23px; font: 12.5px/23px "SFMono-Regular", Consolas, "Liberation Mono", monospace; white-space: pre; }
+    .line-no { user-select: none; padding: 0 12px 0 6px; color: #a0a9ba; text-align: right; border-right: 1px solid rgba(218, 223, 232, .75); }
+    .line-text { padding: 0 14px; }
+    .code-line.add { background: var(--add); box-shadow: inset 3px 0 var(--add-strong); }
+    .code-line.del { background: var(--del); box-shadow: inset 3px 0 var(--del-strong); }
+    .code-line.empty { background: repeating-linear-gradient(-45deg, var(--empty), var(--empty) 5px, #eef1f5 5px, #eef1f5 10px); }
+    .code-line.empty .line-no { color: transparent; }
+
+    footer { padding-top: 18px; text-align: center; color: #8791a5; font-size: 12px; }
+    @media (max-width: 760px) {
+      .app { width: min(100% - 20px, 1500px); padding-top: 20px; }
+      header { align-items: flex-start; } .badge { display: none; }
+      .inputs, .diff-grid { grid-template-columns: 1fr; }
+      .input-pane:first-child, .diff-pane:first-child { border-right: 0; border-bottom: 1px solid var(--line); }
+      textarea { height: 230px; }
+      .toolbar, .result-top { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <div class="eyebrow">Developer Utility</div>
+        <h1>XML Diff</h1>
+        <p class="subtitle">先格式化，再逐行对比。所有数据仅在你的浏览器中处理。</p>
+      </div>
+      <div class="badge">纯前端 · 无需上传</div>
+    </header>
+
+    <section class="card" aria-label="XML 输入区">
+      <div class="inputs">
+        <div class="input-pane">
+          <div class="pane-head"><span class="pane-title">原始 XML</span><span class="pane-note">BASE</span></div>
+          <textarea id="leftInput" spellcheck="false" aria-label="原始 XML" placeholder="在此粘贴第一份 XML…"></textarea>
+        </div>
+        <div class="input-pane">
+          <div class="pane-head"><span class="pane-title">目标 XML</span><span class="pane-note">CHANGED</span></div>
+          <textarea id="rightInput" spellcheck="false" aria-label="目标 XML" placeholder="在此粘贴第二份 XML…"></textarea>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="actions">
+          <button class="primary" id="compareBtn">开始对比 <span class="shortcut">⌘ / Ctrl + Enter</span></button>
+          <button id="formatBtn">仅格式化</button>
+          <button id="unescapeBtn">去除转义</button>
+        </div>
+        <div class="secondary-actions">
+          <button id="exampleBtn">载入示例</button>
+          <button id="swapBtn">交换</button>
+          <button id="clearBtn">清空</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="message" class="message" role="status" aria-live="polite">请输入两份 XML，然后点击“开始对比”。</div>
+
+    <section id="result" class="card result" aria-label="对比结果">
+      <div class="result-top">
+        <div class="stats">
+          <span class="stat" id="sameStat">0 行相同</span>
+          <span class="stat del" id="delStat">0 行删除</span>
+          <span class="stat add" id="addStat">0 行新增</span>
+        </div>
+        <div class="legend">红色 = 删除/旧值 · 绿色 = 新增/新值</div>
+      </div>
+      <div class="diff-grid">
+        <div id="leftDiff" class="diff-pane"><div class="diff-label">原始 XML</div><div class="code"></div></div>
+        <div id="rightDiff" class="diff-pane"><div class="diff-label">目标 XML</div><div class="code"></div></div>
+      </div>
+    </section>
+    <footer>XML 内容不会离开当前页面</footer>
+  </main>
+
+  <script>
+    const $ = (selector) => document.querySelector(selector);
+    const leftInput = $('#leftInput');
+    const rightInput = $('#rightInput');
+    const message = $('#message');
+    const result = $('#result');
+
+    function escapeXmlText(value) {
+      return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function escapeAttribute(value) {
+      return escapeXmlText(value).replace(/"/g, '&quot;');
+    }
+
+    function parseXml(source, label) {
+      if (!source.trim()) throw new Error(`${label}不能为空`);
+      const doc = new DOMParser().parseFromString(source, 'application/xml');
+      const error = doc.querySelector('parsererror');
+      if (error) {
+        const detail = error.textContent.replace(/\s+/g, ' ').trim();
+        throw new Error(`${label}格式错误：${detail}`);
+      }
+      return doc;
+    }
+
+    function formatXml(source, label) {
+      const doc = parseXml(source, label);
+      const lines = [];
+      const indent = (depth) => '  '.repeat(depth);
+
+      function render(node, depth) {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const attrs = Array.from(node.attributes)
+            .map((attr) => ` ${attr.name}="${escapeAttribute(attr.value)}"`).join('');
+          const children = Array.from(node.childNodes).filter((child) =>
+            child.nodeType !== Node.TEXT_NODE || child.nodeValue.trim() !== ''
+          );
+          if (children.length === 0) {
+            lines.push(`${indent(depth)}<${node.nodeName}${attrs}/>`);
+            return;
+          }
+          const onlyText = children.length === 1 && children[0].nodeType === Node.TEXT_NODE && !children[0].nodeValue.includes('\n');
+          if (onlyText) {
+            lines.push(`${indent(depth)}<${node.nodeName}${attrs}>${escapeXmlText(children[0].nodeValue.trim())}</${node.nodeName}>`);
+            return;
+          }
+          lines.push(`${indent(depth)}<${node.nodeName}${attrs}>`);
+          children.forEach((child) => render(child, depth + 1));
+          lines.push(`${indent(depth)}</${node.nodeName}>`);
+        } else if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.nodeValue.trim();
+          if (text) text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+            .forEach((line) => lines.push(`${indent(depth)}${escapeXmlText(line)}`));
+        } else if (node.nodeType === Node.COMMENT_NODE) {
+          lines.push(`${indent(depth)}<!--${node.nodeValue}-->`);
+        } else if (node.nodeType === Node.CDATA_SECTION_NODE) {
+          lines.push(`${indent(depth)}<![CDATA[${node.nodeValue}]]>`);
+        } else if (node.nodeType === Node.PROCESSING_INSTRUCTION_NODE) {
+          lines.push(`${indent(depth)}<?${node.nodeName}${node.nodeValue ? ' ' + node.nodeValue : ''}?>`);
+        } else if (node.nodeType === Node.DOCUMENT_TYPE_NODE) {
+          lines.push(`<!DOCTYPE ${node.name}>`);
+        }
+      }
+
+      Array.from(doc.childNodes).forEach((node) => render(node, 0));
+      return lines.join('\n');
+    }
+
+    function unescapeXml(source) {
+      const decoder = document.createElement('textarea');
+      decoder.innerHTML = source;
+      return decoder.value.replace(/\\"/g, '"');
+    }
+
+    // LCS 动态规划：适合配置文件等常见 XML，并能稳定生成左右对齐的逐行差异。
+    function diffLines(left, right) {
+      const a = left.split('\n');
+      const b = right.split('\n');
+      const rows = a.length + 1;
+      const cols = b.length + 1;
+      const dp = Array.from({ length: rows }, () => new Uint32Array(cols));
+      for (let i = a.length - 1; i >= 0; i--) {
+        for (let j = b.length - 1; j >= 0; j--) {
+          dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+        }
+      }
+      const ops = [];
+      let i = 0, j = 0;
+      while (i < a.length && j < b.length) {
+        if (a[i] === b[j]) { ops.push({ type: 'same', left: a[i++], right: b[j++] }); }
+        else if (dp[i + 1][j] >= dp[i][j + 1]) { ops.push({ type: 'del', left: a[i++] }); }
+        else { ops.push({ type: 'add', right: b[j++] }); }
+      }
+      while (i < a.length) ops.push({ type: 'del', left: a[i++] });
+      while (j < b.length) ops.push({ type: 'add', right: b[j++] });
+
+      // 将相邻删除/新增配成同一视觉行，更容易看出字段值的修改。
+      const aligned = [];
+      for (let k = 0; k < ops.length;) {
+        if (ops[k].type === 'same') { aligned.push(ops[k++]); continue; }
+        const deleted = [], added = [];
+        while (k < ops.length && ops[k].type !== 'same') {
+          if (ops[k].type === 'del') deleted.push(ops[k].left);
+          else added.push(ops[k].right);
+          k++;
+        }
+        const count = Math.max(deleted.length, added.length);
+        for (let n = 0; n < count; n++) aligned.push({
+          type: deleted[n] !== undefined && added[n] !== undefined ? 'change' : (deleted[n] !== undefined ? 'del' : 'add'),
+          left: deleted[n], right: added[n]
+        });
+      }
+      return aligned;
+    }
+
+    function appendLine(container, text, number, type) {
+      const row = document.createElement('div');
+      row.className = `code-line ${type}`;
+      const no = document.createElement('span');
+      no.className = 'line-no'; no.textContent = number || '';
+      const content = document.createElement('span');
+      content.className = 'line-text'; content.textContent = text ?? '';
+      row.append(no, content); container.append(row);
+    }
+
+    function renderDiff(left, right) {
+      const diff = diffLines(left, right);
+      const leftCode = $('#leftDiff .code');
+      const rightCode = $('#rightDiff .code');
+      leftCode.replaceChildren(); rightCode.replaceChildren();
+      let leftNo = 0, rightNo = 0, same = 0, added = 0, deleted = 0;
+      diff.forEach((row) => {
+        const hasLeft = row.left !== undefined;
+        const hasRight = row.right !== undefined;
+        if (hasLeft) leftNo++;
+        if (hasRight) rightNo++;
+        if (row.type === 'same') same++;
+        if (row.type === 'add' || row.type === 'change') added++;
+        if (row.type === 'del' || row.type === 'change') deleted++;
+        appendLine(leftCode, row.left, hasLeft ? leftNo : null, row.type === 'same' ? '' : hasLeft ? 'del' : 'empty');
+        appendLine(rightCode, row.right, hasRight ? rightNo : null, row.type === 'same' ? '' : hasRight ? 'add' : 'empty');
+      });
+      $('#sameStat').textContent = `${same} 行相同`;
+      $('#delStat').textContent = `${deleted} 行删除`;
+      $('#addStat').textContent = `${added} 行新增`;
+      result.classList.add('visible');
+      message.className = 'message ok';
+      message.textContent = added + deleted === 0 ? '两份 XML 内容一致。' : `对比完成：发现 ${added + deleted} 处行级差异。`;
+    }
+
+    function compareBoth() {
+      try {
+        const left = formatXml(leftInput.value, '原始 XML');
+        const right = formatXml(rightInput.value, '目标 XML');
+        leftInput.value = left;
+        rightInput.value = right;
+        renderDiff(left, right);
+      } catch (error) {
+        result.classList.remove('visible');
+        message.className = 'message error';
+        message.textContent = error.message;
+      }
+    }
+
+    function transformFilledInputs(transform, actionName) {
+      const inputs = [
+        { element: leftInput, label: '原始 XML' },
+        { element: rightInput, label: '目标 XML' }
+      ].filter(({ element }) => element.value.trim());
+
+      if (inputs.length === 0) {
+        result.classList.remove('visible');
+        message.className = 'message error';
+        message.textContent = `请至少输入一份 XML，再${actionName}。`;
+        leftInput.focus();
+        return;
+      }
+
+      try {
+        const transformed = inputs.map(({ element, label }) => transform(element.value, label));
+        inputs.forEach(({ element }, index) => { element.value = transformed[index]; });
+        result.classList.remove('visible');
+        message.className = 'message ok';
+        message.textContent = `${inputs.length === 1 ? inputs[0].label : '两份 XML'}已${actionName}。`;
+      } catch (error) {
+        result.classList.remove('visible');
+        message.className = 'message error';
+        message.textContent = error.message;
+      }
+    }
+
+    $('#compareBtn').addEventListener('click', compareBoth);
+    $('#formatBtn').addEventListener('click', () => transformFilledInputs(formatXml, '格式化'));
+    $('#unescapeBtn').addEventListener('click', () => transformFilledInputs(unescapeXml, '去除转义'));
+    $('#clearBtn').addEventListener('click', () => {
+      leftInput.value = ''; rightInput.value = ''; result.classList.remove('visible');
+      message.className = 'message'; message.textContent = '已清空，请输入两份 XML。'; leftInput.focus();
+    });
+    $('#swapBtn').addEventListener('click', () => {
+      [leftInput.value, rightInput.value] = [rightInput.value, leftInput.value];
+      if (leftInput.value.trim() && rightInput.value.trim()) compareBoth();
+    });
+    $('#exampleBtn').addEventListener('click', () => {
+      leftInput.value = `<catalog version="1.0">\n  <book id="101">\n    <title>XML 入门</title>\n    <price currency="CNY">68.00</price>\n    <stock>12</stock>\n  </book>\n</catalog>`;
+      rightInput.value = `<catalog version="1.1">\n  <book id="101">\n    <title>XML 实战</title>\n    <price currency="CNY">72.00</price>\n    <stock>12</stock>\n    <author>Lin</author>\n  </book>\n</catalog>`;
+      compareBoth();
+    });
+    document.addEventListener('keydown', (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); compareBoth(); }
+    });
+
+    let syncing = false;
+    const leftDiff = $('#leftDiff');
+    const rightDiff = $('#rightDiff');
+    function syncScroll(source, target) {
+      if (syncing) return;
+      syncing = true;
+      target.scrollTop = source.scrollTop;
+      target.scrollLeft = source.scrollLeft;
+      requestAnimationFrame(() => { syncing = false; });
+    }
+    leftDiff.addEventListener('scroll', () => syncScroll(leftDiff, rightDiff));
+    rightDiff.addEventListener('scroll', () => syncScroll(rightDiff, leftDiff));
+  </script>
+</body>
+</html>
