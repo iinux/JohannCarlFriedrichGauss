@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SF Pro、Google Sans、IBM Plex 与 Anthropic Serif 字体展示">
+  <title>Four voices — 字体标本</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f0eee8;
+      --ink: #151515;
+      --muted: #6c6a63;
+      --line: rgba(21, 21, 21, .16);
+      --card: rgba(255, 255, 255, .55);
+      --accent: #f05b38;
+      --size: 72px;
+      --weight: 500;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 85% 8%, rgba(240, 91, 56, .12), transparent 28rem),
+        var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      transition: background-color .25s ease, color .25s ease;
+    }
+
+    body.dark {
+      color-scheme: dark;
+      --bg: #141412;
+      --ink: #f2f0e9;
+      --muted: #a6a39a;
+      --line: rgba(242, 240, 233, .18);
+      --card: rgba(255, 255, 255, .045);
+    }
+
+    button, input { font: inherit; }
+
+    .page {
+      width: min(1500px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 28px 0 80px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .mark {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      font-weight: 650;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .mark::before {
+      content: "";
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 5px rgba(240, 91, 56, .14);
+    }
+
+    .theme-toggle {
+      width: 42px;
+      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      color: inherit;
+      background: transparent;
+      cursor: pointer;
+      transition: transform .2s ease, background .2s ease;
+    }
+
+    .theme-toggle:hover { transform: rotate(12deg); background: var(--card); }
+
+    .intro {
+      display: grid;
+      grid-template-columns: 1.35fr .65fr;
+      gap: 48px;
+      padding: 70px 0 54px;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(64px, 10vw, 160px);
+      font-weight: 520;
+      line-height: .82;
+      letter-spacing: -.075em;
+    }
+
+    .intro-copy {
+      align-self: end;
+      max-width: 450px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    .intro-copy strong { color: var(--ink); font-weight: 600; }
+
+    .toolbar {
+      position: sticky;
+      top: 12px;
+      z-index: 10;
+      display: grid;
+      grid-template-columns: minmax(230px, 1fr) 170px 170px;
+      gap: 12px;
+      padding: 12px;
+      margin-bottom: 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--bg) 86%, transparent);
+      backdrop-filter: blur(18px);
+    }
+
+    .control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      height: 44px;
+      padding: 0 14px;
+      border-radius: 10px;
+      background: var(--card);
+    }
+
+    .control label {
+      flex: none;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .control input[type="text"] {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      color: inherit;
+      background: transparent;
+    }
+
+    .control input[type="range"] { width: 100%; accent-color: var(--accent); }
+    .value { min-width: 35px; font-size: 12px; font-variant-numeric: tabular-nums; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .specimen {
+      position: relative;
+      min-height: 460px;
+      overflow: hidden;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--card);
+      transition: transform .25s ease, border-color .25s ease;
+    }
+
+    .specimen:hover { transform: translateY(-3px); border-color: var(--muted); }
+
+    .meta {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand { margin: 0 0 5px; font-size: 12px; color: var(--muted); }
+    .font-name { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -.03em; }
+    .index { color: var(--accent); font-size: 12px; font-weight: 700; }
+
+    .sample {
+      min-height: 218px;
+      padding: 30px 0 24px;
+      outline: none;
+      font-size: clamp(38px, var(--size), 104px);
+      font-weight: var(--weight);
+      line-height: .98;
+      letter-spacing: -.055em;
+      overflow-wrap: anywhere;
+    }
+
+    .sample:focus { text-decoration: underline; text-decoration-color: rgba(240, 91, 56, .35); text-underline-offset: 6px; }
+
+    .sf { font-family: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif; }
+    .google { font-family: "Google Sans", "Product Sans", "Google Sans Text", Arial, sans-serif; }
+    .plex { font-family: "IBM Plex Sans", "IBM Plex Sans Text", "Helvetica Neue", sans-serif; }
+    .anthropic { font-family: "Anthropic Serif", "Tiempos Text", "Iowan Old Style", "Baskerville", Georgia, serif; letter-spacing: -.045em; }
+
+    .glyphs {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 14px;
+      letter-spacing: .04em;
+    }
+
+    .glyphs span:last-child { text-align: right; }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      padding-top: 28px;
+      margin-top: 48px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 850px) {
+      .page { width: min(100% - 28px, 680px); padding-top: 18px; }
+      .intro { grid-template-columns: 1fr; padding: 52px 0 40px; }
+      .intro-copy { justify-self: end; }
+      .toolbar { grid-template-columns: 1fr 1fr; }
+      .toolbar .control:first-child { grid-column: 1 / -1; }
+      .grid { grid-template-columns: 1fr; }
+      .specimen { min-height: 400px; }
+    }
+
+    @media (max-width: 520px) {
+      h1 { font-size: 58px; }
+      .toolbar { position: static; grid-template-columns: 1fr; }
+      .toolbar .control:first-child { grid-column: auto; }
+      .specimen { padding: 19px; }
+      .sample { min-height: 190px; }
+      footer { flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div class="mark">Type specimen / 2026</div>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换深色模式" title="切换主题">◐</button>
+    </header>
+
+    <section class="intro" aria-labelledby="page-title">
+      <h1 id="page-title">Four<br>voices.</h1>
+      <p class="intro-copy"><strong>四种字体，四种语气。</strong><br>从精密克制的系统字体，到温暖的人文衬线体。输入任意文字，即时比较它们的节奏、比例与性格。</p>
+    </section>
+
+    <section class="toolbar" aria-label="字体预览控制">
+      <div class="control">
+        <label for="globalText">样文</label>
+        <input id="globalText" type="text" value="Design shapes language." aria-label="输入预览文字">
+      </div>
+      <div class="control">
+        <label for="sizeRange">字号</label>
+        <input id="sizeRange" type="range" min="38" max="104" value="72" aria-label="调整字号">
+        <span class="value" id="sizeValue">72</span>
+      </div>
+      <div class="control">
+        <label for="weightRange">字重</label>
+        <input id="weightRange" type="range" min="300" max="700" step="100" value="500" aria-label="调整字重">
+        <span class="value" id="weightValue">500</span>
+      </div>
+    </section>
+
+    <section class="grid" aria-label="字体展示">
+      <article class="specimen">
+        <div class="meta"><div><p class="brand">Apple</p><h2 class="font-name">SF Pro</h2></div><span class="index">01</span></div>
+        <div class="sample sf" contenteditable="true" spellcheck="false" aria-label="SF Pro 可编辑样文">Design shapes language.</div>
+        <div class="glyphs sf"><span>Aa Bb Cc Dd</span><span>0123456789<br>简体中文</span></div>
+      </article>
+
+      <article class="specimen">
+        <div class="meta"><div><p class="brand">Google</p><h2 class="font-name">Google Sans</h2></div><span class="index">02</span></div>
+        <div class="sample google" contenteditable="true" spellcheck="false" aria-label="Google Sans 可编辑样文">Design shapes language.</div>
+        <div class="glyphs google"><span>Aa Bb Cc Dd</span><span>0123456789<br>简体中文</span></div>
+      </article>
+
+      <article class="specimen">
+        <div class="meta"><div><p class="brand">IBM</p><h2 class="font-name">IBM Plex</h2></div><span class="index">03</span></div>
+        <div class="sample plex" contenteditable="true" spellcheck="false" aria-label="IBM Plex 可编辑样文">Design shapes language.</div>
+        <div class="glyphs plex"><span>Aa Bb Cc Dd</span><span>0123456789<br>简体中文</span></div>
+      </article>
+
+      <article class="specimen">
+        <div class="meta"><div><p class="brand">Anthropic</p><h2 class="font-name">Anthropic Serif</h2></div><span class="index">04</span></div>
+        <div class="sample anthropic" contenteditable="true" spellcheck="false" aria-label="Anthropic Serif 可编辑样文">Design shapes language.</div>
+        <div class="glyphs anthropic"><span>Aa Bb Cc Dd</span><span>0123456789<br>简体中文</span></div>
+      </article>
+    </section>
+
+    <footer>
+      <span>Type changes how a sentence feels<br>before it changes what it says.</span>
+      <span>点击卡片中的文字也可单独编辑<br>本页面优先使用设备中已安装的对应字体</span>
+    </footer>
+  </main>
+
+  <script>
+    const root = document.documentElement;
+    const samples = [...document.querySelectorAll('.sample')];
+    const globalText = document.querySelector('#globalText');
+    const sizeRange = document.querySelector('#sizeRange');
+    const weightRange = document.querySelector('#weightRange');
+    const sizeValue = document.querySelector('#sizeValue');
+    const weightValue = document.querySelector('#weightValue');
+    const themeToggle = document.querySelector('#themeToggle');
+
+    globalText.addEventListener('input', () => {
+      const value = globalText.value || ' ';
+      samples.forEach(sample => { sample.textContent = value; });
+    });
+
+    sizeRange.addEventListener('input', () => {
+      root.style.setProperty('--size', `${sizeRange.value}px`);
+      sizeValue.textContent = sizeRange.value;
+    });
+
+    weightRange.addEventListener('input', () => {
+      root.style.setProperty('--weight', weightRange.value);
+      weightValue.textContent = weightRange.value;
+    });
+
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      themeToggle.setAttribute('aria-label', document.body.classList.contains('dark') ? '切换浅色模式' : '切换深色模式');
+    });
+  </script>
+</body>
+</html>
